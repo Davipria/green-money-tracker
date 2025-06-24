@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Trash2 } from "lucide-react";
 
@@ -32,8 +30,8 @@ const AddBet = () => {
     timing: "prematch" as 'prematch' | 'live',
     stake: "",
     notes: "",
-    cashout: false,
-    status: "pending" as 'pending' | 'won' | 'lost',
+    status: "pending" as 'pending' | 'won' | 'lost' | 'cashout',
+    cashoutAmount: "",
     
     // Scommessa singola
     sport: "",
@@ -62,6 +60,16 @@ const AddBet = () => {
       toast({
         title: "Errore",
         description: "Compila tutti i campi obbligatori",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validazione cashout
+    if (formData.status === 'cashout' && !formData.cashoutAmount) {
+      toast({
+        title: "Errore",
+        description: "Inserisci l'importo del cashout",
         variant: "destructive"
       });
       return;
@@ -108,8 +116,8 @@ const AddBet = () => {
       timing: "prematch",
       stake: "",
       notes: "",
-      cashout: false,
       status: "pending",
+      cashoutAmount: "",
       sport: "",
       event: "",
       odds: "",
@@ -286,7 +294,7 @@ const AddBet = () => {
 
               <div className="space-y-3">
                 <Label className="text-base font-semibold">Stato Scommessa</Label>
-                <Select value={formData.status} onValueChange={(value: 'pending' | 'won' | 'lost') => handleInputChange("status", value)}>
+                <Select value={formData.status} onValueChange={(value: 'pending' | 'won' | 'lost' | 'cashout') => handleInputChange("status", value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Seleziona stato" />
                   </SelectTrigger>
@@ -294,20 +302,26 @@ const AddBet = () => {
                     <SelectItem value="pending">In Attesa</SelectItem>
                     <SelectItem value="won">Vinta</SelectItem>
                     <SelectItem value="lost">Persa</SelectItem>
+                    <SelectItem value="cashout">Cashout</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
-            {/* Cashout Option */}
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="cashout" 
-                checked={formData.cashout}
-                onCheckedChange={(checked) => handleInputChange("cashout", !!checked)}
-              />
-              <Label htmlFor="cashout">Cashout disponibile</Label>
-            </div>
+            {/* Campo Importo Cashout */}
+            {formData.status === 'cashout' && (
+              <div className="space-y-2">
+                <Label htmlFor="cashoutAmount">Importo Cashout (€) *</Label>
+                <Input
+                  id="cashoutAmount"
+                  type="number"
+                  step="0.01"
+                  placeholder="Es. 75.00"
+                  value={formData.cashoutAmount}
+                  onChange={(e) => handleInputChange("cashoutAmount", e.target.value)}
+                />
+              </div>
+            )}
 
             {/* Scommessa Singola */}
             {betType === 'single' && (
@@ -579,6 +593,14 @@ const AddBet = () => {
                     €{(calculatePotentialWin() - parseFloat(formData.stake || '0')).toFixed(2)}
                   </span>
                 </div>
+                {formData.status === 'cashout' && formData.cashoutAmount && (
+                  <div className="flex justify-between items-center mt-1">
+                    <span className="text-sm text-muted-foreground">Importo cashout:</span>
+                    <span className="font-bold text-blue-600">
+                      €{formData.cashoutAmount}
+                    </span>
+                  </div>
+                )}
                 {betType === 'exchange' && exchangeType === 'lay' && formData.liability && (
                   <div className="flex justify-between items-center mt-1">
                     <span className="text-sm text-muted-foreground">Responsabilità:</span>
