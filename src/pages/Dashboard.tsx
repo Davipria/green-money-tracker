@@ -1,7 +1,6 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/utils/betUtils";
-import { TrendingUp, TrendingDown, Target, Trophy, Calendar, Zap, Home } from "lucide-react";
+import { TrendingUp, TrendingDown, Target, Trophy, Calendar, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -85,15 +84,9 @@ const Dashboard = () => {
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header Section */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4">
-            <Home className="w-8 h-8 text-white" />
-          </div>
           <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Home
-          </h1>
-          <p className="text-gray-600 text-lg">
             Panoramica delle tue scommesse sportive
-          </p>
+          </h1>
         </div>
 
         {/* Stats Cards */}
