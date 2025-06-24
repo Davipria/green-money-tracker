@@ -9,6 +9,125 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      bet_selections: {
+        Row: {
+          bet_id: string
+          created_at: string
+          event: string
+          id: string
+          odds: number
+          selection: string | null
+          sport: string | null
+        }
+        Insert: {
+          bet_id: string
+          created_at?: string
+          event: string
+          id?: string
+          odds: number
+          selection?: string | null
+          sport?: string | null
+        }
+        Update: {
+          bet_id?: string
+          created_at?: string
+          event?: string
+          id?: string
+          odds?: number
+          selection?: string | null
+          sport?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bet_selections_bet_id_fkey"
+            columns: ["bet_id"]
+            isOneToOne: false
+            referencedRelation: "bets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bets: {
+        Row: {
+          bet_type: string
+          bookmaker: string | null
+          cashout_amount: number | null
+          commission: number | null
+          created_at: string
+          date: string
+          event: string
+          exchange_type: string | null
+          id: string
+          liability: number | null
+          multiple_title: string | null
+          notes: string | null
+          odds: number
+          payout: number | null
+          profit: number | null
+          selection: string | null
+          sport: string | null
+          stake: number
+          status: string
+          system_type: string | null
+          timing: string | null
+          tipster: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bet_type: string
+          bookmaker?: string | null
+          cashout_amount?: number | null
+          commission?: number | null
+          created_at?: string
+          date: string
+          event: string
+          exchange_type?: string | null
+          id?: string
+          liability?: number | null
+          multiple_title?: string | null
+          notes?: string | null
+          odds: number
+          payout?: number | null
+          profit?: number | null
+          selection?: string | null
+          sport?: string | null
+          stake: number
+          status: string
+          system_type?: string | null
+          timing?: string | null
+          tipster?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bet_type?: string
+          bookmaker?: string | null
+          cashout_amount?: number | null
+          commission?: number | null
+          created_at?: string
+          date?: string
+          event?: string
+          exchange_type?: string | null
+          id?: string
+          liability?: number | null
+          multiple_title?: string | null
+          notes?: string | null
+          odds?: number
+          payout?: number | null
+          profit?: number | null
+          selection?: string | null
+          sport?: string | null
+          stake?: number
+          status?: string
+          system_type?: string | null
+          timing?: string | null
+          tipster?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           bankroll: number | null

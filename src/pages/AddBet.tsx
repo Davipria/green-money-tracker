@@ -8,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Trash2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface SingleBet {
   id: string;
@@ -19,8 +21,10 @@ interface SingleBet {
 
 const AddBet = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [betType, setBetType] = useState<'single' | 'multiple' | 'system' | 'exchange'>('single');
   const [exchangeType, setExchangeType] = useState<'back' | 'lay'>('back');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [formData, setFormData] = useState({
     // Campi comuni
@@ -52,7 +56,7 @@ const AddBet = () => {
     { id: '1', sport: '', event: '', odds: '', selection: '' }
   ]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validazione base
@@ -94,40 +98,137 @@ const AddBet = () => {
       return;
     }
 
-    const betData = {
-      ...formData,
-      betType,
-      exchangeType: betType === 'exchange' ? exchangeType : undefined,
-      bets: betType === 'multiple' || betType === 'system' ? multipleBets : undefined
-    };
+    setIsSubmitting(true);
 
-    console.log("Nuova scommessa:", betData);
-    
-    toast({
-      title: "Scommessa aggiunta!",
-      description: "La tua scommessa è stata salvata con successo"
-    });
+    try {
+      // Calcola payout e profit in base allo stato
+      let payout = null;
+      let profit = null;
+      
+      if (formData.status === 'won') {
+        payout = parseFloat(formData.odds) * parseFloat(formData.stake);
+        profit = payout - parseFloat(formData.stake);
+      } else if (formData.status === 'lost') {
+        profit = -parseFloat(formData.stake);
+      } else if (formData.status === 'cashout' && formData.cashoutAmount) {
+        payout = parseFloat(formData.cashoutAmount);
+        profit = payout - parseFloat(formData.stake);
+      }
 
-    // Reset form
-    setFormData({
-      date: new Date().toISOString().split('T')[0],
-      bookmaker: "",
-      tipster: "",
-      timing: "prematch",
-      stake: "",
-      notes: "",
-      status: "pending",
-      cashoutAmount: "",
-      sport: "",
-      event: "",
-      odds: "",
-      selection: "",
-      multipleTitle: "",
-      systemType: "",
-      liability: "",
-      commission: ""
-    });
-    setMultipleBets([{ id: '1', sport: '', event: '', odds: '', selection: '' }]);
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) {
+        toast({
+          title: "Errore",
+          description: "Devi essere autenticato per salvare una scommessa",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Prepara i dati per il database
+      const betData = {
+        user_id: user.user.id,
+        date: formData.date,
+        sport: betType === 'single' ? formData.sport : null,
+        event: betType === 'single' ? formData.event : formData.multipleTitle,
+        bet_type: betType,
+        odds: parseFloat(formData.odds),
+        stake: parseFloat(formData.stake),
+        status: formData.status,
+        payout,
+        profit,
+        cashout_amount: formData.status === 'cashout' ? parseFloat(formData.cashoutAmount) : null,
+        notes: formData.notes || null,
+        bookmaker: formData.bookmaker,
+        tipster: formData.tipster || null,
+        timing: formData.timing,
+        selection: betType === 'single' ? formData.selection : null,
+        multiple_title: (betType === 'multiple' || betType === 'system') ? formData.multipleTitle : null,
+        system_type: betType === 'system' ? formData.systemType : null,
+        liability: betType === 'exchange' && exchangeType === 'lay' ? parseFloat(formData.liability) : null,
+        commission: betType === 'exchange' ? parseFloat(formData.commission) : null,
+        exchange_type: betType === 'exchange' ? exchangeType : null
+      };
+
+      // Inserisci la scommessa principale
+      const { data: bet, error } = await supabase
+        .from('bets')
+        .insert(betData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Errore durante il salvataggio:', error);
+        toast({
+          title: "Errore",
+          description: "Errore durante il salvataggio della scommessa",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Se è una multipla o sistema, salva le selezioni
+      if ((betType === 'multiple' || betType === 'system') && bet) {
+        const selections = multipleBets
+          .filter(b => b.sport && b.event && b.odds)
+          .map(b => ({
+            bet_id: bet.id,
+            sport: b.sport,
+            event: b.event,
+            odds: parseFloat(b.odds),
+            selection: b.selection || null
+          }));
+
+        if (selections.length > 0) {
+          const { error: selectionsError } = await supabase
+            .from('bet_selections')
+            .insert(selections);
+
+          if (selectionsError) {
+            console.error('Errore durante il salvataggio delle selezioni:', selectionsError);
+          }
+        }
+      }
+
+      toast({
+        title: "Scommessa salvata!",
+        description: "La tua scommessa è stata salvata con successo"
+      });
+
+      // Reset form
+      setFormData({
+        date: new Date().toISOString().split('T')[0],
+        bookmaker: "",
+        tipster: "",
+        timing: "prematch",
+        stake: "",
+        notes: "",
+        status: "pending",
+        cashoutAmount: "",
+        sport: "",
+        event: "",
+        odds: "",
+        selection: "",
+        multipleTitle: "",
+        systemType: "",
+        liability: "",
+        commission: ""
+      });
+      setMultipleBets([{ id: '1', sport: '', event: '', odds: '', selection: '' }]);
+
+      // Reindirizza all'archivio
+      navigate('/archive');
+
+    } catch (error) {
+      console.error('Errore imprevisto:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore imprevisto",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleInputChange = (field: string, value: string | boolean) => {
@@ -612,8 +713,8 @@ const AddBet = () => {
               </div>
             )}
 
-            <Button type="submit" className="w-full">
-              Salva Scommessa
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? "Salvataggio..." : "Salva Scommessa"}
             </Button>
           </form>
         </CardContent>

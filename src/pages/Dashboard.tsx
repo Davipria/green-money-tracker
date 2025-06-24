@@ -1,15 +1,87 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockBets } from "@/data/mockBets";
-import { calculateProfit, formatCurrency } from "@/utils/betUtils";
+import { formatCurrency } from "@/utils/betUtils";
 import { TrendingUp, TrendingDown, Target, Trophy } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+interface Bet {
+  id: string;
+  date: string;
+  sport: string;
+  event: string;
+  bet_type: string;
+  odds: number;
+  stake: number;
+  status: 'pending' | 'won' | 'lost' | 'cashout';
+  payout?: number;
+  profit?: number;
+  created_at: string;
+}
 
 const Dashboard = () => {
-  const totalProfit = mockBets.reduce((sum, bet) => sum + calculateProfit(bet), 0);
-  const totalStake = mockBets.reduce((sum, bet) => sum + bet.stake, 0);
-  const wonBets = mockBets.filter(bet => bet.status === 'won').length;
-  const winRate = mockBets.length > 0 ? (wonBets / mockBets.length) * 100 : 0;
+  const [bets, setBets] = useState<Bet[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchBets = async () => {
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        if (!user.user) {
+          setLoading(false);
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from('bets')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Errore caricamento scommesse:', error);
+          toast({
+            title: "Errore",
+            description: "Impossibile caricare le scommesse",
+            variant: "destructive"
+          });
+        } else {
+          setBets(data || []);
+        }
+      } catch (error) {
+        console.error('Errore imprevisto:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBets();
+  }, [toast]);
+
+  const totalProfit = bets.reduce((sum, bet) => sum + (bet.profit || 0), 0);
+  const totalStake = bets.reduce((sum, bet) => sum + bet.stake, 0);
+  const wonBets = bets.filter(bet => bet.status === 'won').length;
+  const winRate = bets.length > 0 ? (wonBets / bets.length) * 100 : 0;
   const roi = totalStake > 0 ? (totalProfit / totalStake) * 100 : 0;
+
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  const thisMonthBets = bets.filter(bet => {
+    const betDate = new Date(bet.date);
+    return betDate.getMonth() === currentMonth && betDate.getFullYear() === currentYear;
+  });
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
+          <p className="text-muted-foreground">Caricamento...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -48,7 +120,7 @@ const Dashboard = () => {
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(totalStake)}</div>
             <p className="text-xs text-muted-foreground">
-              {mockBets.length} scommesse
+              {bets.length} scommesse
             </p>
           </CardContent>
         </Card>
@@ -61,7 +133,7 @@ const Dashboard = () => {
           <CardContent>
             <div className="text-2xl font-bold">{winRate.toFixed(1)}%</div>
             <p className="text-xs text-muted-foreground">
-              {wonBets} su {mockBets.length} scommesse
+              {wonBets} su {bets.length} scommesse
             </p>
           </CardContent>
         </Card>
@@ -72,16 +144,9 @@ const Dashboard = () => {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {mockBets.filter(bet => {
-                const betDate = new Date(bet.date);
-                const now = new Date();
-                return betDate.getMonth() === now.getMonth() && 
-                       betDate.getFullYear() === now.getFullYear();
-              }).length}
-            </div>
+            <div className="text-2xl font-bold">{thisMonthBets.length}</div>
             <p className="text-xs text-muted-foreground">
-              Giugno 2024
+              {new Date().toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}
             </p>
           </CardContent>
         </Card>
@@ -92,27 +157,37 @@ const Dashboard = () => {
           <CardTitle>Ultime Scommesse</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {mockBets.slice(0, 5).map((bet) => (
-              <div key={bet.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex-1">
-                  <div className="font-medium">{bet.event}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {bet.sport} • {new Date(bet.date).toLocaleDateString('it-IT')}
+          {bets.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>Non hai ancora aggiunto scommesse.</p>
+              <p className="text-sm mt-2">Vai alla sezione "Nuova Scommessa" per iniziare.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {bets.slice(0, 5).map((bet) => (
+                <div key={bet.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex-1">
+                    <div className="font-medium">{bet.event}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {bet.sport || bet.bet_type} • {new Date(bet.date).toLocaleDateString('it-IT')}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-medium">{formatCurrency(bet.stake)}</div>
+                    <div className={`text-sm ${
+                      bet.status === 'won' ? 'text-green-600' : 
+                      bet.status === 'lost' ? 'text-red-600' : 
+                      bet.status === 'cashout' ? 'text-blue-600' : 'text-yellow-600'
+                    }`}>
+                      {bet.status === 'won' ? 'Vinta' : 
+                       bet.status === 'lost' ? 'Persa' : 
+                       bet.status === 'cashout' ? 'Cashout' : 'In attesa'}
+                    </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="font-medium">{formatCurrency(bet.stake)}</div>
-                  <div className={`text-sm ${
-                    bet.status === 'won' ? 'text-green-600' : 
-                    bet.status === 'lost' ? 'text-red-600' : 'text-yellow-600'
-                  }`}>
-                    {bet.status === 'won' ? 'Vinta' : bet.status === 'lost' ? 'Persa' : 'In attesa'}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
