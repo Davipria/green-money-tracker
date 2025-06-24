@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/utils/betUtils";
 import { TrendingUp, TrendingDown, Target, Trophy, Calendar, Zap } from "lucide-react";
@@ -6,26 +5,28 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Bet } from "@/types/bet";
-
 const Dashboard = () => {
   const [bets, setBets] = useState<Bet[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   useEffect(() => {
     const fetchBets = async () => {
       try {
-        const { data: user } = await supabase.auth.getUser();
+        const {
+          data: user
+        } = await supabase.auth.getUser();
         if (!user.user) {
           setLoading(false);
           return;
         }
-
-        const { data, error } = await supabase
-          .from('bets')
-          .select('*')
-          .order('created_at', { ascending: false });
-
+        const {
+          data,
+          error
+        } = await supabase.from('bets').select('*').order('created_at', {
+          ascending: false
+        });
         if (error) {
           console.error('Errore caricamento scommesse:', error);
           toast({
@@ -42,26 +43,21 @@ const Dashboard = () => {
         setLoading(false);
       }
     };
-
     fetchBets();
   }, [toast]);
-
   const totalProfit = bets.reduce((sum, bet) => sum + (bet.profit || 0), 0);
   const totalStake = bets.reduce((sum, bet) => sum + bet.stake, 0);
   const wonBets = bets.filter(bet => bet.status === 'won').length;
-  const winRate = bets.length > 0 ? (wonBets / bets.length) * 100 : 0;
-  const roi = totalStake > 0 ? (totalProfit / totalStake) * 100 : 0;
-
+  const winRate = bets.length > 0 ? wonBets / bets.length * 100 : 0;
+  const roi = totalStake > 0 ? totalProfit / totalStake * 100 : 0;
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
   const thisMonthBets = bets.filter(bet => {
     const betDate = new Date(bet.date);
     return betDate.getMonth() === currentMonth && betDate.getFullYear() === currentYear;
   });
-
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
+    return <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse space-y-6">
             <div className="text-center">
@@ -70,18 +66,13 @@ const Dashboard = () => {
               <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-32 bg-gray-200 rounded-xl"></div>
-              ))}
+              {[1, 2, 3, 4].map(i => <div key={i} className="h-32 bg-gray-200 rounded-xl"></div>)}
             </div>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
+  return <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header Section */}
         <div className="text-center mb-8">
@@ -156,7 +147,9 @@ const Dashboard = () => {
                   <p className="text-orange-100 text-sm font-medium mb-1">Questo Mese</p>
                   <p className="text-3xl font-bold">{thisMonthBets.length}</p>
                   <p className="text-orange-100 text-xs mt-1">
-                    {new Date().toLocaleDateString('it-IT', { month: 'long' })}
+                    {new Date().toLocaleDateString('it-IT', {
+                    month: 'long'
+                  })}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
@@ -178,18 +171,14 @@ const Dashboard = () => {
             </div>
           </CardHeader>
           <CardContent>
-            {bets.length === 0 ? (
-              <div className="text-center py-12">
+            {bets.length === 0 ? <div className="text-center py-12">
                 <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl flex items-center justify-center">
                   <Target className="w-8 h-8 text-gray-500" />
                 </div>
                 <p className="text-gray-500 text-lg font-medium mb-2">Non hai ancora aggiunto scommesse</p>
                 <p className="text-gray-400">Vai alla sezione "Nuova Scommessa" per iniziare.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {bets.slice(0, 5).map((bet) => (
-                  <div key={bet.id} className="group">
+              </div> : <div className="space-y-4">
+                {bets.slice(0, 5).map(bet => <div key={bet.id} className="group">
                     <div className="flex items-center justify-between p-6 bg-gradient-to-r from-gray-50 to-white border border-gray-100 rounded-xl hover:shadow-lg transition-all duration-300 group-hover:border-blue-200">
                       <div className="flex-1">
                         <div className="font-semibold text-gray-900 text-lg mb-1">{bet.event}</div>
@@ -206,26 +195,16 @@ const Dashboard = () => {
                       </div>
                       <div className="text-right">
                         <div className="font-semibold text-gray-900 text-lg mb-1">{formatCurrency(bet.stake)}</div>
-                        <div className={`text-sm font-medium px-3 py-1 rounded-full ${
-                          bet.status === 'won' ? 'text-emerald-700 bg-emerald-100' : 
-                          bet.status === 'lost' ? 'text-red-700 bg-red-100' : 
-                          bet.status === 'cashout' ? 'text-blue-700 bg-blue-100' : 'text-yellow-700 bg-yellow-100'
-                        }`}>
-                          {bet.status === 'won' ? 'Vinta' : 
-                           bet.status === 'lost' ? 'Persa' : 
-                           bet.status === 'cashout' ? 'Cashout' : 'In attesa'}
+                        <div className="">
+                          {bet.status === 'won' ? 'Vinta' : bet.status === 'lost' ? 'Persa' : bet.status === 'cashout' ? 'Cashout' : 'In attesa'}
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  </div>)}
+              </div>}
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Dashboard;
