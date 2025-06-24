@@ -103,14 +103,14 @@ const ExportBetsDialog = ({ trigger }: ExportBetsDialogProps) => {
         'Evento': bet.event,
         'Selezione': bet.selection || '',
         'Quota': bet.odds,
-        'Puntata': bet.stake,
-        'Stake': bet.stake, // Duplicated as requested
+        'Puntata': `€${bet.stake.toFixed(2)}`,
+        'Stake': `${bet.stake}%`,
         'Stato Scommessa': bet.status === 'won' ? 'Vinta' : 
                           bet.status === 'lost' ? 'Persa' : 
                           bet.status === 'cashout' ? 'Cashout' : 'In attesa',
-        'Guadagno': bet.status === 'won' && bet.payout ? bet.payout - bet.stake :
-                   bet.status === 'lost' ? -bet.stake :
-                   bet.status === 'cashout' && bet.cashout_amount ? bet.cashout_amount - bet.stake : '',
+        'Guadagno': bet.status === 'won' && bet.payout ? `€${(bet.payout - bet.stake).toFixed(2)}` :
+                   bet.status === 'lost' ? `€${(-bet.stake).toFixed(2)}` :
+                   bet.status === 'cashout' && bet.cashout_amount ? `€${(bet.cashout_amount - bet.stake).toFixed(2)}` : '',
       }));
 
       // Crea il workbook
