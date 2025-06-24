@@ -39,7 +39,7 @@ const Auth = () => {
             title: "Accesso effettuato!",
             description: "Benvenuto in BetTracker Pro",
           });
-          navigate('/');
+          navigate('/app');
         }
       } else {
         const { error } = await signUp(email, password, firstName, lastName);
