@@ -124,25 +124,25 @@ const Analysis = () => {
       return acc;
     }, [] as Array<{date: string, profit: number, bankroll: number, betNumber: number}>);
 
-  // Create daily performance data for ROI chart
-  const dailyPerformanceData = filteredBets
+  // Create monthly performance data for ROI chart
+  const monthlyPerformanceData = filteredBets
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .reduce((acc, bet) => {
-      const betDate = new Date(bet.date).toLocaleDateString('it-IT', { 
-        day: '2-digit', 
-        month: '2-digit' 
-      });
+      const date = new Date(bet.date);
+      const key = `${date.getFullYear()}-${date.getMonth()}`;
+      const displayName = date.toLocaleDateString('it-IT', { month: 'short', year: '2-digit' });
       
-      const existingDay = acc.find(item => item.date === betDate);
+      const existingMonth = acc.find(item => item.monthKey === key);
       const currentProfit = bet.profit || 0;
       
-      if (existingDay) {
-        existingDay.profit += currentProfit;
-        existingDay.totalStake += bet.stake;
-        existingDay.roi = calculateROI(existingDay.profit, existingDay.totalStake);
+      if (existingMonth) {
+        existingMonth.profit += currentProfit;
+        existingMonth.totalStake += bet.stake;
+        existingMonth.roi = calculateROI(existingMonth.profit, existingMonth.totalStake);
       } else {
         acc.push({
-          date: betDate,
+          monthKey: key,
+          month: displayName,
           profit: currentProfit,
           totalStake: bet.stake,
           roi: calculateROI(currentProfit, bet.stake)
@@ -150,7 +150,7 @@ const Analysis = () => {
       }
       
       return acc;
-    }, [] as Array<{date: string, profit: number, totalStake: number, roi: number}>);
+    }, [] as Array<{monthKey: string, month: string, profit: number, totalStake: number, roi: number}>);
 
   // Check if we should show Performance (ROI) chart
   const shouldShowPerformanceChart = () => {
@@ -454,9 +454,9 @@ const Analysis = () => {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={dailyPerformanceData}>
+                  <LineChart data={monthlyPerformanceData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
+                    <XAxis dataKey="month" />
                     <YAxis />
                     <Tooltip 
                       formatter={(value: number, name: string) => [
