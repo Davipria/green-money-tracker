@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Bet } from "@/types/bet";
+import { Link } from "react-router-dom";
 
 const Dashboard = () => {
   const [bets, setBets] = useState<Bet[]>([]);
@@ -167,12 +168,14 @@ const Dashboard = () => {
         {/* Recent Bets */}
         <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
           <CardHeader className="pb-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <Zap className="w-4 h-4 text-white" />
+            <Link to="/app/archive" className="block hover:opacity-80 transition-opacity">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                  <Zap className="w-4 h-4 text-white" />
+                </div>
+                <CardTitle className="text-xl">Ultime Scommesse</CardTitle>
               </div>
-              <CardTitle className="text-xl">Ultime Scommesse</CardTitle>
-            </div>
+            </Link>
           </CardHeader>
           <CardContent>
             {bets.length === 0 ? (
