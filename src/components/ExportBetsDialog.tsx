@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { format } from "date-fns";
 import { Calendar, Download, CalendarIcon } from "lucide-react";
@@ -93,7 +94,7 @@ const ExportBetsDialog = ({ trigger }: ExportBetsDialogProps) => {
         return;
       }
 
-      // Prepara i dati per Excel senza la colonna Stake
+      // Prepara i dati per Excel senza simboli dell'euro
       const excelData = (bets as Bet[]).map(bet => ({
         'Data': new Date(bet.date).toLocaleDateString('it-IT'),
         'Bookmaker': bet.bookmaker || '',
@@ -102,13 +103,13 @@ const ExportBetsDialog = ({ trigger }: ExportBetsDialogProps) => {
         'Evento': bet.event,
         'Selezione': bet.selection || '',
         'Quota': bet.odds,
-        'Puntata': `€${bet.stake}`,
+        'Puntata': bet.stake,
         'Stato Scommessa': bet.status === 'won' ? 'Vinta' : 
                           bet.status === 'lost' ? 'Persa' : 
                           bet.status === 'cashout' ? 'Cashout' : 'In attesa',
-        'Guadagno': bet.status === 'won' && bet.payout ? `€${(bet.payout - bet.stake).toFixed(2)}` :
-                   bet.status === 'lost' ? `€${(-bet.stake).toFixed(2)}` :
-                   bet.status === 'cashout' && bet.cashout_amount ? `€${(bet.cashout_amount - bet.stake).toFixed(2)}` : '',
+        'Guadagno': bet.status === 'won' && bet.payout ? (bet.payout - bet.stake).toFixed(2) :
+                   bet.status === 'lost' ? (-bet.stake).toFixed(2) :
+                   bet.status === 'cashout' && bet.cashout_amount ? (bet.cashout_amount - bet.stake).toFixed(2) : '',
       }));
 
       // Crea il workbook
@@ -116,7 +117,7 @@ const ExportBetsDialog = ({ trigger }: ExportBetsDialogProps) => {
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Scommesse');
 
-      // Imposta larghezza colonne senza la colonna Stake
+      // Imposta larghezza colonne
       const columnWidths = [
         { wch: 12 }, // Data
         { wch: 15 }, // Bookmaker
@@ -130,6 +131,16 @@ const ExportBetsDialog = ({ trigger }: ExportBetsDialogProps) => {
         { wch: 12 }, // Guadagno
       ];
       worksheet['!cols'] = columnWidths;
+
+      // Applica formattazione grassetto alla prima riga (intestazioni)
+      const headerCells = ['A1', 'B1', 'C1', 'D1', 'E1', 'F1', 'G1', 'H1', 'I1', 'J1'];
+      headerCells.forEach(cell => {
+        if (worksheet[cell]) {
+          worksheet[cell].s = {
+            font: { bold: true }
+          };
+        }
+      });
 
       // Genera e scarica il file
       const fileName = `scommesse_${format(startDate, 'dd-MM-yyyy')}_${format(endDate, 'dd-MM-yyyy')}.xlsx`;
