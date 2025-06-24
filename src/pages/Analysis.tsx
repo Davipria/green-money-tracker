@@ -59,7 +59,7 @@ const Analysis = () => {
                 />
                 <Bar 
                   dataKey="profit" 
-                  fill={(entry) => entry >= 0 ? '#22c55e' : '#ef4444'}
+                  fill="#3b82f6"
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>
