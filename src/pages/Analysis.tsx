@@ -1,13 +1,12 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { formatCurrency, calculateROI, groupBetsByMonthWithROI } from "@/utils/betUtils";
+import { formatCurrency, calculateROI, groupBetsByMonthWithROI, calculateAverageOdds, calculateAverageStake, calculateProfitVolatility } from "@/utils/betUtils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Bet } from "@/types/bet";
-import { TrendingUp, Calendar, Target, BarChart3, PieChart as PieChartIcon, TrendingDown, Percent } from "lucide-react";
+import { TrendingUp, Calendar, Target, BarChart3, PieChart as PieChartIcon, TrendingDown, Percent, Activity, DollarSign, TrendingUpDown } from "lucide-react";
 
 type TimeFilter = 'all' | 'year' | 'month';
 
@@ -191,6 +190,9 @@ const Analysis = () => {
   const totalBets = filteredBets.length;
   const winRate = totalBets > 0 ? ((filteredBets.filter(bet => bet.status === 'won').length / totalBets) * 100).toFixed(1) : '0';
   const overallROI = calculateROI(totalProfit, totalStake);
+  const averageOdds = calculateAverageOdds(filteredBets);
+  const averageStake = calculateAverageStake(filteredBets);
+  const profitVolatility = calculateProfitVolatility(filteredBets);
 
   if (bets.length === 0) {
     return (
@@ -294,7 +296,7 @@ const Analysis = () => {
         </Card>
 
         {/* Stats Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card className="bg-gradient-to-br from-green-500 to-emerald-600 border-0 text-white shadow-xl">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -346,6 +348,48 @@ const Analysis = () => {
                 </div>
                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
                   <Percent className="w-6 h-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-cyan-500 to-blue-600 border-0 text-white shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-cyan-100 text-sm font-medium">Quote Medie</p>
+                  <p className="text-3xl font-bold">{averageOdds.toFixed(2)}</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Activity className="w-6 h-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-teal-500 to-green-600 border-0 text-white shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-teal-100 text-sm font-medium">Puntata Media</p>
+                  <p className="text-3xl font-bold">{formatCurrency(averageStake)}</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <DollarSign className="w-6 h-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-amber-500 to-orange-600 border-0 text-white shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-amber-100 text-sm font-medium">Volatilità Profitto</p>
+                  <p className="text-3xl font-bold">{formatCurrency(profitVolatility)}</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <TrendingUpDown className="w-6 h-6" />
                 </div>
               </div>
             </CardContent>

@@ -1,4 +1,3 @@
-
 import { Bet, MonthlyStats } from "@/types/bet";
 
 export const calculateProfit = (bet: Bet): number => {
@@ -15,6 +14,34 @@ export const calculateProfit = (bet: Bet): number => {
 export const calculateROI = (totalProfit: number, totalStake: number): number => {
   if (totalStake === 0) return 0;
   return (totalProfit / totalStake) * 100;
+};
+
+export const calculateAverageOdds = (bets: Bet[]): number => {
+  if (bets.length === 0) return 0;
+  const totalOdds = bets.reduce((sum, bet) => sum + bet.odds, 0);
+  return totalOdds / bets.length;
+};
+
+export const calculateAverageStake = (bets: Bet[]): number => {
+  if (bets.length === 0) return 0;
+  const totalStake = bets.reduce((sum, bet) => sum + bet.stake, 0);
+  return totalStake / bets.length;
+};
+
+export const calculateProfitVolatility = (bets: Bet[]): number => {
+  if (bets.length < 2) return 0;
+  
+  const profits = bets.map(bet => calculateProfit(bet));
+  const differences = [];
+  
+  for (let i = 1; i < profits.length; i++) {
+    differences.push(Math.abs(profits[i] - profits[i - 1]));
+  }
+  
+  if (differences.length === 0) return 0;
+  
+  const totalDifferences = differences.reduce((sum, diff) => sum + diff, 0);
+  return totalDifferences / differences.length;
 };
 
 export const groupBetsByMonth = (bets: Bet[]): MonthlyStats[] => {
