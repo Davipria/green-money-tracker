@@ -59,6 +59,7 @@ export type Database = {
           exchange_type: string | null
           id: string
           liability: number | null
+          manifestation: string | null
           multiple_title: string | null
           notes: string | null
           odds: number
@@ -85,6 +86,7 @@ export type Database = {
           exchange_type?: string | null
           id?: string
           liability?: number | null
+          manifestation?: string | null
           multiple_title?: string | null
           notes?: string | null
           odds: number
@@ -111,6 +113,7 @@ export type Database = {
           exchange_type?: string | null
           id?: string
           liability?: number | null
+          manifestation?: string | null
           multiple_title?: string | null
           notes?: string | null
           odds?: number

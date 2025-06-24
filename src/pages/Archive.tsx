@@ -2,13 +2,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/utils/betUtils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronRight, Edit } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Bet, MonthlyStats } from "@/types/bet";
 import EditBetDialog from "@/components/EditBetDialog";
-import { Button } from "@/components/ui/button";
 
 const Archive = () => {
   const [bets, setBets] = useState<Bet[]>([]);
@@ -52,8 +51,7 @@ const Archive = () => {
     fetchBets();
   }, [toast]);
 
-  const handleEditBet = (bet: Bet, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleEditBet = (bet: Bet) => {
     setSelectedBet(bet);
     setEditDialogOpen(true);
   };
@@ -202,66 +200,59 @@ const Archive = () => {
                     <CardContent className="pt-0">
                       <div className="space-y-3">
                         {monthBets.map((bet) => (
-                          <div key={bet.id} className="relative group">
-                            <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/30 transition-colors cursor-pointer"
-                                 onClick={() => handleEditBet(bet, {} as React.MouseEvent)}>
-                              <div className="flex-1">
-                                <div className="flex items-center space-x-3">
-                                  <div>
-                                    {bet.manifestation && (
-                                      <div className="text-xs text-muted-foreground font-medium mb-1">
-                                        {bet.manifestation}
-                                      </div>
-                                    )}
-                                    <div className="font-medium">{bet.event}</div>
-                                    <div className="text-sm text-muted-foreground">
-                                      {bet.sport || bet.bet_type} • Quote {bet.odds}
+                          <div 
+                            key={bet.id} 
+                            className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/30 transition-colors cursor-pointer"
+                            onClick={() => handleEditBet(bet)}
+                          >
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3">
+                                <div>
+                                  {bet.manifestation && (
+                                    <div className="text-xs text-muted-foreground font-medium mb-1">
+                                      {bet.manifestation}
                                     </div>
-                                    <div className="text-xs text-muted-foreground">
-                                      {new Date(bet.date).toLocaleDateString('it-IT')}
-                                    </div>
+                                  )}
+                                  <div className="font-medium">{bet.event}</div>
+                                  <div className="text-sm text-muted-foreground">
+                                    {bet.sport || bet.bet_type} • Quote {bet.odds}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {new Date(bet.date).toLocaleDateString('it-IT')}
                                   </div>
                                 </div>
                               </div>
-                              <div className="text-right space-y-1">
-                                <div className="font-medium">
-                                  Puntata: {formatCurrency(bet.stake)}
-                                </div>
-                                {bet.payout && (
-                                  <div className="text-sm text-muted-foreground">
-                                    Vincita: {formatCurrency(bet.payout)}
-                                  </div>
-                                )}
-                                {bet.status === 'cashout' && bet.cashout_amount && (
-                                  <div className="text-sm text-muted-foreground">
-                                    Cashout: {formatCurrency(bet.cashout_amount)}
-                                  </div>
-                                )}
-                                <div className="flex items-center space-x-2">
-                                  <Badge 
-                                    variant={bet.status === 'won' ? 'default' : bet.status === 'lost' ? 'destructive' : bet.status === 'cashout' ? 'secondary' : 'secondary'}
-                                    className={bet.status === 'won' ? 'bg-green-100 text-green-800' : ''}
-                                  >
-                                    {bet.status === 'won' ? 'Vinta' : 
-                                     bet.status === 'lost' ? 'Persa' : 
-                                     bet.status === 'cashout' ? 'Cashout' : 'In attesa'}
-                                  </Badge>
-                                  <span className={`font-bold ${
-                                    bet.profit && bet.profit > 0 ? 'text-green-600' : 
-                                    bet.profit && bet.profit < 0 ? 'text-red-600' : 'text-muted-foreground'
-                                  }`}>
-                                    {bet.profit ? formatCurrency(bet.profit) : 'N/A'}
-                                  </span>
-                                </div>
+                            </div>
+                            <div className="text-right space-y-1">
+                              <div className="font-medium">
+                                Puntata: {formatCurrency(bet.stake)}
                               </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={(e) => handleEditBet(bet, e)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
+                              {bet.payout && (
+                                <div className="text-sm text-muted-foreground">
+                                  Vincita: {formatCurrency(bet.payout)}
+                                </div>
+                              )}
+                              {bet.status === 'cashout' && bet.cashout_amount && (
+                                <div className="text-sm text-muted-foreground">
+                                  Cashout: {formatCurrency(bet.cashout_amount)}
+                                </div>
+                              )}
+                              <div className="flex items-center space-x-2">
+                                <Badge 
+                                  variant={bet.status === 'won' ? 'default' : bet.status === 'lost' ? 'destructive' : bet.status === 'cashout' ? 'secondary' : 'secondary'}
+                                  className={bet.status === 'won' ? 'bg-green-100 text-green-800' : ''}
+                                >
+                                  {bet.status === 'won' ? 'Vinta' : 
+                                   bet.status === 'lost' ? 'Persa' : 
+                                   bet.status === 'cashout' ? 'Cashout' : 'In attesa'}
+                                </Badge>
+                                <span className={`font-bold ${
+                                  bet.profit && bet.profit > 0 ? 'text-green-600' : 
+                                  bet.profit && bet.profit < 0 ? 'text-red-600' : 'text-muted-foreground'
+                                }`}>
+                                  {bet.profit ? formatCurrency(bet.profit) : 'N/A'}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         ))}
