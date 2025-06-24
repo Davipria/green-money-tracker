@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Button } from "@/components/ui/button";
@@ -104,25 +105,41 @@ const Analysis = () => {
   const averageOdds = calculateAverageOdds(filteredBets);
   const averageStake = calculateAverageStake(filteredBets);
 
-  // Create bankroll evolution data
-  const bankrollEvolutionData = filteredBets
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .reduce((acc, bet, index) => {
-      const previousBankroll = index > 0 ? acc[index - 1].bankroll : initialBankroll;
-      const currentProfit = bet.profit || 0;
-      const newBankroll = previousBankroll + currentProfit;
+  // Create bankroll evolution data - grouped by day
+  const bankrollEvolutionData = (() => {
+    // Group bets by date
+    const betsByDate = filteredBets
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .reduce((acc, bet) => {
+        const dateKey = bet.date; // YYYY-MM-DD format
+        if (!acc[dateKey]) {
+          acc[dateKey] = [];
+        }
+        acc[dateKey].push(bet);
+        return acc;
+      }, {} as Record<string, Bet[]>);
+
+    // Calculate final bankroll for each day
+    let runningBankroll = initialBankroll;
+    const dailyData: Array<{date: string, bankroll: number, dailyProfit: number}> = [];
+
+    Object.entries(betsByDate).forEach(([dateKey, dayBets]) => {
+      // Calculate total profit for this day
+      const dailyProfit = dayBets.reduce((sum, bet) => sum + (bet.profit || 0), 0);
+      runningBankroll += dailyProfit;
       
-      acc.push({
-        date: new Date(bet.date).toLocaleDateString('it-IT', { 
+      dailyData.push({
+        date: new Date(dateKey).toLocaleDateString('it-IT', { 
           day: '2-digit', 
           month: '2-digit' 
         }),
-        profit: currentProfit,
-        bankroll: newBankroll,
-        betNumber: index + 1
+        bankroll: runningBankroll,
+        dailyProfit: dailyProfit
       });
-      return acc;
-    }, [] as Array<{date: string, profit: number, bankroll: number, betNumber: number}>);
+    });
+
+    return dailyData;
+  })();
 
   // Create monthly performance data for ROI chart
   const monthlyPerformanceData = filteredBets
@@ -429,7 +446,7 @@ const Analysis = () => {
                   <Tooltip 
                     formatter={(value: number, name: string) => [
                       formatCurrency(value),
-                      name === 'bankroll' ? 'Bankroll' : 'Profitto'
+                      name === 'bankroll' ? 'Bankroll' : 'Profitto Giornaliero'
                     ]}
                     labelFormatter={(label) => `Data: ${label}`}
                   />
