@@ -372,30 +372,6 @@ const Analysis = () => {
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Monthly Performance Chart */}
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-            <CardHeader>
-              <CardTitle className="text-xl">Performance Mensile</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip 
-                    formatter={(value: number, name: string) => [
-                      name === 'roi' ? `${value.toFixed(1)}%` : formatCurrency(value),
-                      name === 'roi' ? 'ROI' : 'Profitto'
-                    ]}
-                  />
-                  <Bar dataKey="profit" fill="#8884d8" name="profit" />
-                  <Line type="monotone" dataKey="roi" stroke="#82ca9d" name="roi" />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
           {/* Bankroll Evolution Chart */}
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
             <CardHeader>
@@ -421,6 +397,30 @@ const Analysis = () => {
                     strokeWidth={3}
                     name="bankroll"
                   />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Performance (ROI) Chart */}
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+            <CardHeader>
+              <CardTitle className="text-xl">Performance (ROI)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip 
+                    formatter={(value: number, name: string) => [
+                      name === 'roi' ? `${value.toFixed(1)}%` : formatCurrency(value),
+                      name === 'roi' ? 'ROI' : 'Profitto'
+                    ]}
+                  />
+                  <Bar dataKey="profit" fill="#8884d8" name="profit" />
+                  <Line type="monotone" dataKey="roi" stroke="#82ca9d" name="roi" />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
