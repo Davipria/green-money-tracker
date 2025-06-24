@@ -1,5 +1,5 @@
 
-import { Archive, BarChart3, Plus, User, TrendingUp } from "lucide-react"
+import { Archive, BarChart3, Plus, User, Home } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -14,9 +14,9 @@ import { Link, useLocation } from "react-router-dom"
 
 const menuItems = [
   {
-    title: "Dashboard",
+    title: "Home",
     url: "/app",
-    icon: TrendingUp,
+    icon: Home,
   },
   {
     title: "Archivio",
