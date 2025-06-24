@@ -15,7 +15,6 @@ interface SingleBet {
   id: string;
   sport: string;
   event: string;
-  market: string;
   odds: string;
   selection: string;
 }
@@ -34,11 +33,11 @@ const AddBet = () => {
     stake: "",
     notes: "",
     cashout: false,
+    status: "pending" as 'pending' | 'won' | 'lost',
     
     // Scommessa singola
     sport: "",
     event: "",
-    market: "",
     odds: "",
     selection: "",
     
@@ -52,7 +51,7 @@ const AddBet = () => {
   });
 
   const [multipleBets, setMultipleBets] = useState<SingleBet[]>([
-    { id: '1', sport: '', event: '', market: '', odds: '', selection: '' }
+    { id: '1', sport: '', event: '', odds: '', selection: '' }
   ]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -110,9 +109,9 @@ const AddBet = () => {
       stake: "",
       notes: "",
       cashout: false,
+      status: "pending",
       sport: "",
       event: "",
-      market: "",
       odds: "",
       selection: "",
       multipleTitle: "",
@@ -120,7 +119,7 @@ const AddBet = () => {
       liability: "",
       commission: ""
     });
-    setMultipleBets([{ id: '1', sport: '', event: '', market: '', odds: '', selection: '' }]);
+    setMultipleBets([{ id: '1', sport: '', event: '', odds: '', selection: '' }]);
   };
 
   const handleInputChange = (field: string, value: string | boolean) => {
@@ -132,7 +131,7 @@ const AddBet = () => {
 
   const addBetToMultiple = () => {
     const newId = (multipleBets.length + 1).toString();
-    setMultipleBets([...multipleBets, { id: newId, sport: '', event: '', market: '', odds: '', selection: '' }]);
+    setMultipleBets([...multipleBets, { id: newId, sport: '', event: '', odds: '', selection: '' }]);
   };
 
   const removeBetFromMultiple = (id: string) => {
@@ -258,7 +257,7 @@ const AddBet = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-3">
                 <Label className="text-base font-semibold">Timing</Label>
                 <RadioGroup value={formData.timing} onValueChange={(value: 'prematch' | 'live') => handleInputChange("timing", value)}>
@@ -283,6 +282,20 @@ const AddBet = () => {
                   value={formData.stake}
                   onChange={(e) => handleInputChange("stake", e.target.value)}
                 />
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-base font-semibold">Stato Scommessa</Label>
+                <Select value={formData.status} onValueChange={(value: 'pending' | 'won' | 'lost') => handleInputChange("status", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona stato" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">In Attesa</SelectItem>
+                    <SelectItem value="won">Vinta</SelectItem>
+                    <SelectItem value="lost">Persa</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -321,21 +334,15 @@ const AddBet = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="market">Mercato</Label>
-                    <Select value={formData.market} onValueChange={(value) => handleInputChange("market", value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleziona mercato" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1x2">1X2</SelectItem>
-                        <SelectItem value="over-under">Over/Under</SelectItem>
-                        <SelectItem value="handicap">Handicap</SelectItem>
-                        <SelectItem value="vincente">Vincente</SelectItem>
-                        <SelectItem value="doppia-chance">Doppia Chance</SelectItem>
-                        <SelectItem value="goal">Goal/No Goal</SelectItem>
-                        <SelectItem value="combo">Combo</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Label htmlFor="odds">Quote *</Label>
+                    <Input
+                      id="odds"
+                      type="number"
+                      step="0.01"
+                      placeholder="Es. 2.50"
+                      value={formData.odds}
+                      onChange={(e) => handleInputChange("odds", e.target.value)}
+                    />
                   </div>
                 </div>
 
@@ -349,28 +356,14 @@ const AddBet = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="selection">Selezione</Label>
-                    <Input
-                      id="selection"
-                      placeholder="Es. 1, Over 2.5, ecc."
-                      value={formData.selection}
-                      onChange={(e) => handleInputChange("selection", e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="odds">Quote *</Label>
-                    <Input
-                      id="odds"
-                      type="number"
-                      step="0.01"
-                      placeholder="Es. 2.50"
-                      value={formData.odds}
-                      onChange={(e) => handleInputChange("odds", e.target.value)}
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="selection">Selezione</Label>
+                  <Input
+                    id="selection"
+                    placeholder="Es. 1, Over 2.5, ecc."
+                    value={formData.selection}
+                    onChange={(e) => handleInputChange("selection", e.target.value)}
+                  />
                 </div>
               </div>
             )}
@@ -455,19 +448,14 @@ const AddBet = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label>Mercato</Label>
-                            <Select value={bet.market} onValueChange={(value) => updateMultipleBet(bet.id, "market", value)}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Seleziona mercato" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="1x2">1X2</SelectItem>
-                                <SelectItem value="over-under">Over/Under</SelectItem>
-                                <SelectItem value="handicap">Handicap</SelectItem>
-                                <SelectItem value="vincente">Vincente</SelectItem>
-                                <SelectItem value="altro">Altro</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <Label>Quote</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              placeholder="Es. 2.50"
+                              value={bet.odds}
+                              onChange={(e) => updateMultipleBet(bet.id, "odds", e.target.value)}
+                            />
                           </div>
                         </div>
 
@@ -480,26 +468,13 @@ const AddBet = () => {
                           />
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>Selezione</Label>
-                            <Input
-                              placeholder="Es. 1, Over 2.5"
-                              value={bet.selection}
-                              onChange={(e) => updateMultipleBet(bet.id, "selection", e.target.value)}
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label>Quote</Label>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              placeholder="Es. 2.50"
-                              value={bet.odds}
-                              onChange={(e) => updateMultipleBet(bet.id, "odds", e.target.value)}
-                            />
-                          </div>
+                        <div className="space-y-2">
+                          <Label>Selezione</Label>
+                          <Input
+                            placeholder="Es. 1, Over 2.5"
+                            value={bet.selection}
+                            onChange={(e) => updateMultipleBet(bet.id, "selection", e.target.value)}
+                          />
                         </div>
                       </CardContent>
                     </Card>
