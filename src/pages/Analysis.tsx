@@ -1,15 +1,18 @@
-
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { formatCurrency, calculateROI, groupBetsByMonthWithROI, calculateAverageOdds, calculateAverageStake } from "@/utils/betUtils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Bet } from "@/types/bet";
-import { TrendingUp, DollarSign, Percent, Target, Activity, BarChart3 } from "lucide-react";
+import { TrendingUp, DollarSign, Percent, Target, Activity, BarChart3, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
@@ -19,6 +22,10 @@ const Analysis = () => {
   const [timeFilter, setTimeFilter] = useState("all");
   const [selectedYear, setSelectedYear] = useState<string>("all");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  const [customDateRange, setCustomDateRange] = useState<{from: Date | undefined, to: Date | undefined}>({
+    from: undefined,
+    to: undefined
+  });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -58,6 +65,13 @@ const Analysis = () => {
   const now = new Date();
   const filteredBets = bets.filter(bet => {
     const betDate = new Date(bet.date);
+    
+    // Custom date range filter
+    if (timeFilter === "custom") {
+      if (customDateRange.from && betDate < customDateRange.from) return false;
+      if (customDateRange.to && betDate > customDateRange.to) return false;
+      return true;
+    }
     
     // Year filter
     if (selectedYear !== "all" && betDate.getFullYear() !== parseInt(selectedYear)) {
@@ -214,45 +228,109 @@ const Analysis = () => {
               <ToggleGroupItem value="week" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
                 Questa settimana
               </ToggleGroupItem>
+              <ToggleGroupItem value="custom" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
+                Scegli
+              </ToggleGroupItem>
             </ToggleGroup>
           </div>
 
-          {/* Year and Month Selectors */}
-          <div className="flex justify-center gap-4">
-            <div className="flex flex-col items-center gap-2">
-              <label className="text-sm font-medium text-gray-600">Anno</label>
-              <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger className="w-32 bg-white/80 backdrop-blur-sm">
-                  <SelectValue placeholder="Anno" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tutti</SelectItem>
-                  {availableYears.map(year => (
-                    <SelectItem key={year} value={year.toString()}>
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Custom Date Range Picker */}
+          {timeFilter === "custom" && (
+            <div className="flex justify-center gap-4">
+              <div className="flex flex-col items-center gap-2">
+                <label className="text-sm font-medium text-gray-600">Data Inizio</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-48 justify-start text-left font-normal bg-white/80 backdrop-blur-sm",
+                        !customDateRange.from && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {customDateRange.from ? format(customDateRange.from, "dd/MM/yyyy") : "Seleziona data"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={customDateRange.from}
+                      onSelect={(date) => setCustomDateRange(prev => ({ ...prev, from: date }))}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
 
-            <div className="flex flex-col items-center gap-2">
-              <label className="text-sm font-medium text-gray-600">Mese</label>
-              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-40 bg-white/80 backdrop-blur-sm">
-                  <SelectValue placeholder="Mese" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tutti</SelectItem>
-                  {availableMonths.map(month => (
-                    <SelectItem key={month} value={month.toString()}>
-                      {monthNames[month]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex flex-col items-center gap-2">
+                <label className="text-sm font-medium text-gray-600">Data Fine</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-48 justify-start text-left font-normal bg-white/80 backdrop-blur-sm",
+                        !customDateRange.to && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {customDateRange.to ? format(customDateRange.to, "dd/MM/yyyy") : "Seleziona data"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={customDateRange.to}
+                      onSelect={(date) => setCustomDateRange(prev => ({ ...prev, to: date }))}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Year and Month Selectors - only show when not in custom mode */}
+          {timeFilter !== "custom" && (
+            <div className="flex justify-center gap-4">
+              <div className="flex flex-col items-center gap-2">
+                <label className="text-sm font-medium text-gray-600">Anno</label>
+                <Select value={selectedYear} onValueChange={setSelectedYear}>
+                  <SelectTrigger className="w-32 bg-white/80 backdrop-blur-sm">
+                    <SelectValue placeholder="Anno" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tutti</SelectItem>
+                    {availableYears.map(year => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col items-center gap-2">
+                <label className="text-sm font-medium text-gray-600">Mese</label>
+                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                  <SelectTrigger className="w-40 bg-white/80 backdrop-blur-sm">
+                    <SelectValue placeholder="Mese" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tutti</SelectItem>
+                    {availableMonths.map(month => (
+                      <SelectItem key={month} value={month.toString()}>
+                        {monthNames[month]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Stats Overview */}
@@ -479,4 +557,3 @@ const Analysis = () => {
 };
 
 export default Analysis;
-
