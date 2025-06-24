@@ -27,6 +27,7 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
     tipster: "",
     timing: "prematch" as 'prematch' | 'live',
     stake: "",
+    stakePercentage: "",
     notes: "",
     status: "pending" as 'pending' | 'won' | 'lost' | 'cashout',
     cashoutAmount: "",
@@ -45,6 +46,7 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
         tipster: bet.tipster || "",
         timing: (bet.timing as 'prematch' | 'live') || "prematch",
         stake: bet.stake.toString(),
+        stakePercentage: "", // Lasciamo vuoto di default
         notes: bet.notes || "",
         status: bet.status,
         cashoutAmount: bet.cashout_amount?.toString() || "",
@@ -158,6 +160,32 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
     }));
   };
 
+  const handleStakePercentageChange = async (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      stakePercentage: value
+    }));
+
+    if (value) {
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('bankroll')
+          .single();
+
+        if (profile && profile.bankroll) {
+          const calculatedStake = (parseFloat(value) / 100) * profile.bankroll;
+          setFormData(prev => ({
+            ...prev,
+            stake: calculatedStake.toFixed(2)
+          }));
+        }
+      } catch (error) {
+        console.error('Errore nel calcolo dello stake:', error);
+      }
+    }
+  };
+
   if (!bet) return null;
 
   return (
@@ -264,16 +292,28 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="stake">Puntata (€) *</Label>
+              <Label htmlFor="stakePercentage">Stake (% del bankroll)</Label>
               <Input
-                id="stake"
+                id="stakePercentage"
                 type="number"
-                step="0.01"
-                placeholder="Es. 50.00"
-                value={formData.stake}
-                onChange={(e) => handleInputChange("stake", e.target.value)}
+                step="0.1"
+                placeholder="Es. 2.5"
+                value={formData.stakePercentage}
+                onChange={(e) => handleStakePercentageChange(e.target.value)}
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="stake">Puntata (€) *</Label>
+            <Input
+              id="stake"
+              type="number"
+              step="0.01"
+              placeholder="Es. 50.00"
+              value={formData.stake}
+              onChange={(e) => handleInputChange("stake", e.target.value)}
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
