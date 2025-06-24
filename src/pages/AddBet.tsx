@@ -25,6 +25,7 @@ const AddBet = () => {
   const [betType, setBetType] = useState<'single' | 'multiple' | 'system' | 'exchange'>('single');
   const [exchangeType, setExchangeType] = useState<'back' | 'lay'>('back');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bankroll, setBankroll] = useState<string>("1000");
   
   const [formData, setFormData] = useState({
     // Campi comuni
@@ -33,6 +34,7 @@ const AddBet = () => {
     tipster: "",
     timing: "prematch" as 'prematch' | 'live',
     stake: "",
+    stakePercentage: "",
     notes: "",
     status: "pending" as 'pending' | 'won' | 'lost' | 'cashout',
     cashoutAmount: "",
@@ -204,6 +206,7 @@ const AddBet = () => {
         tipster: "",
         timing: "prematch",
         stake: "",
+        stakePercentage: "",
         notes: "",
         status: "pending",
         cashoutAmount: "",
@@ -238,6 +241,22 @@ const AddBet = () => {
     setFormData(prev => ({
       ...prev,
       [field]: value
+    }));
+  };
+
+  const handleStakeChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      stake: value,
+      stakePercentage: bankroll && value ? ((parseFloat(value) / parseFloat(bankroll)) * 100).toFixed(2) : ""
+    }));
+  };
+
+  const handleStakePercentageChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      stakePercentage: value,
+      stake: bankroll && value ? ((parseFloat(value) * parseFloat(bankroll)) / 100).toFixed(2) : ""
     }));
   };
 
@@ -326,6 +345,19 @@ const AddBet = () => {
               </div>
             )}
 
+            {/* Bankroll Field */}
+            <div className="space-y-2">
+              <Label htmlFor="bankroll">Bankroll (€)</Label>
+              <Input
+                id="bankroll"
+                type="number"
+                step="0.01"
+                placeholder="Es. 1000.00"
+                value={bankroll}
+                onChange={(e) => setBankroll(e.target.value)}
+              />
+            </div>
+
             {/* Campi Comuni */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
@@ -369,7 +401,7 @@ const AddBet = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="space-y-3">
                 <Label className="text-base font-semibold">Timing</Label>
                 <RadioGroup value={formData.timing} onValueChange={(value: 'prematch' | 'live') => handleInputChange("timing", value)}>
@@ -392,7 +424,19 @@ const AddBet = () => {
                   step="0.01"
                   placeholder="Es. 50.00"
                   value={formData.stake}
-                  onChange={(e) => handleInputChange("stake", e.target.value)}
+                  onChange={(e) => handleStakeChange(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="stakePercentage">Stake (%) *</Label>
+                <Input
+                  id="stakePercentage"
+                  type="number"
+                  step="0.01"
+                  placeholder="Es. 5.00"
+                  value={formData.stakePercentage}
+                  onChange={(e) => handleStakePercentageChange(e.target.value)}
                 />
               </div>
 
