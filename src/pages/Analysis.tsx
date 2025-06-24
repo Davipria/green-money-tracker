@@ -1,481 +1,552 @@
-import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
-import { Calendar } from "@/components/ui/calendar";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
-import { DateRange } from "react-day-picker";
-import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { BarChart, LineChart, PieChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Line, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { formatCurrency, calculateROI, groupBetsByMonthWithROI, calculateAverageOdds, calculateAverageStake } from "@/utils/betUtils";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { MetricCard } from "@/components/MetricCard";
+import { useToast } from "@/hooks/use-toast";
+import { Bet } from "@/types/bet";
+import { TrendingUp, DollarSign, Percent, Target, Activity, BarChart3, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 const Analysis = () => {
-  const { user } = useAuth();
-  const [bets, setBets] = useState<any[]>([]);
-  const [timeFilter, setTimeFilter] = useState<"all" | "year" | "month" | "week" | "custom">("all");
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [customStartDate, setCustomStartDate] = useState<Date | undefined>(new Date(new Date().getFullYear(), 0, 1));
-  const [customEndDate, setCustomEndDate] = useState<Date | undefined>(new Date());
-  const [sportFilter, setSportFilter] = useState<string>("all");
-  const [bookmakerFilter, setBookmakerFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [oddsRange, setOddsRange] = useState<number[]>([1, 5]);
-  const [monthlyPerformanceData, setMonthlyPerformanceData] = useState<any[]>([]);
+  const [bets, setBets] = useState<Bet[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [timeFilter, setTimeFilter] = useState("all");
+  const [customDateRange, setCustomDateRange] = useState<{from: Date | undefined, to: Date | undefined}>({
+    from: undefined,
+    to: undefined
+  });
+  const [initialBankroll, setInitialBankroll] = useState(1000);
+  const { toast } = useToast();
 
   useEffect(() => {
-    fetchBets();
-  }, [user]);
+    const fetchBetsAndBankroll = async () => {
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        if (!user.user) {
+          setLoading(false);
+          return;
+        }
 
-  useEffect(() => {
-    calculateMonthlyPerformance();
-  }, [bets]);
+        // Fetch user bankroll
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('bankroll')
+          .eq('id', user.user.id)
+          .single();
 
-  const fetchBets = async () => {
-    if (!user) return;
+        if (profileData?.bankroll) {
+          setInitialBankroll(profileData.bankroll);
+        }
 
-    try {
-      const { data, error } = await supabase
-        .from('bets')
-        .select('*')
-        .eq('user_id', user.id);
+        const { data, error } = await supabase
+          .from('bets')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error("Error fetching bets:", error);
-      } else {
-        setBets(data || []);
+        if (error) {
+          console.error('Errore caricamento scommesse:', error);
+          toast({
+            title: "Errore",
+            description: "Impossibile caricare le scommesse",
+            variant: "destructive",
+          });
+        } else {
+          setBets((data || []) as Bet[]);
+        }
+      } catch (error) {
+        console.error('Errore imprevisto:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching bets:", error);
+    };
+
+    fetchBetsAndBankroll();
+  }, [toast]);
+
+  const now = new Date();
+  const filteredBets = bets.filter(bet => {
+    const betDate = new Date(bet.date);
+    
+    // Custom date range filter
+    if (timeFilter === "custom") {
+      if (customDateRange.from && betDate < customDateRange.from) return false;
+      if (customDateRange.to && betDate > new Date(customDateRange.to.getTime() + 24 * 60 * 60 * 1000 - 1)) return false;
+      return true;
     }
+    
+    // Time filter
+    switch (timeFilter) {
+      case "week":
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        return betDate >= weekAgo;
+      case "month":
+        return betDate.getMonth() === now.getMonth() && betDate.getFullYear() === now.getFullYear();
+      case "year":
+        return betDate.getFullYear() === now.getFullYear();
+      default:
+        return true;
+    }
+  });
+
+  const totalProfit = filteredBets.reduce((sum, bet) => sum + (bet.profit || 0), 0);
+  const totalStake = filteredBets.reduce((sum, bet) => sum + bet.stake, 0);
+  const wonBets = filteredBets.filter(bet => bet.status === 'won').length;
+  const winRate = filteredBets.length > 0 ? (wonBets / filteredBets.length) * 100 : 0;
+  const overallROI = calculateROI(totalProfit, totalStake);
+  const averageOdds = calculateAverageOdds(filteredBets);
+  const averageStake = calculateAverageStake(filteredBets);
+
+  // Create bankroll evolution data
+  const bankrollEvolutionData = filteredBets
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .reduce((acc, bet, index) => {
+      const previousBankroll = index > 0 ? acc[index - 1].bankroll : initialBankroll;
+      const currentProfit = bet.profit || 0;
+      const newBankroll = previousBankroll + currentProfit;
+      
+      acc.push({
+        date: new Date(bet.date).toLocaleDateString('it-IT', { 
+          day: '2-digit', 
+          month: '2-digit' 
+        }),
+        profit: currentProfit,
+        bankroll: newBankroll,
+        betNumber: index + 1
+      });
+      return acc;
+    }, [] as Array<{date: string, profit: number, bankroll: number, betNumber: number}>);
+
+  // Create monthly performance data for ROI chart
+  const monthlyPerformanceData = filteredBets
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .reduce((acc, bet) => {
+      const date = new Date(bet.date);
+      const key = `${date.getFullYear()}-${date.getMonth()}`;
+      const displayName = date.toLocaleDateString('it-IT', { month: 'short', year: '2-digit' });
+      
+      const existingMonth = acc.find(item => item.monthKey === key);
+      const currentProfit = bet.profit || 0;
+      
+      if (existingMonth) {
+        existingMonth.profit += currentProfit;
+        existingMonth.totalStake += bet.stake;
+        existingMonth.roi = calculateROI(existingMonth.profit, existingMonth.totalStake);
+      } else {
+        acc.push({
+          monthKey: key,
+          month: displayName,
+          profit: currentProfit,
+          totalStake: bet.stake,
+          roi: calculateROI(currentProfit, bet.stake)
+        });
+      }
+      
+      return acc;
+    }, [] as Array<{monthKey: string, month: string, profit: number, totalStake: number, roi: number}>);
+
+  // Check if we should show Performance (ROI) chart
+  const shouldShowPerformanceChart = () => {
+    if (timeFilter === "all" || timeFilter === "year") {
+      return true;
+    }
+    
+    if (timeFilter === "custom" && customDateRange.from && customDateRange.to) {
+      const diffTime = Math.abs(customDateRange.to.getTime() - customDateRange.from.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays > 60; // More than 2 months (approximately 60 days)
+    }
+    
+    return false;
   };
 
-  const calculateMonthlyPerformance = () => {
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
+  if (bets.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-12">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl flex items-center justify-center">
+              <BarChart3 className="w-8 h-8 text-gray-500" />
+            </div>
+            <p className="text-gray-500 text-lg font-medium mb-2">Non hai ancora scommesse da analizzare</p>
+            <p className="text-gray-400">Aggiungi alcune scommesse per vedere le statistiche.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-    const monthlyData = [];
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="animate-pulse space-y-6">
+            <div className="text-center">
+              <div className="h-16 w-16 bg-gray-200 rounded-2xl mx-auto mb-4"></div>
+              <div className="h-8 bg-gray-200 rounded w-1/3 mx-auto mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <div key={i} className="h-32 bg-gray-200 rounded-xl"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-    for (let i = 11; i >= 0; i--) {
-      const year = currentMonth - i < 0 ? currentYear - 1 : currentYear;
-      const month = (currentMonth - i + 12) % 12;
-      const monthName = new Date(year, month, 1).toLocaleDateString('it-IT', { month: 'short', year: 'numeric' });
-
-      const monthStart = new Date(year, month, 1);
-      const monthEnd = new Date(year, month + 1, 0);
-
-      const monthlyBets = bets.filter(bet => {
-        const betDate = new Date(bet.date);
-        return betDate >= monthStart && betDate <= monthEnd;
-      });
-
-      const totalStake = monthlyBets.reduce((sum, bet) => sum + bet.stake, 0);
-      const totalProfit = monthlyBets.reduce((sum, bet) => sum + (bet.profit || 0), 0);
-      const roi = totalStake > 0 ? (totalProfit / totalStake) * 100 : 0;
-
-      monthlyData.push({
-        month: monthName,
-        roi: roi,
-        profit: totalProfit
-      });
+  const monthlyData = groupBetsByMonthWithROI(filteredBets);
+  
+  const sportData = filteredBets.reduce((acc, bet) => {
+    const sport = bet.sport || 'Altro';
+    if (!acc[sport]) {
+      acc[sport] = { count: 0, profit: 0 };
     }
+    acc[sport].count += 1;
+    acc[sport].profit += bet.profit || 0;
+    return acc;
+  }, {} as Record<string, { count: number; profit: number }>);
 
-    setMonthlyPerformanceData(monthlyData);
-  };
-
-  const filteredBets = useMemo(() => {
-    let filtered = [...bets];
-
-    // Time Filter
-    if (timeFilter === "year") {
-      const currentYear = new Date().getFullYear();
-      filtered = filtered.filter(bet => new Date(bet.date).getFullYear() === currentYear);
-    } else if (timeFilter === "month") {
-      const now = new Date();
-      const currentYear = now.getFullYear();
-      const currentMonth = now.getMonth();
-      filtered = filtered.filter(bet => new Date(bet.date).getFullYear() === currentYear && new Date(bet.date).getMonth() === currentMonth);
-    } else if (timeFilter === "week") {
-      const now = new Date();
-      const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
-      const endOfWeek = new Date(now.setDate(now.getDate() + 6));
-
-      filtered = filtered.filter(bet => {
-        const betDate = new Date(bet.date);
-        return betDate >= startOfWeek && betDate <= endOfWeek;
-      });
-    } else if (timeFilter === "custom" && customStartDate && customEndDate) {
-      filtered = filtered.filter(bet => {
-        const betDate = new Date(bet.date);
-        return betDate >= customStartDate && betDate <= customEndDate;
-      });
-    }
-
-    // Sport Filter
-    if (sportFilter !== "all") {
-      filtered = filtered.filter(bet => bet.sport === sportFilter);
-    }
-
-    // Bookmaker Filter
-    if (bookmakerFilter !== "all") {
-      filtered = filtered.filter(bet => bet.bookmaker === bookmakerFilter);
-    }
-
-    // Status Filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter(bet => bet.status === statusFilter);
-    }
-
-    // Odds Range Filter
-    filtered = filtered.filter(bet => bet.odds >= oddsRange[0] && bet.odds <= oddsRange[1]);
-
-    return filtered;
-  }, [bets, timeFilter, customStartDate, customEndDate, sportFilter, bookmakerFilter, statusFilter, oddsRange]);
-
-  const totalStake = useMemo(() => {
-    return filteredBets.reduce((sum, bet) => sum + bet.stake, 0);
-  }, [filteredBets]);
-
-  const totalProfit = useMemo(() => {
-    return filteredBets.reduce((sum, bet) => sum + (bet.profit || 0), 0);
-  }, [filteredBets]);
-
-  const calculateROI = (profit: number, stake: number) => {
-    return stake > 0 ? (profit / stake) * 100 : 0;
-  };
-
-  const sports = useMemo(() => {
-    return [...new Set(bets.map(bet => bet.sport).filter(Boolean))];
-  }, [bets]);
-
-  const bookmakers = useMemo(() => {
-    return [...new Set(bets.map(bet => bet.bookmaker).filter(Boolean))];
-  }, [bets]);
-
-  const betStatuses = useMemo(() => {
-    return [...new Set(bets.map(bet => bet.status).filter(Boolean))];
-  }, [bets]);
-
-  const shouldShowPerformanceChart = monthlyPerformanceData.length > 0 && monthlyPerformanceData.some(item => item.roi !== 0);
+  const chartData = Object.entries(sportData).map(([sport, data]) => ({
+    sport,
+    scommesse: data.count,
+    profitto: data.profit
+  }));
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Analisi</h1>
-        <p className="text-muted-foreground">
-          Visualizza le tue statistiche e performance delle scommesse
-        </p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header Section */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl mb-4">
+            <BarChart3 className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            Analisi Prestazioni
+          </h1>
+          <p className="text-gray-600 text-lg">
+            Analizza le tue performance e identifica tendenze
+          </p>
+        </div>
 
-      {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Time Filter */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Periodo</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Select value={timeFilter} onValueChange={(value) => setTimeFilter(value as "all" | "year" | "month" | "week" | "custom")}>
-              <SelectTrigger>
-                <SelectValue placeholder="Seleziona Periodo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tutto</SelectItem>
-                <SelectItem value="year">Quest'anno</SelectItem>
-                <SelectItem value="month">Questo mese</SelectItem>
-                <SelectItem value="week">Questa settimana</SelectItem>
-                <SelectItem value="custom">Personalizzato</SelectItem>
-              </SelectContent>
-            </Select>
+        {/* Filters Section */}
+        <div className="space-y-6">
+          {/* Time Filter */}
+          <div className="flex justify-center">
+            <ToggleGroup 
+              type="single" 
+              value={timeFilter} 
+              onValueChange={(value) => value && setTimeFilter(value)}
+              className="bg-white/80 backdrop-blur-sm p-1 rounded-xl shadow-lg"
+            >
+              <ToggleGroupItem value="all" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
+                Tutto
+              </ToggleGroupItem>
+              <ToggleGroupItem value="year" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
+                Quest'anno
+              </ToggleGroupItem>
+              <ToggleGroupItem value="month" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
+                Questo mese
+              </ToggleGroupItem>
+              <ToggleGroupItem value="week" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
+                Questa settimana
+              </ToggleGroupItem>
+              <ToggleGroupItem value="custom" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
+                Scegli
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
 
-            {timeFilter === "custom" && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-[240px] justify-start text-left font-normal",
-                      !dateRange?.from && "text-muted-foreground"
-                    )}
-                  >
-                    {customStartDate ? format(customStartDate, "dd/MM/yyyy") : <span>Inizio</span>} - {customEndDate ? format(customEndDate, "dd/MM/yyyy") : <span>Fine</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="center" side="bottom">
-                  <Calendar
-                    mode="range"
-                    defaultMonth={customStartDate}
-                    selected={{
-                      from: customStartDate,
-                      to: customEndDate,
-                    }}
-                    onSelect={(dateRange) => {
-                      setCustomStartDate(dateRange?.from);
-                      setCustomEndDate(dateRange?.to);
-                    }}
-                    numberOfMonths={2}
-                    pagedNavigation
-                  />
-                </PopoverContent>
-              </Popover>
-            )}
-          </CardContent>
-        </Card>
+          {/* Custom Date Range Picker */}
+          {timeFilter === "custom" && (
+            <div className="flex justify-center gap-4">
+              <div className="flex flex-col items-center gap-2">
+                <label className="text-sm font-medium text-gray-600">Data Inizio</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-48 justify-start text-left font-normal bg-white/80 backdrop-blur-sm",
+                        !customDateRange.from && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {customDateRange.from ? format(customDateRange.from, "dd/MM/yyyy") : "Seleziona data"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={customDateRange.from}
+                      onSelect={(date) => setCustomDateRange(prev => ({ ...prev, from: date }))}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
 
-        {/* Sport Filter */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Sport</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Select value={sportFilter} onValueChange={setSportFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Tutti gli sport" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tutti gli sport</SelectItem>
-                {sports.map(sport => (
-                  <SelectItem key={sport} value={sport}>{sport}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
+              <div className="flex flex-col items-center gap-2">
+                <label className="text-sm font-medium text-gray-600">Data Fine</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-48 justify-start text-left font-normal bg-white/80 backdrop-blur-sm",
+                        !customDateRange.to && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {customDateRange.to ? format(customDateRange.to, "dd/MM/yyyy") : "Seleziona data"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={customDateRange.to}
+                      onSelect={(date) => setCustomDateRange(prev => ({ ...prev, to: date }))}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          )}
+        </div>
 
-        {/* Bookmaker Filter */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Bookmaker</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Select value={bookmakerFilter} onValueChange={setBookmakerFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Tutti i bookmaker" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tutti i bookmaker</SelectItem>
-                {bookmakers.map(bookmaker => (
-                  <SelectItem key={bookmaker} value={bookmaker}>{bookmaker}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Card className="bg-gradient-to-br from-green-500 to-emerald-600 border-0 text-white shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-100 text-sm font-medium">Profitto Totale</p>
+                  <p className="text-3xl font-bold">{formatCurrency(totalProfit)}</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <TrendingUp className="w-6 h-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Status Filter */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Stato</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Tutti gli stati" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tutti gli stati</SelectItem>
-                {betStatuses.map(status => (
-                  <SelectItem key={status} value={status}>{status}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
+          <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 border-0 text-white shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100 text-sm font-medium">ROI</p>
+                  <p className="text-3xl font-bold">{overallROI.toFixed(1)}%</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Percent className="w-6 h-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Odds Range Filter */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quote</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Label>Range: {oddsRange[0]} - {oddsRange[1]}</Label>
-            <Slider
-              defaultValue={oddsRange}
-              min={1}
-              max={10}
-              step={0.1}
-              onValueChange={(value) => setOddsRange(value)}
-            />
-          </CardContent>
-        </Card>
-      </div>
+          <Card className="bg-gradient-to-br from-purple-500 to-pink-600 border-0 text-white shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-purple-100 text-sm font-medium">Win Rate</p>
+                  <p className="text-3xl font-bold">{winRate.toFixed(1)}%</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Target className="w-6 h-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard label="Totale Scommesse" value={filteredBets.length.toString()} />
-        <MetricCard label="Percentuale Vincita" value={`${filteredBets.length > 0 ? (filteredBets.filter(bet => bet.status === 'won').length / filteredBets.length) * 100 : 0}%`} />
-        <MetricCard label="Profitto Totale" value={`€${totalProfit.toFixed(2)}`} />
-        <MetricCard label="ROI" value={`${calculateROI(totalProfit, totalStake).toFixed(2)}%`} />
-        <MetricCard label="Quote Medie" value={filteredBets.length > 0 ? (filteredBets.reduce((sum, bet) => sum + bet.odds, 0) / filteredBets.length).toFixed(2) : '0.00'} />
-        <MetricCard label="Stake Totale" value={`€${totalStake.toFixed(2)}`} />
-      </div>
+          <Card className="bg-gradient-to-br from-orange-500 to-red-600 border-0 text-white shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-orange-100 text-sm font-medium">Scommesse Totali</p>
+                  <p className="text-3xl font-bold">{filteredBets.length}</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <BarChart3 className="w-6 h-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Monthly Performance Chart */}
-        {shouldShowPerformanceChart && (
-          <Card>
+          <Card className="bg-gradient-to-br from-teal-500 to-cyan-600 border-0 text-white shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-teal-100 text-sm font-medium">Quota Media</p>
+                  <p className="text-3xl font-bold">{averageOdds.toFixed(2)}</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Activity className="w-6 h-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-amber-500 to-yellow-600 border-0 text-white shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-amber-100 text-sm font-medium">Puntata Media</p>
+                  <p className="text-3xl font-bold">{formatCurrency(averageStake)}</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <DollarSign className="w-6 h-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Charts Section */}
+        <div className={`grid grid-cols-1 ${shouldShowPerformanceChart() ? 'lg:grid-cols-2' : ''} gap-8`}>
+          {/* Bankroll Evolution Chart */}
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
             <CardHeader>
-              <CardTitle>Performance Mensile (ROI)</CardTitle>
+              <CardTitle className="text-xl">Evoluzione Bankroll</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={monthlyPerformanceData}>
+                <LineChart data={bankrollEvolutionData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis tickFormatter={(value) => `${value}%`} />
-                  <Tooltip formatter={(value: any) => [`ROI: ${typeof value === 'number' ? value.toFixed(2) : value}%`]} />
-                  <Legend />
-                  <Line type="monotone" dataKey="roi" stroke="#82ca9d" name="ROI" />
+                  <XAxis dataKey="date" />
+                  <YAxis domain={['dataMin - 50', 'dataMax + 50']} />
+                  <Tooltip 
+                    formatter={(value: number, name: string) => [
+                      formatCurrency(value),
+                      name === 'bankroll' ? 'Bankroll' : 'Profitto'
+                    ]}
+                    labelFormatter={(label) => `Data: ${label}`}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="bankroll" 
+                    stroke="#10b981" 
+                    strokeWidth={3}
+                    name="bankroll"
+                    dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
-        )}
 
-        {/* Bet Status Chart */}
-        <Card>
+          {/* Performance (ROI) Chart - Conditional */}
+          {shouldShowPerformanceChart() && (
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+              <CardHeader>
+                <CardTitle className="text-xl">Performance (ROI)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={monthlyPerformanceData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip 
+                      formatter={(value: number, name: string) => [
+                        name === 'roi' ? `${value.toFixed(1)}%` : formatCurrency(value),
+                        name === 'roi' ? 'ROI' : 'Profitto'
+                      ]}
+                    />
+                    <Bar dataKey="profit" fill="#8884d8" name="profit" />
+                    <Line type="monotone" dataKey="roi" stroke="#82ca9d" name="roi" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Second Row of Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Sports Distribution Chart */}
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+            <CardHeader>
+              <CardTitle className="text-xl">Distribuzione per Sport</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ sport, percent }: any) => `${sport} ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="scommesse"
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Placeholder for future chart */}
+          <div></div>
+        </div>
+
+        {/* Sports Performance Table */}
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
           <CardHeader>
-            <CardTitle>Distribuzione degli Stati delle Scommesse</CardTitle>
+            <CardTitle className="text-xl">Performance per Sport</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={(() => {
-                    const won = filteredBets.filter(bet => bet.status === 'won').length;
-                    const lost = filteredBets.filter(bet => bet.status === 'lost').length;
-                    const open = filteredBets.filter(bet => bet.status === 'open').length;
-                    const cashedOut = filteredBets.filter(bet => bet.status === 'cashed_out').length;
-
-                    return [
-                      { name: 'Vinte', value: won },
-                      { name: 'Perse', value: lost },
-                      { name: 'Aperte', value: open },
-                      { name: 'Cashout', value: cashedOut },
-                    ];
-                  })()}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  fill="#8884d8"
-                  label
-                >
-                  <Cell fill="#82ca9d" name="Vinte" />
-                  <Cell fill="#e57373" name="Perse" />
-                  <Cell fill="#64b5f6" name="Aperte" />
-                  <Cell fill="#ffb74d" name="Cashout" />
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Profit by Sport Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Profitto per Sport</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={(() => {
-                const sportsData: { [key: string]: number } = {};
-                filteredBets.forEach(bet => {
-                  if (bet.sport) {
-                    sportsData[bet.sport] = (sportsData[bet.sport] || 0) + (bet.profit || 0);
-                  }
-                });
-
-                return Object.entries(sportsData).map(([sport, profit]) => ({ sport, profit }));
-              })()}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="sport" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="profit" fill="#8884d8" name="Profitto" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Stake by Bookmaker Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Stake per Bookmaker</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={(() => {
-                const bookmakerData: { [key: string]: number } = {};
-                filteredBets.forEach(bet => {
-                  if (bet.bookmaker) {
-                    bookmakerData[bet.bookmaker] = (bookmakerData[bet.bookmaker] || 0) + bet.stake;
-                  }
-                });
-
-                return Object.entries(bookmakerData).map(([bookmaker, stake]) => ({ bookmaker, stake }));
-              })()}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="bookmaker" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="stake" fill="#82ca9d" name="Stake" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Breakdown Sections */}
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Dettagli Scommesse</h2>
-        {filteredBets.length === 0 ? (
-          <p>Nessuna scommessa trovata con i filtri selezionati.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Evento</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Selezione</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quota</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stake</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stato</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Profitto</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sport</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bookmaker</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredBets.map(bet => (
-                  <tr key={bet.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">{new Date(bet.date).toLocaleDateString()}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{bet.event}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{bet.selection}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{bet.odds}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{bet.stake}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{bet.status}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{bet.profit}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{bet.sport}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{bet.bookmaker}</td>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-4">Sport</th>
+                    <th className="text-left p-4">Scommesse</th>
+                    <th className="text-left p-4">Profitto</th>
+                    <th className="text-left p-4">Win Rate</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                </thead>
+                <tbody>
+                  {Object.entries(sportData).map(([sport, data]) => {
+                    const sportBets = filteredBets.filter(bet => (bet.sport || 'Altro') === sport);
+                    const sportWinRate = sportBets.length > 0 ? 
+                      (sportBets.filter(bet => bet.status === 'won').length / sportBets.length) * 100 : 0;
+                    
+                    return (
+                      <tr key={sport} className="border-b hover:bg-gray-50">
+                        <td className="p-4 font-medium">{sport}</td>
+                        <td className="p-4">{data.count}</td>
+                        <td className="p-4">
+                          <span className={data.profit >= 0 ? 'text-green-600' : 'text-red-600'}>
+                            {formatCurrency(data.profit)}
+                          </span>
+                        </td>
+                        <td className="p-4">{sportWinRate.toFixed(1)}%</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

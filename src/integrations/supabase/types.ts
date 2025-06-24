@@ -131,30 +131,6 @@ export type Database = {
         }
         Relationships: []
       }
-      monthly_reports_log: {
-        Row: {
-          id: string
-          report_month: string
-          report_type: string
-          sent_at: string
-          user_id: string
-        }
-        Insert: {
-          id?: string
-          report_month: string
-          report_type: string
-          sent_at?: string
-          user_id: string
-        }
-        Update: {
-          id?: string
-          report_month?: string
-          report_type?: string
-          sent_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           bankroll: number | null
@@ -162,7 +138,6 @@ export type Database = {
           first_name: string | null
           id: string
           last_name: string | null
-          monthly_reports_enabled: boolean | null
           updated_at: string
         }
         Insert: {
@@ -171,7 +146,6 @@ export type Database = {
           first_name?: string | null
           id: string
           last_name?: string | null
-          monthly_reports_enabled?: boolean | null
           updated_at?: string
         }
         Update: {
@@ -180,7 +154,6 @@ export type Database = {
           first_name?: string | null
           id?: string
           last_name?: string | null
-          monthly_reports_enabled?: boolean | null
           updated_at?: string
         }
         Relationships: []

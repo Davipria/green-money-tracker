@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,7 +16,6 @@ interface Profile {
   first_name: string | null;
   last_name: string | null;
   bankroll: number | null;
-  monthly_reports_enabled: boolean | null;
 }
 
 const Profile = () => {
@@ -52,7 +52,6 @@ const Profile = () => {
           first_name: user?.user_metadata?.first_name || null,
           last_name: user?.user_metadata?.last_name || null,
           bankroll: 1000.00,
-          monthly_reports_enabled: true,
         };
         
         const { data: createdProfile, error: createError } = await supabase
@@ -87,7 +86,6 @@ const Profile = () => {
           first_name: profile.first_name,
           last_name: profile.last_name,
           bankroll: profile.bankroll,
-          monthly_reports_enabled: profile.monthly_reports_enabled,
         })
         .eq('id', profile.id);
 
@@ -240,21 +238,6 @@ const Profile = () => {
                   <p className="text-sm text-muted-foreground">Promemoria scommesse</p>
                 </div>
                 <Switch defaultChecked />
-              </div>
-
-              <Separator />
-              
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Report Mensili Automatici</Label>
-                  <p className="text-sm text-muted-foreground">Ricevi via email analisi e archivio ogni mese</p>
-                </div>
-                <Switch 
-                  checked={profile?.monthly_reports_enabled ?? true}
-                  onCheckedChange={(checked) => 
-                    setProfile(prev => prev ? {...prev, monthly_reports_enabled: checked} : null)
-                  }
-                />
               </div>
             </CardContent>
           </Card>
