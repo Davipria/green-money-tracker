@@ -15,27 +15,27 @@ import { Link, useLocation } from "react-router-dom"
 const menuItems = [
   {
     title: "Dashboard",
-    url: "/",
+    url: "/app",
     icon: TrendingUp,
   },
   {
     title: "Archivio",
-    url: "/archive",
+    url: "/app/archive",
     icon: Archive,
   },
   {
     title: "Nuova Scommessa",
-    url: "/add-bet",
+    url: "/app/add-bet",
     icon: Plus,
   },
   {
     title: "Analisi",
-    url: "/analysis",
+    url: "/app/analysis",
     icon: BarChart3,
   },
   {
     title: "Profilo",
-    url: "/profile",
+    url: "/app/profile",
     icon: User,
   },
 ]

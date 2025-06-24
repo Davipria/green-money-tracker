@@ -37,8 +37,9 @@ const App = () => {
         <AuthProvider>
           <BrowserRouter>
             <Routes>
+              <Route path="/" element={<Landing />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="*" element={
+              <Route path="/app/*" element={
                 <ProtectedRoute>
                   <SidebarProvider>
                     <div className="min-h-screen flex w-full">
