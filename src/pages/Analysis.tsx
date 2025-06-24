@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Button } from "@/components/ui/button";
@@ -235,6 +234,23 @@ const Analysis = () => {
 
   const chartData = Object.entries(sportData).map(([sport, data]) => ({
     sport,
+    scommesse: data.count,
+    profitto: data.profit
+  }));
+
+  // Create bookmaker data
+  const bookmakerData = filteredBets.reduce((acc, bet) => {
+    const bookmaker = bet.bookmaker || 'Non specificato';
+    if (!acc[bookmaker]) {
+      acc[bookmaker] = { count: 0, profit: 0 };
+    }
+    acc[bookmaker].count += 1;
+    acc[bookmaker].profit += bet.profit || 0;
+    return acc;
+  }, {} as Record<string, { count: number; profit: number }>);
+
+  const bookmakerChartData = Object.entries(bookmakerData).map(([bookmaker, data]) => ({
+    bookmaker,
     scommesse: data.count,
     profitto: data.profit
   }));
@@ -520,8 +536,33 @@ const Analysis = () => {
             </CardContent>
           </Card>
 
-          {/* Placeholder for future chart */}
-          <div></div>
+          {/* Bookmaker Distribution Chart */}
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+            <CardHeader>
+              <CardTitle className="text-xl">Distribuzione per Bookmaker</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={bookmakerChartData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ bookmaker, percent }: any) => `${bookmaker} ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="scommesse"
+                  >
+                    {bookmakerChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Sports Performance Table */}
