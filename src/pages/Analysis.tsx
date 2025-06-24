@@ -23,15 +23,27 @@ const Analysis = () => {
     from: undefined,
     to: undefined
   });
+  const [initialBankroll, setInitialBankroll] = useState(1000);
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchBets = async () => {
+    const fetchBetsAndBankroll = async () => {
       try {
         const { data: user } = await supabase.auth.getUser();
         if (!user.user) {
           setLoading(false);
           return;
+        }
+
+        // Fetch user bankroll
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('bankroll')
+          .eq('id', user.user.id)
+          .single();
+
+        if (profileData?.bankroll) {
+          setInitialBankroll(profileData.bankroll);
         }
 
         const { data, error } = await supabase
@@ -56,7 +68,7 @@ const Analysis = () => {
       }
     };
 
-    fetchBets();
+    fetchBetsAndBankroll();
   }, [toast]);
 
   const now = new Date();
@@ -92,23 +104,25 @@ const Analysis = () => {
   const averageOdds = calculateAverageOdds(filteredBets);
   const averageStake = calculateAverageStake(filteredBets);
 
-  // Create cumulative earnings data
-  const cumulativeEarningsData = filteredBets
+  // Create bankroll evolution data
+  const bankrollEvolutionData = filteredBets
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .reduce((acc, bet, index) => {
-      const previousTotal = index > 0 ? acc[index - 1].cumulativeEarnings : 0;
+      const previousBankroll = index > 0 ? acc[index - 1].bankroll : initialBankroll;
       const currentProfit = bet.profit || 0;
+      const newBankroll = previousBankroll + currentProfit;
+      
       acc.push({
         date: new Date(bet.date).toLocaleDateString('it-IT', { 
           day: '2-digit', 
           month: '2-digit' 
         }),
         profit: currentProfit,
-        cumulativeEarnings: previousTotal + currentProfit,
+        bankroll: newBankroll,
         betNumber: index + 1
       });
       return acc;
-    }, [] as Array<{date: string, profit: number, cumulativeEarnings: number, betNumber: number}>);
+    }, [] as Array<{date: string, profit: number, bankroll: number, betNumber: number}>);
 
   if (bets.length === 0) {
     return (
@@ -382,30 +396,30 @@ const Analysis = () => {
             </CardContent>
           </Card>
 
-          {/* Cumulative Earnings Chart */}
+          {/* Bankroll Evolution Chart */}
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
             <CardHeader>
-              <CardTitle className="text-xl">Guadagni Cumulativi</CardTitle>
+              <CardTitle className="text-xl">Evoluzione Bankroll</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={cumulativeEarningsData}>
+                <LineChart data={bankrollEvolutionData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
                   <YAxis />
                   <Tooltip 
                     formatter={(value: number, name: string) => [
                       formatCurrency(value),
-                      name === 'cumulativeEarnings' ? 'Guadagni Cumulativi' : 'Profitto'
+                      name === 'bankroll' ? 'Bankroll' : 'Profitto'
                     ]}
                     labelFormatter={(label) => `Data: ${label}`}
                   />
                   <Line 
                     type="monotone" 
-                    dataKey="cumulativeEarnings" 
+                    dataKey="bankroll" 
                     stroke="#10b981" 
                     strokeWidth={3}
-                    name="cumulativeEarnings"
+                    name="bankroll"
                   />
                 </LineChart>
               </ResponsiveContainer>
