@@ -66,7 +66,7 @@ const Analysis = () => {
     // Custom date range filter
     if (timeFilter === "custom") {
       if (customDateRange.from && betDate < customDateRange.from) return false;
-      if (customDateRange.to && betDate > customDateRange.to) return false;
+      if (customDateRange.to && betDate > new Date(customDateRange.to.getTime() + 24 * 60 * 60 * 1000 - 1)) return false;
       return true;
     }
     
