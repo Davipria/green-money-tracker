@@ -1,4 +1,5 @@
 
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,17 +7,124 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { User, Settings, Bell, Shield } from "lucide-react";
+
+interface Profile {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  bankroll: number | null;
+}
 
 const Profile = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const handleSaveProfile = () => {
-    toast({
-      title: "Profilo salvato!",
-      description: "Le tue impostazioni sono state aggiornate con successo"
-    });
+  useEffect(() => {
+    if (user) {
+      fetchProfile();
+    }
+  }, [user]);
+
+  const fetchProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user?.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      if (data) {
+        setProfile(data);
+      } else {
+        // Create profile if it doesn't exist
+        const newProfile = {
+          id: user?.id!,
+          first_name: user?.user_metadata?.first_name || null,
+          last_name: user?.user_metadata?.last_name || null,
+          bankroll: 1000.00,
+        };
+        
+        const { data: createdProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert(newProfile)
+          .select()
+          .single();
+
+        if (createError) throw createError;
+        setProfile(createdProfile);
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      toast({
+        title: "Errore",
+        description: "Impossibile caricare il profilo",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleSaveProfile = async () => {
+    if (!profile) return;
+    
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          bankroll: profile.bankroll,
+        })
+        .eq('id', profile.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Profilo salvato!",
+        description: "Le tue impostazioni sono state aggiornate con successo"
+      });
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast({
+        title: "Errore",
+        description: "Impossibile salvare il profilo",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6 max-w-4xl mx-auto">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 h-96 bg-gray-200 rounded"></div>
+            <div className="space-y-6">
+              <div className="h-32 bg-gray-200 rounded"></div>
+              <div className="h-32 bg-gray-200 rounded"></div>
+              <div className="h-24 bg-gray-200 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
@@ -39,26 +147,40 @@ const Profile = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName">Nome</Label>
-                <Input id="firstName" placeholder="Mario" />
+                <Input 
+                  id="firstName" 
+                  value={profile?.first_name || ''} 
+                  onChange={(e) => setProfile(prev => prev ? {...prev, first_name: e.target.value} : null)}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="lastName">Cognome</Label>
-                <Input id="lastName" placeholder="Rossi" />
+                <Input 
+                  id="lastName" 
+                  value={profile?.last_name || ''} 
+                  onChange={(e) => setProfile(prev => prev ? {...prev, last_name: e.target.value} : null)}
+                />
               </div>
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="mario.rossi@email.com" />
+              <Input id="email" type="email" value={user?.email || ''} disabled />
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="bankroll">Bankroll Iniziale (€)</Label>
-              <Input id="bankroll" type="number" placeholder="1000" />
+              <Input 
+                id="bankroll" 
+                type="number" 
+                step="0.01"
+                value={profile?.bankroll || ''} 
+                onChange={(e) => setProfile(prev => prev ? {...prev, bankroll: parseFloat(e.target.value)} : null)}
+              />
             </div>
 
-            <Button onClick={handleSaveProfile} className="w-full">
-              Salva Modifiche
+            <Button onClick={handleSaveProfile} className="w-full" disabled={saving}>
+              {saving ? 'Salvataggio...' : 'Salva Modifiche'}
             </Button>
           </CardContent>
         </Card>
