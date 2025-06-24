@@ -39,6 +39,13 @@ const Landing = () => {
     }
   ];
 
+  const scrollToFeatures = () => {
+    const featuresSection = document.getElementById('features-section');
+    if (featuresSection) {
+      featuresSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted">
       {/* Header */}
@@ -49,7 +56,7 @@ const Landing = () => {
             <h1 className="text-2xl font-bold text-primary">BetTracker Pro</h1>
           </div>
           <Link to="/auth">
-            <Button>Inizia Ora</Button>
+            <Button>Accedi</Button>
           </Link>
         </div>
       </header>
@@ -72,14 +79,14 @@ const Landing = () => {
               Registrati Gratis
             </Button>
           </Link>
-          <Button variant="outline" size="lg" className="text-lg">
+          <Button variant="outline" size="lg" className="text-lg" onClick={scrollToFeatures}>
             Scopri le Funzionalità
           </Button>
         </div>
       </section>
 
       {/* Features Grid */}
-      <section className="container mx-auto px-4 py-20">
+      <section id="features-section" className="container mx-auto px-4 py-20">
         <div className="text-center mb-16">
           <h2 className="text-3xl font-bold mb-4">Perché Scegliere BetTracker Pro?</h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
