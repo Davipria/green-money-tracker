@@ -19,8 +19,6 @@ const Analysis = () => {
   const [bets, setBets] = useState<Bet[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState("all");
-  const [selectedYear, setSelectedYear] = useState<string>("all");
-  const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const [customDateRange, setCustomDateRange] = useState<{from: Date | undefined, to: Date | undefined}>({
     from: undefined,
     to: undefined
@@ -72,16 +70,6 @@ const Analysis = () => {
       return true;
     }
     
-    // Year filter
-    if (selectedYear !== "all" && betDate.getFullYear() !== parseInt(selectedYear)) {
-      return false;
-    }
-    
-    // Month filter
-    if (selectedMonth !== "all" && betDate.getMonth() !== parseInt(selectedMonth)) {
-      return false;
-    }
-    
     // Time filter
     switch (timeFilter) {
       case "week":
@@ -95,18 +83,6 @@ const Analysis = () => {
         return true;
     }
   });
-
-  // Get available years and months from bets
-  const availableYears = [...new Set(bets.map(bet => new Date(bet.date).getFullYear()))]
-    .sort((a, b) => b - a);
-  
-  const availableMonths = [...new Set(bets.map(bet => new Date(bet.date).getMonth()))]
-    .sort((a, b) => a - b);
-
-  const monthNames = [
-    "Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno",
-    "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"
-  ];
 
   const totalProfit = filteredBets.reduce((sum, bet) => sum + (bet.profit || 0), 0);
   const totalStake = filteredBets.reduce((sum, bet) => sum + bet.stake, 0);
@@ -288,45 +264,6 @@ const Analysis = () => {
                     />
                   </PopoverContent>
                 </Popover>
-              </div>
-            </div>
-          )}
-
-          {/* Year and Month Selectors - only show when not in custom mode */}
-          {timeFilter !== "custom" && (
-            <div className="flex justify-center gap-4">
-              <div className="flex flex-col items-center gap-2">
-                <label className="text-sm font-medium text-gray-600">Anno</label>
-                <Select value={selectedYear} onValueChange={setSelectedYear}>
-                  <SelectTrigger className="w-32 bg-white/80 backdrop-blur-sm">
-                    <SelectValue placeholder="Anno" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tutti</SelectItem>
-                    {availableYears.map(year => (
-                      <SelectItem key={year} value={year.toString()}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex flex-col items-center gap-2">
-                <label className="text-sm font-medium text-gray-600">Mese</label>
-                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                  <SelectTrigger className="w-40 bg-white/80 backdrop-blur-sm">
-                    <SelectValue placeholder="Mese" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tutti</SelectItem>
-                    {availableMonths.map(month => (
-                      <SelectItem key={month} value={month.toString()}>
-                        {monthNames[month]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
             </div>
           )}
