@@ -227,51 +227,6 @@ const Analysis = () => {
           </p>
         </div>
 
-        {/* Stats Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="bg-gradient-to-br from-green-500 to-emerald-600 border-0 text-white shadow-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-green-100 text-sm font-medium">Profitto Totale</p>
-                  <p className="text-3xl font-bold">{formatCurrency(totalProfit)}</p>
-                </div>
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  {totalProfit >= 0 ? <TrendingUp className="w-6 h-6" /> : <TrendingDown className="w-6 h-6" />}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 border-0 text-white shadow-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-blue-100 text-sm font-medium">Scommesse Totali</p>
-                  <p className="text-3xl font-bold">{totalBets}</p>
-                </div>
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Target className="w-6 h-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-to-br from-purple-500 to-pink-600 border-0 text-white shadow-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-100 text-sm font-medium">Tasso di Vincita</p>
-                  <p className="text-3xl font-bold">{winRate}%</p>
-                </div>
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <BarChart3 className="w-6 h-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Time Filter Section */}
         <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
           <CardHeader className="pb-4">
@@ -333,6 +288,51 @@ const Analysis = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Stats Overview Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="bg-gradient-to-br from-green-500 to-emerald-600 border-0 text-white shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-100 text-sm font-medium">Profitto Totale</p>
+                  <p className="text-3xl font-bold">{formatCurrency(totalProfit)}</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  {totalProfit >= 0 ? <TrendingUp className="w-6 h-6" /> : <TrendingDown className="w-6 h-6" />}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 border-0 text-white shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100 text-sm font-medium">Scommesse Totali</p>
+                  <p className="text-3xl font-bold">{totalBets}</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Target className="w-6 h-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gradient-to-br from-purple-500 to-pink-600 border-0 text-white shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-purple-100 text-sm font-medium">Tasso di Vincita</p>
+                  <p className="text-3xl font-bold">{winRate}%</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <BarChart3 className="w-6 h-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
