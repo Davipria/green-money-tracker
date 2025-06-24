@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -40,7 +40,7 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="/app/*" element={
+              <Route path="/app" element={
                 <ProtectedRoute>
                   <SidebarProvider>
                     <div className="min-h-screen flex w-full">
@@ -51,11 +51,11 @@ const App = () => {
                           <UserMenu />
                         </div>
                         <Routes>
-                          <Route path="/" element={<Dashboard />} />
-                          <Route path="/archive" element={<Archive />} />
-                          <Route path="/add-bet" element={<AddBet />} />
-                          <Route path="/analysis" element={<Analysis />} />
-                          <Route path="/profile" element={<Profile />} />
+                          <Route index element={<Dashboard />} />
+                          <Route path="archive" element={<Archive />} />
+                          <Route path="add-bet" element={<AddBet />} />
+                          <Route path="analysis" element={<Analysis />} />
+                          <Route path="profile" element={<Profile />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </main>
@@ -63,6 +63,9 @@ const App = () => {
                   </SidebarProvider>
                 </ProtectedRoute>
               } />
+              {/* Redirect any /profile to /app/profile */}
+              <Route path="/profile" element={<Navigate to="/app/profile" replace />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
         </AuthProvider>

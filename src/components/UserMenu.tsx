@@ -1,3 +1,4 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -47,7 +48,7 @@ const UserMenu = () => {
           </p>
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate('/profile')}>
+        <DropdownMenuItem onClick={() => navigate('/app/profile')}>
           <User className="mr-2 h-4 w-4" />
           <span>Profilo</span>
         </DropdownMenuItem>
