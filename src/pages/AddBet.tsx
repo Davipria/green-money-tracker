@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, TrendingUp, Calculator, DollarSign, Target, Calendar, Building2 } from "lucide-react";
+import { Plus, Trash2, TrendingUp, Calculator, DollarSign, Target, Calendar, Building2, PlusCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
@@ -300,11 +301,16 @@ const AddBet = () => {
   return (
     <div className="container mx-auto py-8 px-4">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          Nuova Scommessa
-        </h1>
-        <p className="text-muted-foreground">
+      <div className="mb-8 text-center">
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <div className="p-3 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg">
+            <PlusCircle className="h-8 w-8" />
+          </div>
+          <h1 className="text-3xl font-bold text-foreground bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Nuova Scommessa
+          </h1>
+        </div>
+        <p className="text-muted-foreground text-lg">
           Aggiungi una nuova scommessa al tuo portafoglio
         </p>
       </div>
