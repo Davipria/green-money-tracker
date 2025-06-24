@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { formatCurrency, calculateROI, groupBetsByMonthWithROI, calculateAverageOdds, calculateAverageStake } from "@/utils/betUtils";
@@ -74,6 +75,24 @@ const Analysis = () => {
   const overallROI = calculateROI(totalProfit, totalStake);
   const averageOdds = calculateAverageOdds(filteredBets);
   const averageStake = calculateAverageStake(filteredBets);
+
+  // Create cumulative earnings data
+  const cumulativeEarningsData = filteredBets
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .reduce((acc, bet, index) => {
+      const previousTotal = index > 0 ? acc[index - 1].cumulativeEarnings : 0;
+      const currentProfit = bet.profit || 0;
+      acc.push({
+        date: new Date(bet.date).toLocaleDateString('it-IT', { 
+          day: '2-digit', 
+          month: '2-digit' 
+        }),
+        profit: currentProfit,
+        cumulativeEarnings: previousTotal + currentProfit,
+        betNumber: index + 1
+      });
+      return acc;
+    }, [] as Array<{date: string, profit: number, cumulativeEarnings: number, betNumber: number}>);
 
   if (bets.length === 0) {
     return (
@@ -282,6 +301,39 @@ const Analysis = () => {
             </CardContent>
           </Card>
 
+          {/* Cumulative Earnings Chart */}
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+            <CardHeader>
+              <CardTitle className="text-xl">Guadagni Cumulativi</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={cumulativeEarningsData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip 
+                    formatter={(value: number, name: string) => [
+                      formatCurrency(value),
+                      name === 'cumulativeEarnings' ? 'Guadagni Cumulativi' : 'Profitto'
+                    ]}
+                    labelFormatter={(label) => `Data: ${label}`}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="cumulativeEarnings" 
+                    stroke="#10b981" 
+                    strokeWidth={3}
+                    name="cumulativeEarnings"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Second Row of Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Sports Distribution Chart */}
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
             <CardHeader>
@@ -309,6 +361,9 @@ const Analysis = () => {
               </ResponsiveContainer>
             </CardContent>
           </Card>
+
+          {/* Placeholder for future chart */}
+          <div></div>
         </div>
 
         {/* Sports Performance Table */}
