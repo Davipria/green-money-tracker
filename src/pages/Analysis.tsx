@@ -1,24 +1,10 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/utils/betUtils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
-interface Bet {
-  id: string;
-  date: string;
-  sport: string;
-  event: string;
-  bet_type: string;
-  odds: number;
-  stake: number;
-  status: 'pending' | 'won' | 'lost' | 'cashout';
-  payout?: number;
-  profit?: number;
-  created_at: string;
-}
+import { Bet } from "@/types/bet";
 
 const Analysis = () => {
   const [bets, setBets] = useState<Bet[]>([]);
@@ -47,7 +33,7 @@ const Analysis = () => {
             variant: "destructive"
           });
         } else {
-          setBets(data || []);
+          setBets((data || []) as Bet[]);
         }
       } catch (error) {
         console.error('Errore imprevisto:', error);

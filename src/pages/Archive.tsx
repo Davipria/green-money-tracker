@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/utils/betUtils";
@@ -7,32 +6,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
-interface Bet {
-  id: string;
-  date: string;
-  sport: string;
-  event: string;
-  bet_type: string;
-  odds: number;
-  stake: number;
-  status: 'pending' | 'won' | 'lost' | 'cashout';
-  payout?: number;
-  profit?: number;
-  cashout_amount?: number;
-  notes?: string;
-  created_at: string;
-}
-
-interface MonthlyStats {
-  month: string;
-  year: number;
-  totalStake: number;
-  totalPayout: number;
-  profit: number;
-  betsCount: number;
-  winRate: number;
-}
+import { Bet, MonthlyStats } from "@/types/bet";
 
 const Archive = () => {
   const [bets, setBets] = useState<Bet[]>([]);
@@ -62,7 +36,7 @@ const Archive = () => {
             variant: "destructive"
           });
         } else {
-          setBets(data || []);
+          setBets((data || []) as Bet[]);
         }
       } catch (error) {
         console.error('Errore imprevisto:', error);
