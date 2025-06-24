@@ -124,6 +124,34 @@ const Analysis = () => {
       return acc;
     }, [] as Array<{date: string, profit: number, bankroll: number, betNumber: number}>);
 
+  // Create daily performance data for ROI chart
+  const dailyPerformanceData = filteredBets
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .reduce((acc, bet) => {
+      const betDate = new Date(bet.date).toLocaleDateString('it-IT', { 
+        day: '2-digit', 
+        month: '2-digit' 
+      });
+      
+      const existingDay = acc.find(item => item.date === betDate);
+      const currentProfit = bet.profit || 0;
+      
+      if (existingDay) {
+        existingDay.profit += currentProfit;
+        existingDay.totalStake += bet.stake;
+        existingDay.roi = calculateROI(existingDay.profit, existingDay.totalStake);
+      } else {
+        acc.push({
+          date: betDate,
+          profit: currentProfit,
+          totalStake: bet.stake,
+          roi: calculateROI(currentProfit, bet.stake)
+        });
+      }
+      
+      return acc;
+    }, [] as Array<{date: string, profit: number, totalStake: number, roi: number}>);
+
   if (bets.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
@@ -379,10 +407,10 @@ const Analysis = () => {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={bankrollEvolutionData}>
+                <LineChart data={bankrollEvolutionData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
-                  <YAxis />
+                  <YAxis domain={['dataMin - 50', 'dataMax + 50']} />
                   <Tooltip 
                     formatter={(value: number, name: string) => [
                       formatCurrency(value),
@@ -396,6 +424,7 @@ const Analysis = () => {
                     stroke="#10b981" 
                     strokeWidth={3}
                     name="bankroll"
+                    dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -409,9 +438,9 @@ const Analysis = () => {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={monthlyData}>
+                <LineChart data={dailyPerformanceData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
+                  <XAxis dataKey="date" />
                   <YAxis />
                   <Tooltip 
                     formatter={(value: number, name: string) => [
