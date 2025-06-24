@@ -1,13 +1,25 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/utils/betUtils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronRight, Archive as ArchiveIcon, Target, Calendar, TrendingUp } from "lucide-react";
+import { ChevronDown, ChevronRight, Archive as ArchiveIcon, Target, Calendar, TrendingUp, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Bet, MonthlyStats } from "@/types/bet";
 import EditBetDialog from "@/components/EditBetDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const Archive = () => {
   const [bets, setBets] = useState<Bet[]>([]);
@@ -15,6 +27,7 @@ const Archive = () => {
   const [openMonths, setOpenMonths] = useState<string[]>([]);
   const [selectedBet, setSelectedBet] = useState<Bet | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deletingBetId, setDeletingBetId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchBets = async () => {
@@ -58,6 +71,41 @@ const Archive = () => {
 
   const handleBetUpdated = () => {
     fetchBets();
+  };
+
+  const handleDeleteBet = async (betId: string) => {
+    try {
+      setDeletingBetId(betId);
+      
+      const { error } = await supabase
+        .from('bets')
+        .delete()
+        .eq('id', betId);
+
+      if (error) {
+        console.error('Errore eliminazione scommessa:', error);
+        toast({
+          title: "Errore",
+          description: "Impossibile eliminare la scommessa",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Successo",
+          description: "Scommessa eliminata con successo",
+        });
+        fetchBets(); // Ricarica le scommesse
+      }
+    } catch (error) {
+      console.error('Errore imprevisto:', error);
+      toast({
+        title: "Errore",
+        description: "Errore imprevisto durante l'eliminazione",
+        variant: "destructive"
+      });
+    } finally {
+      setDeletingBetId(null);
+    }
   };
 
   const calculateProfit = (bet: Bet): number => {
@@ -243,48 +291,81 @@ const Archive = () => {
                       <CardContent className="pt-0 pb-6">
                         <div className="space-y-4">
                           {monthBets.map((bet) => (
-                            <div 
-                              key={bet.id} 
-                              className="group cursor-pointer"
-                              onClick={() => handleEditBet(bet)}
-                            >
-                              <div className="flex items-center justify-between p-6 bg-gradient-to-r from-gray-50 to-white border border-gray-100 rounded-xl hover:shadow-lg transition-all duration-300 group-hover:border-blue-200 group-hover:shadow-xl">
-                                <div className="flex-1">
-                                  <div className="flex items-center justify-between">
-                                    <div>
-                                      <div className="font-semibold text-gray-900 text-lg mb-2">{bet.event}</div>
-                                      <div className="text-sm text-gray-600 flex items-center space-x-4">
-                                        {bet.sport && (
-                                          <span className="flex items-center">
-                                            <Target className="w-4 h-4 mr-1" />
-                                            {bet.sport}
+                            <div key={bet.id} className="relative group">
+                              <div 
+                                className="cursor-pointer"
+                                onClick={() => handleEditBet(bet)}
+                              >
+                                <div className="flex items-center justify-between p-6 bg-gradient-to-r from-gray-50 to-white border border-gray-100 rounded-xl hover:shadow-lg transition-all duration-300 group-hover:border-blue-200 group-hover:shadow-xl">
+                                  <div className="flex-1">
+                                    <div className="flex items-center justify-between">
+                                      <div>
+                                        <div className="font-semibold text-gray-900 text-lg mb-2">{bet.event}</div>
+                                        <div className="text-sm text-gray-600 flex items-center space-x-4">
+                                          {bet.sport && (
+                                            <span className="flex items-center">
+                                              <Target className="w-4 h-4 mr-1" />
+                                              {bet.sport}
+                                            </span>
+                                          )}
+                                          <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                                            Quote {bet.odds}
                                           </span>
-                                        )}
-                                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
-                                          Quote {bet.odds}
-                                        </span>
+                                        </div>
                                       </div>
-                                    </div>
-                                    <div className="text-right">
-                                      <div className="text-sm text-gray-500 mb-2 flex items-center">
-                                        <Calendar className="w-4 h-4 mr-1" />
-                                        {new Date(bet.date).toLocaleDateString('it-IT')}
+                                      <div className="text-right">
+                                        <div className="text-sm text-gray-500 mb-2 flex items-center">
+                                          <Calendar className="w-4 h-4 mr-1" />
+                                          {new Date(bet.date).toLocaleDateString('it-IT')}
+                                        </div>
+                                        <div className="font-semibold text-gray-900 text-lg mb-3">
+                                          Puntata: {formatCurrency(bet.stake)}
+                                        </div>
+                                        <Badge 
+                                          variant={bet.status === 'won' ? 'default' : bet.status === 'lost' ? 'destructive' : bet.status === 'cashout' ? 'secondary' : 'secondary'}
+                                          className={`px-3 py-1 font-medium ${bet.status === 'won' ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : ''}`}
+                                        >
+                                          {bet.status === 'won' ? 'Vinta' : 
+                                           bet.status === 'lost' ? 'Persa' : 
+                                           bet.status === 'cashout' ? 'Cashout' : 'In attesa'}
+                                        </Badge>
                                       </div>
-                                      <div className="font-semibold text-gray-900 text-lg mb-3">
-                                        Puntata: {formatCurrency(bet.stake)}
-                                      </div>
-                                      <Badge 
-                                        variant={bet.status === 'won' ? 'default' : bet.status === 'lost' ? 'destructive' : bet.status === 'cashout' ? 'secondary' : 'secondary'}
-                                        className={`px-3 py-1 font-medium ${bet.status === 'won' ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : ''}`}
-                                      >
-                                        {bet.status === 'won' ? 'Vinta' : 
-                                         bet.status === 'lost' ? 'Persa' : 
-                                         bet.status === 'cashout' ? 'Cashout' : 'In attesa'}
-                                      </Badge>
                                     </div>
                                   </div>
                                 </div>
                               </div>
+                              
+                              {/* Delete Button */}
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-100 hover:text-red-600"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Elimina Scommessa</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Sei sicuro di voler eliminare questa scommessa? Questa azione non può essere annullata.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Annulla</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDeleteBet(bet.id)}
+                                      disabled={deletingBetId === bet.id}
+                                      className="bg-red-600 hover:bg-red-700"
+                                    >
+                                      {deletingBetId === bet.id ? "Eliminazione..." : "Elimina"}
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </div>
                           ))}
                         </div>
