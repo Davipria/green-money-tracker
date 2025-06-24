@@ -6,6 +6,8 @@ export const calculateProfit = (bet: Bet): number => {
     return bet.payout - bet.stake;
   } else if (bet.status === 'lost') {
     return -bet.stake;
+  } else if (bet.status === 'cashout' && bet.cashout_amount) {
+    return bet.cashout_amount - bet.stake;
   }
   return 0;
 };

@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/utils/betUtils";
@@ -60,6 +61,17 @@ const Archive = () => {
     fetchBets();
   };
 
+  const calculateProfit = (bet: Bet): number => {
+    if (bet.status === 'won' && bet.payout) {
+      return bet.payout - bet.stake;
+    } else if (bet.status === 'lost') {
+      return -bet.stake;
+    } else if (bet.status === 'cashout' && bet.cashout_amount) {
+      return bet.cashout_amount - bet.stake;
+    }
+    return 0;
+  };
+
   const groupBetsByMonth = (bets: Bet[]): MonthlyStats[] => {
     const grouped = bets.reduce((acc, bet) => {
       const date = new Date(bet.date);
@@ -84,7 +96,7 @@ const Archive = () => {
         acc[key].totalPayout += bet.payout;
       }
       
-      acc[key].profit += bet.profit || 0;
+      acc[key].profit += calculateProfit(bet);
       
       return acc;
     }, {} as Record<string, MonthlyStats>);

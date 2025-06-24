@@ -94,7 +94,7 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
         profit = -parseFloat(formData.stake);
       } else if (formData.status === 'cashout' && formData.cashoutAmount) {
         payout = parseFloat(formData.cashoutAmount);
-        profit = payout - parseFloat(formData.stake);
+        profit = parseFloat(formData.cashoutAmount) - parseFloat(formData.stake);
       }
 
       const updateData = {
