@@ -45,6 +45,17 @@ const Analysis = () => {
     fetchBets();
   }, [toast]);
 
+  const calculateProfit = (bet: Bet): number => {
+    if (bet.status === 'won' && bet.payout) {
+      return bet.payout - bet.stake;
+    } else if (bet.status === 'lost') {
+      return -bet.stake;
+    } else if (bet.status === 'cashout' && bet.cashout_amount) {
+      return bet.cashout_amount - bet.stake;
+    }
+    return 0;
+  };
+
   const groupBetsByMonth = (bets: Bet[]) => {
     const grouped = bets.reduce((acc, bet) => {
       const date = new Date(bet.date);
@@ -57,7 +68,7 @@ const Analysis = () => {
         };
       }
       
-      acc[key].profit += bet.profit || 0;
+      acc[key].profit += calculateProfit(bet);
       
       return acc;
     }, {} as Record<string, { month: string; profit: number }>);
@@ -135,19 +146,21 @@ const Analysis = () => {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={monthlyData}>
+                <LineChart data={monthlyData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />
                   <Tooltip 
                     formatter={(value: number) => [formatCurrency(value), "Profitto"]}
                   />
-                  <Bar 
+                  <Line 
+                    type="monotone" 
                     dataKey="profit" 
-                    fill="#3b82f6"
-                    radius={[4, 4, 0, 0]}
+                    stroke="#3b82f6" 
+                    strokeWidth={3}
+                    dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
                   />
-                </BarChart>
+                </LineChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
