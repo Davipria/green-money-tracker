@@ -4,6 +4,7 @@ export interface Bet {
   date: string;
   sport: string;
   event: string;
+  manifestation?: string;
   bet_type: string;
   odds: number;
   stake: number;

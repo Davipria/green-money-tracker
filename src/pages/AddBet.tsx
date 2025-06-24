@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -40,6 +39,7 @@ const AddBet = () => {
     
     // Scommessa singola
     sport: "",
+    manifestation: "",
     event: "",
     odds: "",
     selection: "",
@@ -131,6 +131,7 @@ const AddBet = () => {
         user_id: user.user.id,
         date: formData.date,
         sport: betType === 'single' ? formData.sport : null,
+        manifestation: betType === 'single' ? formData.manifestation : null,
         event: betType === 'single' ? formData.event : formData.multipleTitle,
         bet_type: betType,
         odds: parseFloat(formData.odds),
@@ -207,6 +208,7 @@ const AddBet = () => {
         status: "pending",
         cashoutAmount: "",
         sport: "",
+        manifestation: "",
         event: "",
         odds: "",
         selection: "",
@@ -460,6 +462,16 @@ const AddBet = () => {
                       onChange={(e) => handleInputChange("odds", e.target.value)}
                     />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="manifestation">Manifestazione</Label>
+                  <Input
+                    id="manifestation"
+                    placeholder="Es. Serie A, ATP Roma, Champions League..."
+                    value={formData.manifestation}
+                    onChange={(e) => handleInputChange("manifestation", e.target.value)}
+                  />
                 </div>
 
                 <div className="space-y-2">
