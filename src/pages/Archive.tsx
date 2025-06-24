@@ -206,52 +206,29 @@ const Archive = () => {
                             onClick={() => handleEditBet(bet)}
                           >
                             <div className="flex-1">
-                              <div className="flex items-center space-x-3">
+                              <div className="flex items-center justify-between">
                                 <div>
-                                  {bet.manifestation && (
-                                    <div className="text-xs text-muted-foreground font-medium mb-1">
-                                      {bet.manifestation}
-                                    </div>
-                                  )}
-                                  <div className="font-medium">{bet.event}</div>
-                                  <div className="text-sm text-muted-foreground">
-                                    {bet.sport || bet.bet_type} • Quote {bet.odds}
+                                  <div className="font-medium text-lg">{bet.event}</div>
+                                  <div className="text-sm text-muted-foreground mt-1">
+                                    {bet.sport && `${bet.sport} • `}Quote {bet.odds}
                                   </div>
-                                  <div className="text-xs text-muted-foreground">
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-sm text-muted-foreground mb-1">
                                     {new Date(bet.date).toLocaleDateString('it-IT')}
                                   </div>
+                                  <div className="font-medium mb-2">
+                                    Puntata: {formatCurrency(bet.stake)}
+                                  </div>
+                                  <Badge 
+                                    variant={bet.status === 'won' ? 'default' : bet.status === 'lost' ? 'destructive' : bet.status === 'cashout' ? 'secondary' : 'secondary'}
+                                    className={bet.status === 'won' ? 'bg-green-100 text-green-800' : ''}
+                                  >
+                                    {bet.status === 'won' ? 'Vinta' : 
+                                     bet.status === 'lost' ? 'Persa' : 
+                                     bet.status === 'cashout' ? 'Cashout' : 'In attesa'}
+                                  </Badge>
                                 </div>
-                              </div>
-                            </div>
-                            <div className="text-right space-y-1">
-                              <div className="font-medium">
-                                Puntata: {formatCurrency(bet.stake)}
-                              </div>
-                              {bet.payout && (
-                                <div className="text-sm text-muted-foreground">
-                                  Vincita: {formatCurrency(bet.payout)}
-                                </div>
-                              )}
-                              {bet.status === 'cashout' && bet.cashout_amount && (
-                                <div className="text-sm text-muted-foreground">
-                                  Cashout: {formatCurrency(bet.cashout_amount)}
-                                </div>
-                              )}
-                              <div className="flex items-center space-x-2">
-                                <Badge 
-                                  variant={bet.status === 'won' ? 'default' : bet.status === 'lost' ? 'destructive' : bet.status === 'cashout' ? 'secondary' : 'secondary'}
-                                  className={bet.status === 'won' ? 'bg-green-100 text-green-800' : ''}
-                                >
-                                  {bet.status === 'won' ? 'Vinta' : 
-                                   bet.status === 'lost' ? 'Persa' : 
-                                   bet.status === 'cashout' ? 'Cashout' : 'In attesa'}
-                                </Badge>
-                                <span className={`font-bold ${
-                                  bet.profit && bet.profit > 0 ? 'text-green-600' : 
-                                  bet.profit && bet.profit < 0 ? 'text-red-600' : 'text-muted-foreground'
-                                }`}>
-                                  {bet.profit ? formatCurrency(bet.profit) : 'N/A'}
-                                </span>
                               </div>
                             </div>
                           </div>
