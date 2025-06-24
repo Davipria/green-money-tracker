@@ -16,46 +16,57 @@ import Analysis from "./pages/Analysis";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import { useState } from "react";
 
-const queryClient = new QueryClient();
+const App = () => {
+  // Crea il QueryClient all'interno del componente per evitare problemi di inizializzazione
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: 1,
+        refetchOnWindowFocus: false,
+      },
+    },
+  }));
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="*" element={
-              <ProtectedRoute>
-                <SidebarProvider>
-                  <div className="min-h-screen flex w-full">
-                    <AppSidebar />
-                    <main className="flex-1">
-                      <div className="p-2 flex justify-between items-center">
-                        <SidebarTrigger />
-                        <UserMenu />
-                      </div>
-                      <Routes>
-                        <Route path="/" element={<Dashboard />} />
-                        <Route path="/archive" element={<Archive />} />
-                        <Route path="/add-bet" element={<AddBet />} />
-                        <Route path="/analysis" element={<Analysis />} />
-                        <Route path="/profile" element={<Profile />} />
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
-                    </main>
-                  </div>
-                </SidebarProvider>
-              </ProtectedRoute>
-            } />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="*" element={
+                <ProtectedRoute>
+                  <SidebarProvider>
+                    <div className="min-h-screen flex w-full">
+                      <AppSidebar />
+                      <main className="flex-1">
+                        <div className="p-2 flex justify-between items-center">
+                          <SidebarTrigger />
+                          <UserMenu />
+                        </div>
+                        <Routes>
+                          <Route path="/" element={<Dashboard />} />
+                          <Route path="/archive" element={<Archive />} />
+                          <Route path="/add-bet" element={<AddBet />} />
+                          <Route path="/analysis" element={<Analysis />} />
+                          <Route path="/profile" element={<Profile />} />
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                      </main>
+                    </div>
+                  </SidebarProvider>
+                </ProtectedRoute>
+              } />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
