@@ -6,6 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/utils/betUtils";
 import { Edit, Trash2, Calendar, Target, TrendingUp, User, Clock, BookOpen, FileText, DollarSign, Percent } from "lucide-react";
 import { Bet } from "@/types/bet";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BetDetailsDialogProps {
   bet: Bet | null;
@@ -16,6 +18,33 @@ interface BetDetailsDialogProps {
 }
 
 const BetDetailsDialog = ({ bet, open, onOpenChange, onEdit, onDelete }: BetDetailsDialogProps) => {
+  const [bankroll, setBankroll] = useState<number>(1000);
+
+  useEffect(() => {
+    const fetchBankroll = async () => {
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        if (!user.user) return;
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('bankroll')
+          .eq('id', user.user.id)
+          .single();
+
+        if (profile?.bankroll) {
+          setBankroll(profile.bankroll);
+        }
+      } catch (error) {
+        console.error('Error fetching bankroll:', error);
+      }
+    };
+
+    if (open) {
+      fetchBankroll();
+    }
+  }, [open]);
+
   if (!bet) return null;
 
   const getStatusBadge = (status: string) => {
@@ -40,6 +69,10 @@ const BetDetailsDialog = ({ bet, open, onOpenChange, onEdit, onDelete }: BetDeta
       return bet.cashout_amount - bet.stake;
     }
     return 0;
+  };
+
+  const calculateStakePercentage = (): number => {
+    return (bet.stake / bankroll) * 100;
   };
 
   return (
@@ -108,17 +141,7 @@ const BetDetailsDialog = ({ bet, open, onOpenChange, onEdit, onDelete }: BetDeta
               </Card>
             )}
 
-            {/* Odds & Selection */}
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2 mb-2">
-                  <DollarSign className="w-5 h-5 text-blue-600" />
-                  <span className="font-medium text-gray-700">Quote</span>
-                </div>
-                <p className="text-gray-900 text-lg font-semibold">{bet.odds}</p>
-              </CardContent>
-            </Card>
-
+            {/* Selection & Odds - Reordered */}
             {bet.selection && (
               <Card>
                 <CardContent className="p-4">
@@ -131,7 +154,17 @@ const BetDetailsDialog = ({ bet, open, onOpenChange, onEdit, onDelete }: BetDeta
               </Card>
             )}
 
-            {/* Stake & Payout */}
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-2 mb-2">
+                  <DollarSign className="w-5 h-5 text-blue-600" />
+                  <span className="font-medium text-gray-700">Quote</span>
+                </div>
+                <p className="text-gray-900 text-lg font-semibold">{bet.odds}</p>
+              </CardContent>
+            </Card>
+
+            {/* Stake & Stake Percentage */}
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center space-x-2 mb-2">
@@ -139,6 +172,16 @@ const BetDetailsDialog = ({ bet, open, onOpenChange, onEdit, onDelete }: BetDeta
                   <span className="font-medium text-gray-700">Puntata</span>
                 </div>
                 <p className="text-gray-900 text-lg font-semibold">{formatCurrency(bet.stake)}</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Percent className="w-5 h-5 text-green-600" />
+                  <span className="font-medium text-gray-700">Stake</span>
+                </div>
+                <p className="text-gray-900 text-lg font-semibold">{calculateStakePercentage().toFixed(2)}%</p>
               </CardContent>
             </Card>
 
