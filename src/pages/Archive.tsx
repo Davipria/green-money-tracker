@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Bet, MonthlyStats } from "@/types/bet";
 import EditBetDialog from "@/components/EditBetDialog";
 import ExportBetsDialog from "@/components/ExportBetsDialog";
+import BetDetailsDialog from "@/components/BetDetailsDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +29,7 @@ const Archive = () => {
   const [openMonths, setOpenMonths] = useState<string[]>([]);
   const [selectedBet, setSelectedBet] = useState<Bet | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [deletingBetId, setDeletingBetId] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -66,9 +67,21 @@ const Archive = () => {
     fetchBets();
   }, [toast]);
 
-  const handleEditBet = (bet: Bet) => {
+  const handleViewBetDetails = (bet: Bet) => {
     setSelectedBet(bet);
+    setDetailsDialogOpen(true);
+  };
+
+  const handleEditBet = () => {
+    setDetailsDialogOpen(false);
     setEditDialogOpen(true);
+  };
+
+  const handleDeleteFromDetails = () => {
+    if (selectedBet) {
+      setDetailsDialogOpen(false);
+      handleDeleteBet(selectedBet.id);
+    }
   };
 
   const handleBetUpdated = () => {
@@ -308,7 +321,7 @@ const Archive = () => {
                             <div key={bet.id} className="relative group">
                               <div 
                                 className="cursor-pointer"
-                                onClick={() => handleEditBet(bet)}
+                                onClick={() => handleViewBetDetails(bet)}
                               >
                                 <div className="flex items-center justify-between p-6 bg-gradient-to-r from-gray-50 to-white border border-gray-100 rounded-xl hover:shadow-lg transition-all duration-300 group-hover:border-blue-200 group-hover:shadow-xl">
                                   <div className="flex-1">
@@ -391,6 +404,14 @@ const Archive = () => {
             })}
           </div>
         )}
+
+        <BetDetailsDialog 
+          bet={selectedBet}
+          open={detailsDialogOpen}
+          onOpenChange={setDetailsDialogOpen}
+          onEdit={handleEditBet}
+          onDelete={handleDeleteFromDetails}
+        />
 
         <EditBetDialog 
           bet={selectedBet}
