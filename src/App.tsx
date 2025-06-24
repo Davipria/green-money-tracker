@@ -15,6 +15,7 @@ import AddBet from "./pages/AddBet";
 import Analysis from "./pages/Analysis";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
+import Landing from "./pages/Landing";
 import NotFound from "./pages/NotFound";
 import { useState } from "react";
 
