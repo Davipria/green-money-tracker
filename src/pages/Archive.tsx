@@ -1,14 +1,16 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/utils/betUtils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronRight, Archive as ArchiveIcon, Target, Calendar, TrendingUp, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Archive as ArchiveIcon, Target, Calendar, TrendingUp, Trash2, Download } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Bet, MonthlyStats } from "@/types/bet";
 import EditBetDialog from "@/components/EditBetDialog";
+import ExportBetsDialog from "@/components/ExportBetsDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -213,9 +215,21 @@ const Archive = () => {
           <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             Archivio Scommesse
           </h1>
-          <p className="text-gray-600 text-lg">
+          <p className="text-gray-600 text-lg mb-6">
             Storico delle tue scommesse organizzato per mese
           </p>
+          
+          {/* Export Button */}
+          <div className="flex justify-center">
+            <ExportBetsDialog 
+              trigger={
+                <Button className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2">
+                  <Download className="w-5 h-5" />
+                  <span>Esporta in Excel</span>
+                </Button>
+              }
+            />
+          </div>
         </div>
 
         {bets.length === 0 ? (
