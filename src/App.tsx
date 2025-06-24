@@ -50,14 +50,71 @@ const App = () => {
                           <SidebarTrigger />
                           <UserMenu />
                         </div>
-                        <Routes>
-                          <Route index element={<Dashboard />} />
-                          <Route path="archive" element={<Archive />} />
-                          <Route path="add-bet" element={<AddBet />} />
-                          <Route path="analysis" element={<Analysis />} />
-                          <Route path="profile" element={<Profile />} />
-                          <Route path="*" element={<NotFound />} />
-                        </Routes>
+                        <Dashboard />
+                      </main>
+                    </div>
+                  </SidebarProvider>
+                </ProtectedRoute>
+              } />
+              <Route path="/app/archive" element={
+                <ProtectedRoute>
+                  <SidebarProvider>
+                    <div className="min-h-screen flex w-full">
+                      <AppSidebar />
+                      <main className="flex-1">
+                        <div className="p-2 flex justify-between items-center">
+                          <SidebarTrigger />
+                          <UserMenu />
+                        </div>
+                        <Archive />
+                      </main>
+                    </div>
+                  </SidebarProvider>
+                </ProtectedRoute>
+              } />
+              <Route path="/app/add-bet" element={
+                <ProtectedRoute>
+                  <SidebarProvider>
+                    <div className="min-h-screen flex w-full">
+                      <AppSidebar />
+                      <main className="flex-1">
+                        <div className="p-2 flex justify-between items-center">
+                          <SidebarTrigger />
+                          <UserMenu />
+                        </div>
+                        <AddBet />
+                      </main>
+                    </div>
+                  </SidebarProvider>
+                </ProtectedRoute>
+              } />
+              <Route path="/app/analysis" element={
+                <ProtectedRoute>
+                  <SidebarProvider>
+                    <div className="min-h-screen flex w-full">
+                      <AppSidebar />
+                      <main className="flex-1">
+                        <div className="p-2 flex justify-between items-center">
+                          <SidebarTrigger />
+                          <UserMenu />
+                        </div>
+                        <Analysis />
+                      </main>
+                    </div>
+                  </SidebarProvider>
+                </ProtectedRoute>
+              } />
+              <Route path="/app/profile" element={
+                <ProtectedRoute>
+                  <SidebarProvider>
+                    <div className="min-h-screen flex w-full">
+                      <AppSidebar />
+                      <main className="flex-1">
+                        <div className="p-2 flex justify-between items-center">
+                          <SidebarTrigger />
+                          <UserMenu />
+                        </div>
+                        <Profile />
                       </main>
                     </div>
                   </SidebarProvider>
