@@ -13,7 +13,6 @@ import { BarChart, LineChart, PieChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { MetricCard } from "@/components/MetricCard";
-import ExportButtons from "@/components/ExportButtons";
 
 const Analysis = () => {
   const { user } = useAuth();
@@ -164,50 +163,13 @@ const Analysis = () => {
 
   const shouldShowPerformanceChart = monthlyPerformanceData.length > 0 && monthlyPerformanceData.some(item => item.roi !== 0);
 
-  // Create analysis data for export
-  const analysisData = {
-    totalBets: filteredBets.length,
-    winRate: filteredBets.length > 0 ? (filteredBets.filter(bet => bet.status === 'won').length / filteredBets.length) * 100 : 0,
-    totalProfit: totalProfit,
-    roi: calculateROI(totalProfit, totalStake),
-    averageOdds: filteredBets.length > 0 ? filteredBets.reduce((sum, bet) => sum + bet.odds, 0) / filteredBets.length : 0,
-    totalStake: totalStake,
-    period: timeFilter === 'all' ? 'Tutto il periodo' : 
-            timeFilter === 'year' ? 'Quest\'anno' :
-            timeFilter === 'month' ? 'Questo mese' :
-            timeFilter === 'week' ? 'Questa settimana' :
-            `Dal ${format(customStartDate, 'dd/MM/yyyy')} al ${format(customEndDate, 'dd/MM/yyyy')}`
-  };
-
-  // Convert bets for export
-  const exportBets = filteredBets.map(bet => ({
-    id: bet.id,
-    date: bet.date,
-    event: bet.event,
-    selection: bet.selection,
-    odds: bet.odds,
-    stake: bet.stake,
-    status: bet.status,
-    profit: bet.profit,
-    sport: bet.sport,
-    bookmaker: bet.bookmaker
-  }));
-
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Analisi</h1>
-          <p className="text-muted-foreground">
-            Visualizza le tue statistiche e performance delle scommesse
-          </p>
-        </div>
-        <ExportButtons 
-          bets={exportBets}
-          analysisData={analysisData}
-          monthlyData={monthlyPerformanceData}
-          type="analysis"
-        />
+      <div>
+        <h1 className="text-3xl font-bold mb-2">Analisi</h1>
+        <p className="text-muted-foreground">
+          Visualizza le tue statistiche e performance delle scommesse
+        </p>
       </div>
 
       {/* Filters */}
