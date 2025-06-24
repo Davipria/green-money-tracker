@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/utils/betUtils";
-import { TrendingUp, TrendingDown, Target, Trophy, Calendar, Zap } from "lucide-react";
+import { TrendingUp, TrendingDown, Target, Trophy, Calendar, Zap, Home } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -86,7 +86,7 @@ const Dashboard = () => {
         {/* Header Section */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4">
-            <TrendingUp className="w-8 h-8 text-white" />
+            <Home className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             Home
@@ -208,9 +208,9 @@ const Dashboard = () => {
                           </span>
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right flex flex-col items-end">
                         <div className="font-semibold text-gray-900 text-lg mb-1">{formatCurrency(bet.stake)}</div>
-                        <div className={`text-sm font-medium px-3 py-1 rounded-full ${
+                        <div className={`text-sm font-medium px-3 py-1 rounded-full text-center ${
                           bet.status === 'won' 
                             ? 'bg-green-100 text-green-800' 
                             : bet.status === 'lost' 
