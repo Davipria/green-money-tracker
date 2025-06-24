@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { format } from "date-fns";
 import { Calendar, Download, CalendarIcon } from "lucide-react";
@@ -94,7 +93,7 @@ const ExportBetsDialog = ({ trigger }: ExportBetsDialogProps) => {
         return;
       }
 
-      // Prepara i dati per Excel nell'ordine richiesto
+      // Prepara i dati per Excel senza la colonna Stake
       const excelData = (bets as Bet[]).map(bet => ({
         'Data': new Date(bet.date).toLocaleDateString('it-IT'),
         'Bookmaker': bet.bookmaker || '',
@@ -104,7 +103,6 @@ const ExportBetsDialog = ({ trigger }: ExportBetsDialogProps) => {
         'Selezione': bet.selection || '',
         'Quota': bet.odds,
         'Puntata': `€${bet.stake}`,
-        'Stake': `${bet.stake}%`, // Fixed: removed the *10 multiplication
         'Stato Scommessa': bet.status === 'won' ? 'Vinta' : 
                           bet.status === 'lost' ? 'Persa' : 
                           bet.status === 'cashout' ? 'Cashout' : 'In attesa',
@@ -118,7 +116,7 @@ const ExportBetsDialog = ({ trigger }: ExportBetsDialogProps) => {
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Scommesse');
 
-      // Imposta larghezza colonne nell'ordine corretto
+      // Imposta larghezza colonne senza la colonna Stake
       const columnWidths = [
         { wch: 12 }, // Data
         { wch: 15 }, // Bookmaker
@@ -128,7 +126,6 @@ const ExportBetsDialog = ({ trigger }: ExportBetsDialogProps) => {
         { wch: 20 }, // Selezione
         { wch: 8 },  // Quota
         { wch: 10 }, // Puntata
-        { wch: 10 }, // Stake
         { wch: 15 }, // Stato Scommessa
         { wch: 12 }, // Guadagno
       ];
