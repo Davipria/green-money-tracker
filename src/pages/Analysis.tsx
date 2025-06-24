@@ -357,7 +357,7 @@ const Analysis = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-cyan-100 text-sm font-medium">Quote Medie</p>
+                  <p className="text-cyan-100 text-sm font-medium">Quota Media</p>
                   <p className="text-3xl font-bold">{averageOdds.toFixed(2)}</p>
                 </div>
                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
