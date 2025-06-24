@@ -1,6 +1,7 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { formatCurrency, calculateROI, groupBetsByMonthWithROI, calculateAverageOdds, calculateAverageStake } from "@/utils/betUtils";
+import { formatCurrency, calculateROI, groupBetsByMonthWithROI, calculateAverageOdds, calculateAverageStake, calculateProfitVolatility } from "@/utils/betUtils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -192,6 +193,7 @@ const Analysis = () => {
   const overallROI = calculateROI(totalProfit, totalStake);
   const averageOdds = calculateAverageOdds(filteredBets);
   const averageStake = calculateAverageStake(filteredBets);
+  const profitVolatility = calculateProfitVolatility(filteredBets);
 
   if (bets.length === 0) {
     return (
@@ -375,6 +377,20 @@ const Analysis = () => {
                 </div>
                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
                   <DollarSign className="w-6 h-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-violet-500 to-purple-600 border-0 text-white shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-violet-100 text-sm font-medium">Volatilità Profitti</p>
+                  <p className="text-3xl font-bold">{formatCurrency(profitVolatility)}</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Activity className="w-6 h-6" />
                 </div>
               </div>
             </CardContent>
