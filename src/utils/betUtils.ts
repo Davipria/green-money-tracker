@@ -12,6 +12,11 @@ export const calculateProfit = (bet: Bet): number => {
   return 0;
 };
 
+export const calculateROI = (totalProfit: number, totalStake: number): number => {
+  if (totalStake === 0) return 0;
+  return (totalProfit / totalStake) * 100;
+};
+
 export const groupBetsByMonth = (bets: Bet[]): MonthlyStats[] => {
   const grouped = bets.reduce((acc, bet) => {
     const date = new Date(bet.date);
@@ -54,6 +59,35 @@ export const groupBetsByMonth = (bets: Bet[]): MonthlyStats[] => {
   });
   
   return Object.values(grouped).sort((a, b) => b.year - a.year || b.month.localeCompare(a.month));
+};
+
+export const groupBetsByMonthWithROI = (bets: Bet[]) => {
+  const grouped = bets.reduce((acc, bet) => {
+    const date = new Date(bet.date);
+    const key = `${date.getFullYear()}-${date.getMonth()}`;
+    const displayName = date.toLocaleDateString('it-IT', { month: 'short', year: '2-digit' });
+    
+    if (!acc[key]) {
+      acc[key] = {
+        month: displayName,
+        profit: 0,
+        totalStake: 0,
+        roi: 0,
+      };
+    }
+    
+    acc[key].profit += calculateProfit(bet);
+    acc[key].totalStake += bet.stake;
+    
+    return acc;
+  }, {} as Record<string, { month: string; profit: number; totalStake: number; roi: number }>);
+  
+  // Calculate ROI for each month
+  Object.keys(grouped).forEach(key => {
+    grouped[key].roi = calculateROI(grouped[key].profit, grouped[key].totalStake);
+  });
+  
+  return Object.values(grouped).sort();
 };
 
 export const formatCurrency = (amount: number): string => {

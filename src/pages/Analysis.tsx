@@ -1,12 +1,13 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { formatCurrency } from "@/utils/betUtils";
+import { formatCurrency, calculateROI, groupBetsByMonthWithROI } from "@/utils/betUtils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Bet } from "@/types/bet";
-import { TrendingUp, Calendar, Target, BarChart3, PieChart as PieChartIcon, TrendingDown } from "lucide-react";
+import { TrendingUp, Calendar, Target, BarChart3, PieChart as PieChartIcon, TrendingDown, Percent } from "lucide-react";
 
 type TimeFilter = 'all' | 'year' | 'month';
 
@@ -149,6 +150,7 @@ const Analysis = () => {
 
   const filteredBets = filterBetsByTime(bets);
   const monthlyData = groupBetsByMonth(bets);
+  const roiData = groupBetsByMonthWithROI(filteredBets);
   
   const sportStats = filteredBets.reduce((acc, bet) => {
     const sport = bet.sport || bet.bet_type || 'Altro';
@@ -185,8 +187,10 @@ const Analysis = () => {
   };
 
   const totalProfit = filteredBets.reduce((sum, bet) => sum + calculateProfit(bet), 0);
+  const totalStake = filteredBets.reduce((sum, bet) => sum + bet.stake, 0);
   const totalBets = filteredBets.length;
   const winRate = totalBets > 0 ? ((filteredBets.filter(bet => bet.status === 'won').length / totalBets) * 100).toFixed(1) : '0';
+  const overallROI = calculateROI(totalProfit, totalStake);
 
   if (bets.length === 0) {
     return (
@@ -290,7 +294,7 @@ const Analysis = () => {
         </Card>
 
         {/* Stats Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="bg-gradient-to-br from-green-500 to-emerald-600 border-0 text-white shadow-xl">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -328,6 +332,20 @@ const Analysis = () => {
                 </div>
                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
                   <BarChart3 className="w-6 h-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-orange-500 to-red-600 border-0 text-white shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-orange-100 text-sm font-medium">ROI</p>
+                  <p className="text-3xl font-bold">{overallROI.toFixed(1)}%</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Percent className="w-6 h-6" />
                 </div>
               </div>
             </CardContent>
@@ -378,6 +396,48 @@ const Analysis = () => {
                       </linearGradient>
                     </defs>
                   </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+
+          {roiData.length > 0 && (
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+              <CardHeader className="pb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
+                    <Percent className="w-4 h-4 text-white" />
+                  </div>
+                  <CardTitle className="text-xl">ROI Mensile</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={320}>
+                  <BarChart data={roiData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="month" stroke="#6b7280" fontSize={12} />
+                    <YAxis stroke="#6b7280" fontSize={12} />
+                    <Tooltip 
+                      formatter={(value: number) => [`${value.toFixed(1)}%`, "ROI"]}
+                      contentStyle={{
+                        backgroundColor: 'white',
+                        border: 'none',
+                        borderRadius: '12px',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+                      }}
+                    />
+                    <Bar 
+                      dataKey="roi" 
+                      fill="url(#roiGradient)"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <defs>
+                      <linearGradient id="roiGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#f97316" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#dc2626" stopOpacity={0.8}/>
+                      </linearGradient>
+                    </defs>
+                  </BarChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>

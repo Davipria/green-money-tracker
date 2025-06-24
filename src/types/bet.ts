@@ -35,4 +35,12 @@ export interface MonthlyStats {
   profit: number;
   betsCount: number;
   winRate: number;
+  roi?: number;
+}
+
+export interface ROIData {
+  month: string;
+  profit: number;
+  totalStake: number;
+  roi: number;
 }
