@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -216,8 +217,8 @@ const AddBet = () => {
       });
       setMultipleBets([{ id: '1', sport: '', event: '', odds: '', selection: '' }]);
 
-      // Reindirizza all'archivio
-      navigate('/archive');
+      // Reindirizza all'archivio corretto
+      navigate('/app/archive');
 
     } catch (error) {
       console.error('Errore imprevisto:', error);
