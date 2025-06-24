@@ -413,7 +413,7 @@ const Analysis = () => {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={320}>
-                  <BarChart data={roiData}>
+                  <LineChart data={roiData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                     <XAxis dataKey="month" stroke="#6b7280" fontSize={12} />
                     <YAxis stroke="#6b7280" fontSize={12} />
@@ -426,10 +426,13 @@ const Analysis = () => {
                         boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
                       }}
                     />
-                    <Bar 
+                    <Line 
+                      type="monotone" 
                       dataKey="roi" 
-                      fill="url(#roiGradient)"
-                      radius={[4, 4, 0, 0]}
+                      stroke="url(#roiGradient)"
+                      strokeWidth={3}
+                      dot={{ fill: '#f97316', strokeWidth: 3, r: 5 }}
+                      activeDot={{ r: 7, fill: '#ea580c' }}
                     />
                     <defs>
                       <linearGradient id="roiGradient" x1="0" y1="0" x2="0" y2="1">
@@ -437,7 +440,7 @@ const Analysis = () => {
                         <stop offset="95%" stopColor="#dc2626" stopOpacity={0.8}/>
                       </linearGradient>
                     </defs>
-                  </BarChart>
+                  </LineChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
