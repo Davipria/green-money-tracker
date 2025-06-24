@@ -152,6 +152,21 @@ const Analysis = () => {
       return acc;
     }, [] as Array<{date: string, profit: number, totalStake: number, roi: number}>);
 
+  // Check if we should show Performance (ROI) chart
+  const shouldShowPerformanceChart = () => {
+    if (timeFilter === "all" || timeFilter === "year") {
+      return true;
+    }
+    
+    if (timeFilter === "custom" && customDateRange.from && customDateRange.to) {
+      const diffTime = Math.abs(customDateRange.to.getTime() - customDateRange.from.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays > 60; // More than 2 months (approximately 60 days)
+    }
+    
+    return false;
+  };
+
   if (bets.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
@@ -399,7 +414,7 @@ const Analysis = () => {
         </div>
 
         {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className={`grid grid-cols-1 ${shouldShowPerformanceChart() ? 'lg:grid-cols-2' : ''} gap-8`}>
           {/* Bankroll Evolution Chart */}
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
             <CardHeader>
@@ -431,29 +446,31 @@ const Analysis = () => {
             </CardContent>
           </Card>
 
-          {/* Performance (ROI) Chart */}
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-            <CardHeader>
-              <CardTitle className="text-xl">Performance (ROI)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={dailyPerformanceData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip 
-                    formatter={(value: number, name: string) => [
-                      name === 'roi' ? `${value.toFixed(1)}%` : formatCurrency(value),
-                      name === 'roi' ? 'ROI' : 'Profitto'
-                    ]}
-                  />
-                  <Bar dataKey="profit" fill="#8884d8" name="profit" />
-                  <Line type="monotone" dataKey="roi" stroke="#82ca9d" name="roi" />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+          {/* Performance (ROI) Chart - Conditional */}
+          {shouldShowPerformanceChart() && (
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+              <CardHeader>
+                <CardTitle className="text-xl">Performance (ROI)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={dailyPerformanceData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip 
+                      formatter={(value: number, name: string) => [
+                        name === 'roi' ? `${value.toFixed(1)}%` : formatCurrency(value),
+                        name === 'roi' ? 'ROI' : 'Profitto'
+                      ]}
+                    />
+                    <Bar dataKey="profit" fill="#8884d8" name="profit" />
+                    <Line type="monotone" dataKey="roi" stroke="#82ca9d" name="roi" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Second Row of Charts */}
