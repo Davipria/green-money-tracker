@@ -94,26 +94,23 @@ const ExportBetsDialog = ({ trigger }: ExportBetsDialogProps) => {
         return;
       }
 
-      // Prepara i dati per Excel
+      // Prepara i dati per Excel nell'ordine richiesto
       const excelData = (bets as Bet[]).map(bet => ({
         'Data': new Date(bet.date).toLocaleDateString('it-IT'),
+        'Bookmaker': bet.bookmaker || '',
         'Sport': bet.sport || '',
-        'Evento': bet.event,
         'Manifestazione': bet.manifestation || '',
-        'Tipo Scommessa': bet.bet_type,
+        'Evento': bet.event,
         'Selezione': bet.selection || '',
-        'Quote': bet.odds,
+        'Quota': bet.odds,
         'Puntata': bet.stake,
-        'Status': bet.status === 'won' ? 'Vinta' : 
-                 bet.status === 'lost' ? 'Persa' : 
-                 bet.status === 'cashout' ? 'Cashout' : 'In attesa',
-        'Vincita': bet.payout || '',
-        'Profitto': bet.status === 'won' && bet.payout ? bet.payout - bet.stake :
+        'Stake': bet.stake, // Duplicated as requested
+        'Stato Scommessa': bet.status === 'won' ? 'Vinta' : 
+                          bet.status === 'lost' ? 'Persa' : 
+                          bet.status === 'cashout' ? 'Cashout' : 'In attesa',
+        'Guadagno': bet.status === 'won' && bet.payout ? bet.payout - bet.stake :
                    bet.status === 'lost' ? -bet.stake :
                    bet.status === 'cashout' && bet.cashout_amount ? bet.cashout_amount - bet.stake : '',
-        'Bookmaker': bet.bookmaker || '',
-        'Tipster': bet.tipster || '',
-        'Note': bet.notes || '',
       }));
 
       // Crea il workbook
@@ -121,22 +118,19 @@ const ExportBetsDialog = ({ trigger }: ExportBetsDialogProps) => {
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Scommesse');
 
-      // Imposta larghezza colonne
+      // Imposta larghezza colonne nell'ordine corretto
       const columnWidths = [
         { wch: 12 }, // Data
-        { wch: 15 }, // Sport
-        { wch: 30 }, // Evento
-        { wch: 20 }, // Manifestazione
-        { wch: 15 }, // Tipo Scommessa
-        { wch: 20 }, // Selezione
-        { wch: 8 },  // Quote
-        { wch: 10 }, // Puntata
-        { wch: 12 }, // Status
-        { wch: 10 }, // Vincita
-        { wch: 10 }, // Profitto
         { wch: 15 }, // Bookmaker
-        { wch: 15 }, // Tipster
-        { wch: 25 }, // Note
+        { wch: 15 }, // Sport
+        { wch: 20 }, // Manifestazione
+        { wch: 30 }, // Evento
+        { wch: 20 }, // Selezione
+        { wch: 8 },  // Quota
+        { wch: 10 }, // Puntata
+        { wch: 10 }, // Stake
+        { wch: 15 }, // Stato Scommessa
+        { wch: 12 }, // Guadagno
       ];
       worksheet['!cols'] = columnWidths;
 
