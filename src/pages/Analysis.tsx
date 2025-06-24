@@ -1,4 +1,6 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { formatCurrency } from "@/utils/betUtils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { useEffect, useState } from "react";
@@ -6,9 +8,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Bet } from "@/types/bet";
 
+type TimeFilter = 'all' | 'year' | 'month';
+
 const Analysis = () => {
   const [bets, setBets] = useState<Bet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const { toast } = useToast();
 
   useEffect(() => {
@@ -56,14 +63,45 @@ const Analysis = () => {
     return 0;
   };
 
+  const filterBetsByTime = (bets: Bet[]): Bet[] => {
+    if (timeFilter === 'all') return bets;
+    
+    return bets.filter(bet => {
+      const betDate = new Date(bet.date);
+      
+      if (timeFilter === 'year') {
+        return betDate.getFullYear() === selectedYear;
+      }
+      
+      if (timeFilter === 'month') {
+        return betDate.getFullYear() === selectedYear && betDate.getMonth() === selectedMonth;
+      }
+      
+      return true;
+    });
+  };
+
   const groupBetsByMonth = (bets: Bet[]) => {
-    const grouped = bets.reduce((acc, bet) => {
+    const filtered = filterBetsByTime(bets);
+    
+    const grouped = filtered.reduce((acc, bet) => {
       const date = new Date(bet.date);
-      const key = `${date.getFullYear()}-${date.getMonth()}`;
+      let key: string;
+      let displayName: string;
+      
+      if (timeFilter === 'month') {
+        // Per il filtro mensile, raggruppa per giorno
+        key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+        displayName = date.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
+      } else {
+        // Per anno e tutti, raggruppa per mese
+        key = `${date.getFullYear()}-${date.getMonth()}`;
+        displayName = date.toLocaleDateString('it-IT', { month: 'short', year: '2-digit' });
+      }
       
       if (!acc[key]) {
         acc[key] = {
-          month: date.toLocaleDateString('it-IT', { month: 'short', year: '2-digit' }),
+          month: displayName,
           profit: 0,
         };
       }
@@ -74,6 +112,23 @@ const Analysis = () => {
     }, {} as Record<string, { month: string; profit: number }>);
     
     return Object.values(grouped).sort();
+  };
+
+  const getAvailableYears = (): number[] => {
+    const years = bets.map(bet => new Date(bet.date).getFullYear());
+    return [...new Set(years)].sort((a, b) => b - a);
+  };
+
+  const getAvailableMonths = (): { value: number; label: string }[] => {
+    const months = [];
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(2024, i, 1);
+      months.push({
+        value: i,
+        label: date.toLocaleDateString('it-IT', { month: 'long' })
+      });
+    }
+    return months;
   };
 
   if (loading) {
@@ -87,17 +142,18 @@ const Analysis = () => {
     );
   }
 
+  const filteredBets = filterBetsByTime(bets);
   const monthlyData = groupBetsByMonth(bets);
   
-  // Analisi per sport
-  const sportStats = bets.reduce((acc, bet) => {
+  // Analisi per sport sui dati filtrati
+  const sportStats = filteredBets.reduce((acc, bet) => {
     const sport = bet.sport || bet.bet_type || 'Altro';
     if (!acc[sport]) {
       acc[sport] = { total: 0, won: 0, profit: 0 };
     }
     acc[sport].total += 1;
     if (bet.status === 'won') acc[sport].won += 1;
-    if (bet.profit) acc[sport].profit += bet.profit;
+    acc[sport].profit += calculateProfit(bet);
     return acc;
   }, {} as Record<string, { total: number; won: number; profit: number }>);
 
@@ -109,6 +165,20 @@ const Analysis = () => {
   }));
 
   const COLORS = ['#22c55e', '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6'];
+
+  const getTimeFilterLabel = () => {
+    switch (timeFilter) {
+      case 'month':
+        const monthName = new Date(selectedYear, selectedMonth, 1).toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
+        return `Analisi per ${monthName}`;
+      case 'year':
+        return `Analisi per ${selectedYear}`;
+      case 'all':
+        return 'Analisi dall\'inizio';
+      default:
+        return 'Analisi';
+    }
+  };
 
   if (bets.length === 0) {
     return (
@@ -132,17 +202,70 @@ const Analysis = () => {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2">Analisi</h1>
+        <h1 className="text-3xl font-bold mb-2">{getTimeFilterLabel()}</h1>
         <p className="text-muted-foreground">
           Statistiche dettagliate delle tue scommesse
         </p>
       </div>
 
+      {/* Filtri temporali */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Periodo di Analisi</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <ToggleGroup 
+            type="single" 
+            value={timeFilter} 
+            onValueChange={(value) => value && setTimeFilter(value as TimeFilter)}
+            className="justify-start"
+          >
+            <ToggleGroupItem value="all">Dall'inizio</ToggleGroupItem>
+            <ToggleGroupItem value="year">Anno</ToggleGroupItem>
+            <ToggleGroupItem value="month">Mese</ToggleGroupItem>
+          </ToggleGroup>
+
+          {(timeFilter === 'year' || timeFilter === 'month') && (
+            <div className="flex gap-4">
+              <div>
+                <label className="text-sm font-medium">Anno:</label>
+                <select 
+                  value={selectedYear} 
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
+                  className="ml-2 px-3 py-1 border rounded"
+                >
+                  {getAvailableYears().map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </div>
+
+              {timeFilter === 'month' && (
+                <div>
+                  <label className="text-sm font-medium">Mese:</label>
+                  <select 
+                    value={selectedMonth} 
+                    onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                    className="ml-2 px-3 py-1 border rounded"
+                  >
+                    {getAvailableMonths().map(month => (
+                      <option key={month.value} value={month.value}>{month.label}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {monthlyData.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>Profitti Mensili</CardTitle>
+              <CardTitle>
+                {timeFilter === 'month' ? 'Profitti Giornalieri' : 'Profitti Mensili'}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
@@ -196,7 +319,7 @@ const Analysis = () => {
         )}
       </div>
 
-      {monthlyData.length > 1 && (
+      {monthlyData.length > 1 && timeFilter === 'all' && (
         <Card>
           <CardHeader>
             <CardTitle>Andamento Profitti nel Tempo</CardTitle>
