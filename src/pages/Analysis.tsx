@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
@@ -366,7 +367,7 @@ const Analysis = () => {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis tickFormatter={(value) => `${value}%`} />
-                  <Tooltip formatter={(value) => [`ROI: ${value.toFixed(2)}%`]} />
+                  <Tooltip formatter={(value: any) => [`ROI: ${typeof value === 'number' ? value.toFixed(2) : value}%`]} />
                   <Legend />
                   <Line type="monotone" dataKey="roi" stroke="#82ca9d" name="ROI" />
                 </LineChart>
