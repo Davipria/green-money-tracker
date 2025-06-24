@@ -1,6 +1,8 @@
 
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency, calculateROI, groupBetsByMonthWithROI, calculateAverageOdds, calculateAverageStake } from "@/utils/betUtils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { useEffect, useState } from "react";
@@ -15,6 +17,8 @@ const Analysis = () => {
   const [bets, setBets] = useState<Bet[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState("all");
+  const [selectedYear, setSelectedYear] = useState<string>("all");
+  const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -55,6 +59,17 @@ const Analysis = () => {
   const filteredBets = bets.filter(bet => {
     const betDate = new Date(bet.date);
     
+    // Year filter
+    if (selectedYear !== "all" && betDate.getFullYear() !== parseInt(selectedYear)) {
+      return false;
+    }
+    
+    // Month filter
+    if (selectedMonth !== "all" && betDate.getMonth() !== parseInt(selectedMonth)) {
+      return false;
+    }
+    
+    // Time filter
     switch (timeFilter) {
       case "week":
         const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -67,6 +82,18 @@ const Analysis = () => {
         return true;
     }
   });
+
+  // Get available years and months from bets
+  const availableYears = [...new Set(bets.map(bet => new Date(bet.date).getFullYear()))]
+    .sort((a, b) => b - a);
+  
+  const availableMonths = [...new Set(bets.map(bet => new Date(bet.date).getMonth()))]
+    .sort((a, b) => a - b);
+
+  const monthNames = [
+    "Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno",
+    "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"
+  ];
 
   const totalProfit = filteredBets.reduce((sum, bet) => sum + (bet.profit || 0), 0);
   const totalStake = filteredBets.reduce((sum, bet) => sum + bet.stake, 0);
@@ -165,27 +192,67 @@ const Analysis = () => {
           </p>
         </div>
 
-        {/* Time Filter */}
-        <div className="flex justify-center mb-8">
-          <ToggleGroup 
-            type="single" 
-            value={timeFilter} 
-            onValueChange={(value) => value && setTimeFilter(value)}
-            className="bg-white/80 backdrop-blur-sm p-1 rounded-xl shadow-lg"
-          >
-            <ToggleGroupItem value="all" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
-              Tutto
-            </ToggleGroupItem>
-            <ToggleGroupItem value="year" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
-              Quest'anno
-            </ToggleGroupItem>
-            <ToggleGroupItem value="month" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
-              Questo mese
-            </ToggleGroupItem>
-            <ToggleGroupItem value="week" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
-              Questa settimana
-            </ToggleGroupItem>
-          </ToggleGroup>
+        {/* Filters Section */}
+        <div className="space-y-6">
+          {/* Time Filter */}
+          <div className="flex justify-center">
+            <ToggleGroup 
+              type="single" 
+              value={timeFilter} 
+              onValueChange={(value) => value && setTimeFilter(value)}
+              className="bg-white/80 backdrop-blur-sm p-1 rounded-xl shadow-lg"
+            >
+              <ToggleGroupItem value="all" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
+                Tutto
+              </ToggleGroupItem>
+              <ToggleGroupItem value="year" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
+                Quest'anno
+              </ToggleGroupItem>
+              <ToggleGroupItem value="month" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
+                Questo mese
+              </ToggleGroupItem>
+              <ToggleGroupItem value="week" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
+                Questa settimana
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+
+          {/* Year and Month Selectors */}
+          <div className="flex justify-center gap-4">
+            <div className="flex flex-col items-center gap-2">
+              <label className="text-sm font-medium text-gray-600">Anno</label>
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
+                <SelectTrigger className="w-32 bg-white/80 backdrop-blur-sm">
+                  <SelectValue placeholder="Anno" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tutti</SelectItem>
+                  {availableYears.map(year => (
+                    <SelectItem key={year} value={year.toString()}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col items-center gap-2">
+              <label className="text-sm font-medium text-gray-600">Mese</label>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="w-40 bg-white/80 backdrop-blur-sm">
+                  <SelectValue placeholder="Mese" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tutti</SelectItem>
+                  {availableMonths.map(month => (
+                    <SelectItem key={month} value={month.toString()}>
+                      {monthNames[month]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
 
         {/* Stats Overview */}
@@ -412,3 +479,4 @@ const Analysis = () => {
 };
 
 export default Analysis;
+
