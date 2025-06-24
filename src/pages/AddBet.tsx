@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, TrendingUp, Calculator, DollarSign, Target, Calendar, Building2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
@@ -290,197 +290,267 @@ const AddBet = () => {
     return 0;
   };
 
+  const betTypeOptions = [
+    { value: 'single', label: 'Singola', icon: Target, description: 'Una scommessa su un singolo evento' },
+    { value: 'multiple', label: 'Multipla', icon: TrendingUp, description: 'Combina più selezioni in una scommessa' },
+    { value: 'system', label: 'Sistema', icon: Calculator, description: 'Sistema di scommesse con garanzie' },
+    { value: 'exchange', label: 'Exchange', icon: DollarSign, description: 'Punta o banca su betting exchange' }
+  ];
+
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Nuova Scommessa</h1>
-        <p className="text-muted-foreground">
-          Aggiungi una nuova scommessa al tuo portafoglio
-        </p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-8">
+      <div className="max-w-6xl mx-auto px-6">
+        {/* Hero Section */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mb-6">
+            <Plus className="h-8 w-8 text-white" />
+          </div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+            Nuova Scommessa
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Aggiungi una nuova scommessa al tuo portafoglio e monitora le tue performance
+          </p>
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Dettagli Scommessa</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Tipo di Scommessa */}
-            <div className="space-y-3">
-              <Label className="text-base font-semibold">Tipo di Scommessa *</Label>
-              <RadioGroup value={betType} onValueChange={(value: 'single' | 'multiple' | 'system' | 'exchange') => setBetType(value)}>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="single" id="single" />
-                  <Label htmlFor="single">Singola</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="multiple" id="multiple" />
-                  <Label htmlFor="multiple">Multipla</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="system" id="system" />
-                  <Label htmlFor="system">Sistema</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="exchange" id="exchange" />
-                  <Label htmlFor="exchange">Exchange</Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            {/* Exchange Type */}
-            {betType === 'exchange' && (
-              <div className="space-y-3">
-                <Label className="text-base font-semibold">Tipo Exchange</Label>
-                <RadioGroup value={exchangeType} onValueChange={(value: 'back' | 'lay') => setExchangeType(value)}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="back" id="back" />
-                    <Label htmlFor="back">Punta (Back)</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="lay" id="lay" />
-                    <Label htmlFor="lay">Banca (Lay)</Label>
-                  </div>
-                </RadioGroup>
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Bet Type Selection */}
+          <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-t-lg">
+              <CardTitle className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                <Target className="h-5 w-5" />
+                Tipo di Scommessa
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {betTypeOptions.map((option) => {
+                  const IconComponent = option.icon;
+                  return (
+                    <div
+                      key={option.value}
+                      className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 hover:shadow-md ${
+                        betType === option.value
+                          ? 'border-blue-500 bg-blue-50 shadow-md'
+                          : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                      onClick={() => setBetType(option.value as any)}
+                    >
+                      <div className="flex flex-col items-center text-center space-y-3">
+                        <div className={`p-3 rounded-full ${
+                          betType === option.value ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          <IconComponent className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-800">{option.label}</h3>
+                          <p className="text-sm text-gray-500 mt-1">{option.description}</p>
+                        </div>
+                      </div>
+                      <input
+                        type="radio"
+                        name="betType"
+                        value={option.value}
+                        checked={betType === option.value}
+                        onChange={() => setBetType(option.value as any)}
+                        className="absolute top-3 right-3"
+                      />
+                    </div>
+                  );
+                })}
               </div>
-            )}
 
-            {/* Bankroll Field */}
-            <div className="space-y-2">
-              <Label htmlFor="bankroll">Bankroll (€)</Label>
-              <Input
-                id="bankroll"
-                type="number"
-                step="0.01"
-                placeholder="Es. 1000.00"
-                value={bankroll}
-                onChange={(e) => setBankroll(e.target.value)}
-              />
-            </div>
+              {/* Exchange Type */}
+              {betType === 'exchange' && (
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                  <Label className="text-base font-semibold text-gray-700 mb-3 block">Tipo Exchange</Label>
+                  <RadioGroup value={exchangeType} onValueChange={(value: 'back' | 'lay') => setExchangeType(value)}>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className={`p-3 rounded-lg border-2 ${exchangeType === 'back' ? 'border-green-500 bg-green-50' : 'border-gray-200'}`}>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="back" id="back" />
+                          <Label htmlFor="back" className="font-medium">Punta (Back)</Label>
+                        </div>
+                      </div>
+                      <div className={`p-3 rounded-lg border-2 ${exchangeType === 'lay' ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="lay" id="lay" />
+                          <Label htmlFor="lay" className="font-medium">Banca (Lay)</Label>
+                        </div>
+                      </div>
+                    </div>
+                  </RadioGroup>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-            {/* Campi Comuni */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="date">Data *</Label>
+          {/* Basic Information */}
+          <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader className="bg-gradient-to-r from-green-50 to-blue-50 rounded-t-lg">
+              <CardTitle className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                Informazioni Base
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 space-y-6">
+              {/* Bankroll */}
+              <div className="p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
+                <Label htmlFor="bankroll" className="text-base font-semibold text-gray-700 flex items-center gap-2 mb-2">
+                  <DollarSign className="h-4 w-4" />
+                  Bankroll (€)
+                </Label>
                 <Input
-                  id="date"
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) => handleInputChange("date", e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="bookmaker">Bookmaker *</Label>
-                <Select value={formData.bookmaker} onValueChange={(value) => handleInputChange("bookmaker", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleziona bookmaker" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="bet365">Bet365</SelectItem>
-                    <SelectItem value="william-hill">William Hill</SelectItem>
-                    <SelectItem value="betfair">Betfair</SelectItem>
-                    <SelectItem value="unibet">Unibet</SelectItem>
-                    <SelectItem value="bwin">Bwin</SelectItem>
-                    <SelectItem value="betway">Betway</SelectItem>
-                    <SelectItem value="eurobet">Eurobet</SelectItem>
-                    <SelectItem value="sisal">Sisal</SelectItem>
-                    <SelectItem value="altro">Altro</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="tipster">Tipster</Label>
-                <Input
-                  id="tipster"
-                  placeholder="Nome tipster (opzionale)"
-                  value={formData.tipster}
-                  onChange={(e) => handleInputChange("tipster", e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="space-y-3">
-                <Label className="text-base font-semibold">Timing</Label>
-                <RadioGroup value={formData.timing} onValueChange={(value: 'prematch' | 'live') => handleInputChange("timing", value)}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="prematch" id="prematch" />
-                    <Label htmlFor="prematch">Prematch</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="live" id="live" />
-                    <Label htmlFor="live">Live</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="stake">Puntata (€) *</Label>
-                <Input
-                  id="stake"
+                  id="bankroll"
                   type="number"
                   step="0.01"
-                  placeholder="Es. 50.00"
-                  value={formData.stake}
-                  onChange={(e) => handleStakeChange(e.target.value)}
+                  placeholder="Es. 1000.00"
+                  value={bankroll}
+                  onChange={(e) => setBankroll(e.target.value)}
+                  className="bg-white border-yellow-300 focus:border-yellow-500"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="stakePercentage">Stake (%) *</Label>
-                <Input
-                  id="stakePercentage"
-                  type="number"
-                  step="0.01"
-                  placeholder="Es. 5.00"
-                  value={formData.stakePercentage}
-                  onChange={(e) => handleStakePercentageChange(e.target.value)}
-                />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="date" className="text-base font-medium text-gray-700 flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Data *
+                  </Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => handleInputChange("date", e.target.value)}
+                    className="bg-white border-gray-300 focus:border-blue-500"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="bookmaker" className="text-base font-medium text-gray-700">Bookmaker *</Label>
+                  <Select value={formData.bookmaker} onValueChange={(value) => handleInputChange("bookmaker", value)}>
+                    <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500">
+                      <SelectValue placeholder="Seleziona bookmaker" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="bet365">Bet365</SelectItem>
+                      <SelectItem value="william-hill">William Hill</SelectItem>
+                      <SelectItem value="betfair">Betfair</SelectItem>
+                      <SelectItem value="unibet">Unibet</SelectItem>
+                      <SelectItem value="bwin">Bwin</SelectItem>
+                      <SelectItem value="betway">Betway</SelectItem>
+                      <SelectItem value="eurobet">Eurobet</SelectItem>
+                      <SelectItem value="sisal">Sisal</SelectItem>
+                      <SelectItem value="altro">Altro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="tipster" className="text-base font-medium text-gray-700">Tipster</Label>
+                  <Input
+                    id="tipster"
+                    placeholder="Nome tipster (opzionale)"
+                    value={formData.tipster}
+                    onChange={(e) => handleInputChange("tipster", e.target.value)}
+                    className="bg-white border-gray-300 focus:border-blue-500"
+                  />
+                </div>
               </div>
 
-              <div className="space-y-3">
-                <Label className="text-base font-semibold">Stato Scommessa</Label>
-                <Select value={formData.status} onValueChange={(value: 'pending' | 'won' | 'lost' | 'cashout') => handleInputChange("status", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleziona stato" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">In Attesa</SelectItem>
-                    <SelectItem value="won">Vinta</SelectItem>
-                    <SelectItem value="lost">Persa</SelectItem>
-                    <SelectItem value="cashout">Cashout</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <div className="space-y-3">
+                  <Label className="text-base font-semibold text-gray-700">Timing</Label>
+                  <RadioGroup value={formData.timing} onValueChange={(value: 'prematch' | 'live') => handleInputChange("timing", value)}>
+                    <div className="grid grid-cols-1 gap-2">
+                      <div className={`p-3 rounded-lg border-2 ${formData.timing === 'prematch' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="prematch" id="prematch" />
+                          <Label htmlFor="prematch" className="font-medium">Prematch</Label>
+                        </div>
+                      </div>
+                      <div className={`p-3 rounded-lg border-2 ${formData.timing === 'live' ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="live" id="live" />
+                          <Label htmlFor="live" className="font-medium">Live</Label>
+                        </div>
+                      </div>
+                    </div>
+                  </RadioGroup>
+                </div>
 
-            {/* Campo Importo Cashout */}
-            {formData.status === 'cashout' && (
-              <div className="space-y-2">
-                <Label htmlFor="cashoutAmount">Importo Cashout (€) *</Label>
-                <Input
-                  id="cashoutAmount"
-                  type="number"
-                  step="0.01"
-                  placeholder="Es. 75.00"
-                  value={formData.cashoutAmount}
-                  onChange={(e) => handleInputChange("cashoutAmount", e.target.value)}
-                />
-              </div>
-            )}
+                <div className="space-y-2">
+                  <Label htmlFor="stake" className="text-base font-medium text-gray-700">Puntata (€) *</Label>
+                  <Input
+                    id="stake"
+                    type="number"
+                    step="0.01"
+                    placeholder="Es. 50.00"
+                    value={formData.stake}
+                    onChange={(e) => handleStakeChange(e.target.value)}
+                    className="bg-white border-gray-300 focus:border-blue-500"
+                  />
+                </div>
 
-            {/* Scommessa Singola */}
-            {betType === 'single' && (
-              <div className="space-y-4 border-t pt-6">
-                <h3 className="text-lg font-semibold">Dettagli Scommessa Singola</h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="stakePercentage" className="text-base font-medium text-gray-700">Stake (%) *</Label>
+                  <Input
+                    id="stakePercentage"
+                    type="number"
+                    step="0.01"
+                    placeholder="Es. 5.00"
+                    value={formData.stakePercentage}
+                    onChange={(e) => handleStakePercentageChange(e.target.value)}
+                    className="bg-white border-gray-300 focus:border-blue-500"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-base font-medium text-gray-700">Stato Scommessa</Label>
+                  <Select value={formData.status} onValueChange={(value: 'pending' | 'won' | 'lost' | 'cashout') => handleInputChange("status", value)}>
+                    <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500">
+                      <SelectValue placeholder="Seleziona stato" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">In Attesa</SelectItem>
+                      <SelectItem value="won">Vinta</SelectItem>
+                      <SelectItem value="lost">Persa</SelectItem>
+                      <SelectItem value="cashout">Cashout</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Campo Importo Cashout */}
+              {formData.status === 'cashout' && (
+                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <Label htmlFor="cashoutAmount" className="text-base font-medium text-gray-700">Importo Cashout (€) *</Label>
+                  <Input
+                    id="cashoutAmount"
+                    type="number"
+                    step="0.01"
+                    placeholder="Es. 75.00"
+                    value={formData.cashoutAmount}
+                    onChange={(e) => handleInputChange("cashoutAmount", e.target.value)}
+                    className="mt-2 bg-white border-blue-300 focus:border-blue-500"
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Scommessa Singola */}
+          {betType === 'single' && (
+            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-t-lg">
+                <CardTitle className="text-xl font-semibold text-gray-800">Dettagli Scommessa Singola</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="sport">Sport *</Label>
+                    <Label htmlFor="sport" className="text-base font-medium text-gray-700">Sport *</Label>
                     <Select value={formData.sport} onValueChange={(value) => handleInputChange("sport", value)}>
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-white border-gray-300 focus:border-purple-500">
                         <SelectValue placeholder="Seleziona sport" />
                       </SelectTrigger>
                       <SelectContent>
@@ -496,7 +566,7 @@ const AddBet = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="odds">Quote *</Label>
+                    <Label htmlFor="odds" className="text-base font-medium text-gray-700">Quote *</Label>
                     <Input
                       id="odds"
                       type="number"
@@ -504,70 +574,78 @@ const AddBet = () => {
                       placeholder="Es. 2.50"
                       value={formData.odds}
                       onChange={(e) => handleInputChange("odds", e.target.value)}
+                      className="bg-white border-gray-300 focus:border-purple-500"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="manifestation">Manifestazione</Label>
+                  <Label htmlFor="manifestation" className="text-base font-medium text-gray-700">Manifestazione</Label>
                   <Input
                     id="manifestation"
                     placeholder="Es. Serie A, ATP Roma, Champions League..."
                     value={formData.manifestation}
                     onChange={(e) => handleInputChange("manifestation", e.target.value)}
+                    className="bg-white border-gray-300 focus:border-purple-500"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="event">Evento *</Label>
+                  <Label htmlFor="event" className="text-base font-medium text-gray-700">Evento *</Label>
                   <Input
                     id="event"
                     placeholder="Es. Inter vs Milan"
                     value={formData.event}
                     onChange={(e) => handleInputChange("event", e.target.value)}
+                    className="bg-white border-gray-300 focus:border-purple-500"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="selection">Selezione</Label>
+                  <Label htmlFor="selection" className="text-base font-medium text-gray-700">Selezione</Label>
                   <Input
                     id="selection"
                     placeholder="Es. 1, Over 2.5, ecc."
                     value={formData.selection}
                     onChange={(e) => handleInputChange("selection", e.target.value)}
+                    className="bg-white border-gray-300 focus:border-purple-500"
                   />
                 </div>
-              </div>
-            )}
+              </CardContent>
+            </Card>
+          )}
 
-            {/* Multipla/Sistema */}
-            {(betType === 'multiple' || betType === 'system') && (
-              <div className="space-y-4 border-t pt-6">
+          {/* Multipla/Sistema */}
+          {(betType === 'multiple' || betType === 'system') && (
+            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-green-50 to-teal-50 rounded-t-lg">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">
+                  <CardTitle className="text-xl font-semibold text-gray-800">
                     {betType === 'multiple' ? 'Dettagli Multipla' : 'Dettagli Sistema'}
-                  </h3>
-                  <Button type="button" onClick={addBetToMultiple} variant="outline" size="sm">
+                  </CardTitle>
+                  <Button type="button" onClick={addBetToMultiple} variant="outline" size="sm" className="bg-white hover:bg-green-50">
                     <Plus className="h-4 w-4 mr-1" />
                     Aggiungi Scommessa
                   </Button>
                 </div>
-
+              </CardHeader>
+              <CardContent className="p-6 space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="multipleTitle">Titolo Scommessa *</Label>
+                  <Label htmlFor="multipleTitle" className="text-base font-medium text-gray-700">Titolo Scommessa *</Label>
                   <Input
                     id="multipleTitle"
                     placeholder="Es. Combo Serie A del weekend"
                     value={formData.multipleTitle}
                     onChange={(e) => handleInputChange("multipleTitle", e.target.value)}
+                    className="bg-white border-gray-300 focus:border-green-500"
                   />
                 </div>
 
                 {betType === 'system' && (
                   <div className="space-y-2">
-                    <Label htmlFor="systemType">Tipo Sistema</Label>
+                    <Label htmlFor="systemType" className="text-base font-medium text-gray-700">Tipo Sistema</Label>
                     <Select value={formData.systemType} onValueChange={(value) => handleInputChange("systemType", value)}>
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-white border-gray-300 focus:border-green-500">
                         <SelectValue placeholder="Seleziona tipo sistema" />
                       </SelectTrigger>
                       <SelectContent>
@@ -585,28 +663,29 @@ const AddBet = () => {
                 {/* Lista Scommesse */}
                 <div className="space-y-4">
                   {multipleBets.map((bet, index) => (
-                    <Card key={bet.id} className="relative">
-                      <CardHeader className="pb-3">
+                    <Card key={bet.id} className="border-2 border-gray-200 hover:border-green-300 transition-colors">
+                      <CardHeader className="pb-3 bg-gray-50 rounded-t-lg">
                         <div className="flex justify-between items-center">
-                          <CardTitle className="text-base">Scommessa #{index + 1}</CardTitle>
+                          <CardTitle className="text-base text-gray-700">Scommessa #{index + 1}</CardTitle>
                           {multipleBets.length > 1 && (
                             <Button
                               type="button"
                               variant="ghost"
                               size="sm"
                               onClick={() => removeBetFromMultiple(bet.id)}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           )}
                         </div>
                       </CardHeader>
-                      <CardContent className="space-y-4">
+                      <CardContent className="space-y-4 p-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label>Sport</Label>
+                            <Label className="text-sm font-medium text-gray-700">Sport</Label>
                             <Select value={bet.sport} onValueChange={(value) => updateMultipleBet(bet.id, "sport", value)}>
-                              <SelectTrigger>
+                              <SelectTrigger className="bg-white border-gray-300">
                                 <SelectValue placeholder="Seleziona sport" />
                               </SelectTrigger>
                               <SelectContent>
@@ -620,50 +699,56 @@ const AddBet = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label>Quote</Label>
+                            <Label className="text-sm font-medium text-gray-700">Quote</Label>
                             <Input
                               type="number"
                               step="0.01"
                               placeholder="Es. 2.50"
                               value={bet.odds}
                               onChange={(e) => updateMultipleBet(bet.id, "odds", e.target.value)}
+                              className="bg-white border-gray-300"
                             />
                           </div>
                         </div>
 
                         <div className="space-y-2">
-                          <Label>Evento</Label>
+                          <Label className="text-sm font-medium text-gray-700">Evento</Label>
                           <Input
                             placeholder="Es. Inter vs Milan"
                             value={bet.event}
                             onChange={(e) => updateMultipleBet(bet.id, "event", e.target.value)}
+                            className="bg-white border-gray-300"
                           />
                         </div>
 
                         <div className="space-y-2">
-                          <Label>Selezione</Label>
+                          <Label className="text-sm font-medium text-gray-700">Selezione</Label>
                           <Input
                             placeholder="Es. 1, Over 2.5"
                             value={bet.selection}
                             onChange={(e) => updateMultipleBet(bet.id, "selection", e.target.value)}
+                            className="bg-white border-gray-300"
                           />
                         </div>
                       </CardContent>
                     </Card>
                   ))}
                 </div>
-              </div>
-            )}
+              </CardContent>
+            </Card>
+          )}
 
-            {/* Exchange Fields */}
-            {betType === 'exchange' && (
-              <div className="space-y-4 border-t pt-6">
-                <h3 className="text-lg font-semibold">Dettagli Exchange</h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Exchange Fields */}
+          {betType === 'exchange' && (
+            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-orange-50 to-red-50 rounded-t-lg">
+                <CardTitle className="text-xl font-semibold text-gray-800">Dettagli Exchange</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {exchangeType === 'lay' && (
                     <div className="space-y-2">
-                      <Label htmlFor="liability">Responsabilità (€)</Label>
+                      <Label htmlFor="liability" className="text-base font-medium text-gray-700">Responsabilità (€)</Label>
                       <Input
                         id="liability"
                         type="number"
@@ -671,12 +756,13 @@ const AddBet = () => {
                         placeholder="Es. 250.00"
                         value={formData.liability}
                         onChange={(e) => handleInputChange("liability", e.target.value)}
+                        className="bg-white border-gray-300 focus:border-orange-500"
                       />
                     </div>
                   )}
 
                   <div className="space-y-2">
-                    <Label htmlFor="commission">Commissione (%)</Label>
+                    <Label htmlFor="commission" className="text-base font-medium text-gray-700">Commissione (%)</Label>
                     <Input
                       id="commission"
                       type="number"
@@ -684,33 +770,36 @@ const AddBet = () => {
                       placeholder="Es. 5.0"
                       value={formData.commission}
                       onChange={(e) => handleInputChange("commission", e.target.value)}
+                      className="bg-white border-gray-300 focus:border-orange-500"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="event">Evento *</Label>
+                  <Label htmlFor="event" className="text-base font-medium text-gray-700">Evento *</Label>
                   <Input
                     id="event"
                     placeholder="Es. Inter vs Milan"
                     value={formData.event}
                     onChange={(e) => handleInputChange("event", e.target.value)}
+                    className="bg-white border-gray-300 focus:border-orange-500"
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="selection">Selezione</Label>
+                    <Label htmlFor="selection" className="text-base font-medium text-gray-700">Selezione</Label>
                     <Input
                       id="selection"
                       placeholder="Es. Inter vittoria"
                       value={formData.selection}
                       onChange={(e) => handleInputChange("selection", e.target.value)}
+                      className="bg-white border-gray-300 focus:border-orange-500"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="odds">Quote *</Label>
+                    <Label htmlFor="odds" className="text-base font-medium text-gray-700">Quote *</Label>
                     <Input
                       id="odds"
                       type="number"
@@ -718,64 +807,95 @@ const AddBet = () => {
                       placeholder="Es. 2.50"
                       value={formData.odds}
                       onChange={(e) => handleInputChange("odds", e.target.value)}
+                      className="bg-white border-gray-300 focus:border-orange-500"
                     />
                   </div>
                 </div>
-              </div>
-            )}
+              </CardContent>
+            </Card>
+          )}
 
-            {/* Note */}
-            <div className="space-y-2">
-              <Label htmlFor="notes">Note</Label>
+          {/* Note */}
+          <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-t-lg">
+              <CardTitle className="text-xl font-semibold text-gray-800">Note</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
               <Textarea
                 id="notes"
                 placeholder="Aggiungi note o strategie per questa scommessa..."
                 value={formData.notes}
                 onChange={(e) => handleInputChange("notes", e.target.value)}
-                rows={3}
+                rows={4}
+                className="bg-white border-gray-300 focus:border-blue-500 resize-none"
               />
-            </div>
+            </CardContent>
+          </Card>
 
-            {/* Calcolo Vincita Potenziale */}
-            {formData.stake && calculatePotentialWin() > 0 && (
-              <div className="p-4 bg-muted rounded-lg">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Vincita potenziale:</span>
-                  <span className="font-bold text-green-600">
-                    €{calculatePotentialWin().toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center mt-1">
-                  <span className="text-sm text-muted-foreground">Profitto potenziale:</span>
-                  <span className="font-bold text-green-600">
-                    €{(calculatePotentialWin() - parseFloat(formData.stake || '0')).toFixed(2)}
-                  </span>
-                </div>
-                {formData.status === 'cashout' && formData.cashoutAmount && (
-                  <div className="flex justify-between items-center mt-1">
-                    <span className="text-sm text-muted-foreground">Importo cashout:</span>
-                    <span className="font-bold text-blue-600">
-                      €{formData.cashoutAmount}
-                    </span>
+          {/* Calcolo Vincita Potenziale */}
+          {formData.stake && calculatePotentialWin() > 0 && (
+            <Card className="shadow-lg border-0 bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-semibold text-green-800 mb-4 flex items-center gap-2">
+                  <Calculator className="h-5 w-5" />
+                  Riepilogo Finanziario
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-white p-4 rounded-lg border border-green-200">
+                    <div className="text-sm text-gray-600">Vincita potenziale</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      €{calculatePotentialWin().toFixed(2)}
+                    </div>
                   </div>
-                )}
-                {betType === 'exchange' && exchangeType === 'lay' && formData.liability && (
-                  <div className="flex justify-between items-center mt-1">
-                    <span className="text-sm text-muted-foreground">Responsabilità:</span>
-                    <span className="font-bold text-red-600">
-                      €{formData.liability}
-                    </span>
+                  <div className="bg-white p-4 rounded-lg border border-green-200">
+                    <div className="text-sm text-gray-600">Profitto potenziale</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      €{(calculatePotentialWin() - parseFloat(formData.stake || '0')).toFixed(2)}
+                    </div>
                   </div>
-                )}
-              </div>
-            )}
+                  {formData.status === 'cashout' && formData.cashoutAmount && (
+                    <div className="bg-white p-4 rounded-lg border border-blue-200">
+                      <div className="text-sm text-gray-600">Importo cashout</div>
+                      <div className="text-2xl font-bold text-blue-600">
+                        €{formData.cashoutAmount}
+                      </div>
+                    </div>
+                  )}
+                  {betType === 'exchange' && exchangeType === 'lay' && formData.liability && (
+                    <div className="bg-white p-4 rounded-lg border border-red-200">
+                      <div className="text-sm text-gray-600">Responsabilità</div>
+                      <div className="text-2xl font-bold text-red-600">
+                        €{formData.liability}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? "Salvataggio..." : "Salva Scommessa"}
+          {/* Submit Button */}
+          <div className="flex justify-center">
+            <Button 
+              type="submit" 
+              disabled={isSubmitting} 
+              className="px-12 py-4 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                  Salvataggio...
+                </>
+              ) : (
+                <>
+                  <Plus className="h-5 w-5 mr-2" />
+                  Salva Scommessa
+                </>
+              )}
             </Button>
-          </form>
-        </CardContent>
-      </Card>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
