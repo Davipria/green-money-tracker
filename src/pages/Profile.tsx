@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -54,10 +53,25 @@ const Profile = () => {
       }
 
       if (data) {
-        setProfile(data);
+        // Ensure all fields are properly mapped
+        const profileData: Profile = {
+          id: data.id,
+          first_name: data.first_name,
+          last_name: data.last_name,
+          bankroll: data.bankroll,
+          bio: data.bio,
+          favorite_sport: data.favorite_sport,
+          monthly_budget: data.monthly_budget,
+          risk_level: data.risk_level,
+          notifications_email: data.notifications_email,
+          notifications_reminders: data.notifications_reminders,
+          dark_mode: data.dark_mode,
+          show_balance: data.show_balance,
+        };
+        setProfile(profileData);
       } else {
         // Create profile if it doesn't exist
-        const newProfile = {
+        const newProfile: Profile = {
           id: user?.id!,
           first_name: user?.user_metadata?.first_name || null,
           last_name: user?.user_metadata?.last_name || null,
@@ -79,7 +93,23 @@ const Profile = () => {
           .single();
 
         if (createError) throw createError;
-        setProfile(createdProfile);
+        
+        // Map the created profile data properly
+        const createdProfileData: Profile = {
+          id: createdProfile.id,
+          first_name: createdProfile.first_name,
+          last_name: createdProfile.last_name,
+          bankroll: createdProfile.bankroll,
+          bio: createdProfile.bio,
+          favorite_sport: createdProfile.favorite_sport,
+          monthly_budget: createdProfile.monthly_budget,
+          risk_level: createdProfile.risk_level,
+          notifications_email: createdProfile.notifications_email,
+          notifications_reminders: createdProfile.notifications_reminders,
+          dark_mode: createdProfile.dark_mode,
+          show_balance: createdProfile.show_balance,
+        };
+        setProfile(createdProfileData);
       }
     } catch (error) {
       console.error('Error fetching profile:', error);

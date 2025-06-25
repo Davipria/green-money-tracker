@@ -158,29 +158,53 @@ export type Database = {
       profiles: {
         Row: {
           bankroll: number | null
+          bio: string | null
           created_at: string
+          dark_mode: boolean | null
+          favorite_sport: string | null
           first_name: string | null
           id: string
           last_name: string | null
+          monthly_budget: number | null
           monthly_reports_enabled: boolean | null
+          notifications_email: boolean | null
+          notifications_reminders: boolean | null
+          risk_level: string | null
+          show_balance: boolean | null
           updated_at: string
         }
         Insert: {
           bankroll?: number | null
+          bio?: string | null
           created_at?: string
+          dark_mode?: boolean | null
+          favorite_sport?: string | null
           first_name?: string | null
           id: string
           last_name?: string | null
+          monthly_budget?: number | null
           monthly_reports_enabled?: boolean | null
+          notifications_email?: boolean | null
+          notifications_reminders?: boolean | null
+          risk_level?: string | null
+          show_balance?: boolean | null
           updated_at?: string
         }
         Update: {
           bankroll?: number | null
+          bio?: string | null
           created_at?: string
+          dark_mode?: boolean | null
+          favorite_sport?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
+          monthly_budget?: number | null
           monthly_reports_enabled?: boolean | null
+          notifications_email?: boolean | null
+          notifications_reminders?: boolean | null
+          risk_level?: string | null
+          show_balance?: boolean | null
           updated_at?: string
         }
         Relationships: []
