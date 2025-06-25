@@ -275,7 +275,18 @@ const Analysis = () => {
 
           {/* Export Button */}
           <div className="flex justify-center mb-8">
-            <ExportPDFDialog />
+            <ExportPDFDialog 
+              analysisData={{
+                bankrollEvolutionData,
+                monthlyPerformanceData,
+                sportData: chartData,
+                bookmakerData: bookmakerChartData,
+                sportsPerformanceData: sportData,
+                filteredBets,
+                initialBankroll,
+                totalBets: filteredBets.length
+              }}
+            />
           </div>
 
           {/* Filters Section */}

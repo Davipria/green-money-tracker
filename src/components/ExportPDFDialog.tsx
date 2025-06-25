@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { format } from "date-fns";
 import { CalendarIcon, FileText } from "lucide-react";
@@ -22,12 +21,25 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { exportToPDF } from "@/utils/pdfExport";
+import { Bet } from "@/types/bet";
+
+interface AnalysisData {
+  bankrollEvolutionData: Array<{date: string, bankroll: number, dailyProfit: number}>;
+  monthlyPerformanceData: Array<{monthKey: string, month: string, profit: number, totalStake: number, roi: number}>;
+  sportData: Array<{sport: string, scommesse: number, profitto: number}>;
+  bookmakerData: Array<{bookmaker: string, scommesse: number, profitto: number}>;
+  sportsPerformanceData: Record<string, { count: number; profit: number }>;
+  filteredBets: Bet[];
+  initialBankroll: number;
+  totalBets: number;
+}
 
 interface ExportPDFDialogProps {
   trigger?: React.ReactNode;
+  analysisData?: AnalysisData;
 }
 
-const ExportPDFDialog = ({ trigger }: ExportPDFDialogProps) => {
+const ExportPDFDialog = ({ trigger, analysisData }: ExportPDFDialogProps) => {
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
   const [isExporting, setIsExporting] = useState(false);
@@ -78,7 +90,7 @@ const ExportPDFDialog = ({ trigger }: ExportPDFDialogProps) => {
         analysisContent.setAttribute('data-end-date', format(endDate, 'yyyy-MM-dd'));
       }
       
-      await exportToPDF('analysis-content', filename);
+      await exportToPDF('analysis-content', filename, analysisData);
       
       // Clean up data attributes
       if (analysisContent) {
@@ -119,7 +131,7 @@ const ExportPDFDialog = ({ trigger }: ExportPDFDialogProps) => {
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <FileText className="w-5 h-5" />
-            <span>Esporta Analisi in PDF</span>
+            Esporta Analisi in PDF
           </DialogTitle>
           <DialogDescription>
             Seleziona il periodo per esportare l'analisi delle prestazioni in formato PDF
