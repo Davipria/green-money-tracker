@@ -269,11 +269,6 @@ const Profile = () => {
               Personalizza la tua esperienza di betting
             </p>
           </div>
-          <div className="mt-4 lg:mt-0">
-            <Badge variant="outline" className="text-sm px-3 py-1">
-              📧 {user?.email}
-            </Badge>
-          </div>
         </div>
       </div>
 
@@ -321,6 +316,13 @@ const Profile = () => {
                 <p className="text-sm text-muted-foreground">
                   Clicca sulla fotocamera per cambiare la foto profilo
                 </p>
+              </div>
+
+              {/* Email Badge */}
+              <div className="flex justify-center">
+                <Badge variant="outline" className="text-sm px-3 py-1">
+                  📧 {user?.email}
+                </Badge>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
