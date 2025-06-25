@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { formatCurrency, calculateROI, groupBetsByMonthWithROI, calculateAverageOdds, calculateAverageStake } from "@/utils/betUtils";
-import { exportToPDF } from "@/utils/pdfExport";
+import ExportPDFDialog from "@/components/ExportPDFDialog";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,7 +19,6 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 const Analysis = () => {
   const [bets, setBets] = useState<Bet[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isExporting, setIsExporting] = useState(false);
   const [timeFilter, setTimeFilter] = useState("all");
   const [customDateRange, setCustomDateRange] = useState<{from: Date | undefined, to: Date | undefined}>({
     from: undefined,
@@ -185,30 +184,40 @@ const Analysis = () => {
     return false;
   };
 
-  const handleExportPDF = async () => {
-    setIsExporting(true);
-    try {
-      const currentDate = new Date().toLocaleDateString('it-IT');
-      const filename = `analisi-prestazioni-${currentDate.replace(/\//g, '-')}.pdf`;
-      
-      await exportToPDF('analysis-content', filename);
-      
-      toast({
-        title: "Successo",
-        description: "Report PDF esportato con successo!",
-        variant: "default",
-      });
-    } catch (error) {
-      console.error('Errore durante l\'esportazione PDF:', error);
-      toast({
-        title: "Errore",
-        description: "Impossibile esportare il PDF. Riprova.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsExporting(false);
+  const monthlyData = groupBetsByMonthWithROI(filteredBets);
+  
+  const sportData = filteredBets.reduce((acc, bet) => {
+    const sport = bet.sport || 'Altro';
+    if (!acc[sport]) {
+      acc[sport] = { count: 0, profit: 0 };
     }
-  };
+    acc[sport].count += 1;
+    acc[sport].profit += bet.profit || 0;
+    return acc;
+  }, {} as Record<string, { count: number; profit: number }>);
+
+  const chartData = Object.entries(sportData).map(([sport, data]) => ({
+    sport,
+    scommesse: data.count,
+    profitto: data.profit
+  }));
+
+  // Create bookmaker data
+  const bookmakerData = filteredBets.reduce((acc, bet) => {
+    const bookmaker = bet.bookmaker || 'Non specificato';
+    if (!acc[bookmaker]) {
+      acc[bookmaker] = { count: 0, profit: 0 };
+    }
+    acc[bookmaker].count += 1;
+    acc[bookmaker].profit += bet.profit || 0;
+    return acc;
+  }, {} as Record<string, { count: number; profit: number }>);
+
+  const bookmakerChartData = Object.entries(bookmakerData).map(([bookmaker, data]) => ({
+    bookmaker,
+    scommesse: data.count,
+    profitto: data.profit
+  }));
 
   if (bets.length === 0) {
     return (
@@ -247,41 +256,6 @@ const Analysis = () => {
     );
   }
 
-  const monthlyData = groupBetsByMonthWithROI(filteredBets);
-  
-  const sportData = filteredBets.reduce((acc, bet) => {
-    const sport = bet.sport || 'Altro';
-    if (!acc[sport]) {
-      acc[sport] = { count: 0, profit: 0 };
-    }
-    acc[sport].count += 1;
-    acc[sport].profit += bet.profit || 0;
-    return acc;
-  }, {} as Record<string, { count: number; profit: number }>);
-
-  const chartData = Object.entries(sportData).map(([sport, data]) => ({
-    sport,
-    scommesse: data.count,
-    profitto: data.profit
-  }));
-
-  // Create bookmaker data
-  const bookmakerData = filteredBets.reduce((acc, bet) => {
-    const bookmaker = bet.bookmaker || 'Non specificato';
-    if (!acc[bookmaker]) {
-      acc[bookmaker] = { count: 0, profit: 0 };
-    }
-    acc[bookmaker].count += 1;
-    acc[bookmaker].profit += bet.profit || 0;
-    return acc;
-  }, {} as Record<string, { count: number; profit: number }>);
-
-  const bookmakerChartData = Object.entries(bookmakerData).map(([bookmaker, data]) => ({
-    bookmaker,
-    scommesse: data.count,
-    profitto: data.profit
-  }));
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -301,14 +275,7 @@ const Analysis = () => {
 
           {/* Export Button */}
           <div className="flex justify-center mb-8">
-            <Button
-              onClick={handleExportPDF}
-              disabled={isExporting}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg"
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              {isExporting ? 'Esportazione in corso...' : 'Esporta PDF'}
-            </Button>
+            <ExportPDFDialog />
           </div>
 
           {/* Filters Section */}
