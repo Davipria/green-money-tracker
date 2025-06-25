@@ -1,59 +1,49 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, BarChart3, Target, Shield, Zap, Users, Star, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-
 const Landing = () => {
-  const features = [
-    {
-      icon: TrendingUp,
-      title: "Tracking Completo",
-      description: "Monitora tutte le tue scommesse con statistiche dettagliate",
-      color: "from-green-500 to-emerald-600"
-    },
-    {
-      icon: BarChart3,
-      title: "Analisi Avanzate",
-      description: "Grafici e report per ottimizzare le tue strategie",
-      color: "from-blue-500 to-indigo-600"
-    },
-    {
-      icon: Target,
-      title: "Gestione Bankroll",
-      description: "Controlla il tuo budget e massimizza i profitti",
-      color: "from-purple-500 to-pink-600"
-    },
-    {
-      icon: Shield,
-      title: "Sicurezza Totale",
-      description: "I tuoi dati sono protetti e crittografati",
-      color: "from-orange-500 to-red-600"
-    },
-    {
-      icon: Zap,
-      title: "Interfaccia Veloce",
-      description: "Aggiungi scommesse rapidamente e facilmente",
-      color: "from-yellow-500 to-orange-500"
-    },
-    {
-      icon: Users,
-      title: "Multi-Tipster",
-      description: "Traccia le performance di diversi tipster",
-      color: "from-teal-500 to-cyan-600"
-    }
-  ];
-
+  const features = [{
+    icon: TrendingUp,
+    title: "Tracking Completo",
+    description: "Monitora tutte le tue scommesse con statistiche dettagliate",
+    color: "from-green-500 to-emerald-600"
+  }, {
+    icon: BarChart3,
+    title: "Analisi Avanzate",
+    description: "Grafici e report per ottimizzare le tue strategie",
+    color: "from-blue-500 to-indigo-600"
+  }, {
+    icon: Target,
+    title: "Gestione Bankroll",
+    description: "Controlla il tuo budget e massimizza i profitti",
+    color: "from-purple-500 to-pink-600"
+  }, {
+    icon: Shield,
+    title: "Sicurezza Totale",
+    description: "I tuoi dati sono protetti e crittografati",
+    color: "from-orange-500 to-red-600"
+  }, {
+    icon: Zap,
+    title: "Interfaccia Veloce",
+    description: "Aggiungi scommesse rapidamente e facilmente",
+    color: "from-yellow-500 to-orange-500"
+  }, {
+    icon: Users,
+    title: "Multi-Tipster",
+    description: "Traccia le performance di diversi tipster",
+    color: "from-teal-500 to-cyan-600"
+  }];
   const scrollToFeatures = () => {
     const featuresSection = document.getElementById('features-section');
     if (featuresSection) {
-      featuresSection.scrollIntoView({ behavior: 'smooth' });
+      featuresSection.scrollIntoView({
+        behavior: 'smooth'
+      });
     }
   };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+  return <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -77,10 +67,7 @@ const Landing = () => {
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-20 text-center">
         <div className="max-w-4xl mx-auto">
-          <Badge variant="secondary" className="mb-6 bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 border-0 px-4 py-2">
-            <Star className="w-4 h-4 mr-2" />
-            Nuovo 2024
-          </Badge>
+          
           <h1 className="text-6xl font-bold mb-8 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent leading-tight">
             Il Tuo Tracker di<br />Scommesse Professionale
           </h1>
@@ -95,12 +82,7 @@ const Landing = () => {
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
-            <Button 
-              variant="outline" 
-              size="lg" 
-              className="text-lg px-8 py-4 border-2 border-blue-200 hover:border-blue-300 text-blue-600 hover:bg-blue-50 shadow-lg hover:shadow-xl transition-all duration-300" 
-              onClick={scrollToFeatures}
-            >
+            <Button variant="outline" size="lg" className="text-lg px-8 py-4 border-2 border-blue-200 hover:border-blue-300 text-blue-600 hover:bg-blue-50 shadow-lg hover:shadow-xl transition-all duration-300" onClick={scrollToFeatures}>
               Scopri le Funzionalità
             </Button>
           </div>
@@ -119,8 +101,7 @@ const Landing = () => {
         </div>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {features.map((feature, index) => (
-            <Card key={index} className="group text-center hover:shadow-2xl transition-all duration-500 border-0 bg-white/80 backdrop-blur-sm hover:bg-white transform hover:scale-105">
+          {features.map((feature, index) => <Card key={index} className="group text-center hover:shadow-2xl transition-all duration-500 border-0 bg-white/80 backdrop-blur-sm hover:bg-white transform hover:scale-105">
               <CardHeader className="pb-4">
                 <div className={`w-16 h-16 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300`}>
                   <feature.icon className="h-8 w-8 text-white" />
@@ -132,8 +113,7 @@ const Landing = () => {
                   {feature.description}
                 </CardDescription>
               </CardContent>
-            </Card>
-          ))}
+            </Card>)}
         </div>
       </section>
 
@@ -198,8 +178,6 @@ const Landing = () => {
           </p>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Landing;
