@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -60,6 +59,19 @@ const AddBet = () => {
     { id: '1', sport: '', event: '', odds: '', selection: '' }
   ]);
 
+  // Calcola le quote totali per multiple/sistema
+  const calculateTotalOdds = () => {
+    if (betType === 'multiple' || betType === 'system') {
+      const validBets = multipleBets.filter(bet => bet.odds && parseFloat(bet.odds) > 0);
+      if (validBets.length === 0) return 1;
+      
+      return validBets.reduce((total, bet) => {
+        return total * parseFloat(bet.odds);
+      }, 1);
+    }
+    return parseFloat(formData.odds) || 1;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -102,15 +114,31 @@ const AddBet = () => {
       return;
     }
 
+    // Validazione per multiple/sistema: almeno una scommessa valida
+    if ((betType === 'multiple' || betType === 'system')) {
+      const validBets = multipleBets.filter(bet => bet.sport && bet.event && bet.odds);
+      if (validBets.length === 0) {
+        toast({
+          title: "Errore",
+          description: "Inserisci almeno una scommessa valida per la multipla/sistema",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
+      // Calcola le quote totali per multiple/sistema
+      const totalOdds = calculateTotalOdds();
+      
       // Calcola payout e profit in base allo stato
       let payout = null;
       let profit = null;
       
       if (formData.status === 'won') {
-        payout = parseFloat(formData.odds) * parseFloat(formData.stake);
+        payout = totalOdds * parseFloat(formData.stake);
         profit = payout - parseFloat(formData.stake);
       } else if (formData.status === 'lost') {
         profit = -parseFloat(formData.stake);
@@ -137,7 +165,7 @@ const AddBet = () => {
         manifestation: betType === 'single' ? formData.manifestation : null,
         event: betType === 'single' ? formData.event : formData.multipleTitle,
         bet_type: betType,
-        odds: parseFloat(formData.odds),
+        odds: totalOdds, // Usa sempre le quote totali calcolate
         stake: parseFloat(formData.stake),
         status: formData.status,
         payout,
@@ -283,9 +311,7 @@ const AddBet = () => {
       return parseFloat(formData.odds) * parseFloat(formData.stake);
     }
     if ((betType === 'multiple' || betType === 'system') && formData.stake) {
-      const totalOdds = multipleBets.reduce((acc, bet) => {
-        return bet.odds ? acc * parseFloat(bet.odds) : acc;
-      }, 1);
+      const totalOdds = calculateTotalOdds();
       return totalOdds * parseFloat(formData.stake);
     }
     return 0;
@@ -303,10 +329,8 @@ const AddBet = () => {
       {/* Header */}
       <div className="mb-8 text-center">
         <div className="flex items-center justify-center gap-3 mb-4">
-          <div className="p-3 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg">
-            <PlusCircle className="h-8 w-8" />
-          </div>
-          <h1 className="text-3xl font-bold text-foreground bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-foreground bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex items-center gap-3">
+            <PlusCircle className="h-8 w-8 text-blue-600" />
             Nuova Scommessa
           </h1>
         </div>
@@ -729,6 +753,16 @@ const AddBet = () => {
                   </Card>
                 ))}
               </div>
+
+              {/* Mostra le quote totali calcolate */}
+              {multipleBets.some(bet => bet.odds) && (
+                <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg">
+                  <div className="text-sm text-green-700 mb-1">Quote Totali Calcolate</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {calculateTotalOdds().toFixed(2)}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
