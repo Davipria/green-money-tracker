@@ -400,94 +400,96 @@ const Analysis = () => {
           </div>
 
           {/* Stats Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card className="bg-gradient-to-br from-green-500 to-emerald-600 border-0 text-white shadow-xl">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-green-100 text-sm font-medium">Profitto Totale</p>
-                    <p className="text-3xl font-bold">{formatCurrency(totalProfit)}</p>
+          <div className="stats-overview">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <Card className="bg-gradient-to-br from-green-500 to-emerald-600 border-0 text-white shadow-xl">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-green-100 text-sm font-medium">Profitto Totale</p>
+                      <p className="text-3xl font-bold">{formatCurrency(totalProfit)}</p>
+                    </div>
+                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                      <TrendingUp className="w-6 h-6" />
+                    </div>
                   </div>
-                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                    <TrendingUp className="w-6 h-6" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 border-0 text-white shadow-xl">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-blue-100 text-sm font-medium">ROI</p>
-                    <p className="text-3xl font-bold">{overallROI.toFixed(1)}%</p>
+              <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 border-0 text-white shadow-xl">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-blue-100 text-sm font-medium">ROI</p>
+                      <p className="text-3xl font-bold">{overallROI.toFixed(1)}%</p>
+                    </div>
+                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                      <Percent className="w-6 h-6" />
+                    </div>
                   </div>
-                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                    <Percent className="w-6 h-6" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            <Card className="bg-gradient-to-br from-purple-500 to-pink-600 border-0 text-white shadow-xl">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-purple-100 text-sm font-medium">Win Rate</p>
-                    <p className="text-3xl font-bold">{winRate.toFixed(1)}%</p>
+              <Card className="bg-gradient-to-br from-purple-500 to-pink-600 border-0 text-white shadow-xl">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-purple-100 text-sm font-medium">Win Rate</p>
+                      <p className="text-3xl font-bold">{winRate.toFixed(1)}%</p>
+                    </div>
+                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                      <Target className="w-6 h-6" />
+                    </div>
                   </div>
-                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                    <Target className="w-6 h-6" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            <Card className="bg-gradient-to-br from-orange-500 to-red-600 border-0 text-white shadow-xl">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-orange-100 text-sm font-medium">Scommesse Totali</p>
-                    <p className="text-3xl font-bold">{filteredBets.length}</p>
+              <Card className="bg-gradient-to-br from-orange-500 to-red-600 border-0 text-white shadow-xl">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-orange-100 text-sm font-medium">Scommesse Totali</p>
+                      <p className="text-3xl font-bold">{filteredBets.length}</p>
+                    </div>
+                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                      <BarChart3 className="w-6 h-6" />
+                    </div>
                   </div>
-                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                    <BarChart3 className="w-6 h-6" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            <Card className="bg-gradient-to-br from-teal-500 to-cyan-600 border-0 text-white shadow-xl">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-teal-100 text-sm font-medium">Quota Media</p>
-                    <p className="text-3xl font-bold">{averageOdds.toFixed(2)}</p>
+              <Card className="bg-gradient-to-br from-teal-500 to-cyan-600 border-0 text-white shadow-xl">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-teal-100 text-sm font-medium">Quota Media</p>
+                      <p className="text-3xl font-bold">{averageOdds.toFixed(2)}</p>
+                    </div>
+                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                      <Activity className="w-6 h-6" />
+                    </div>
                   </div>
-                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                    <Activity className="w-6 h-6" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            <Card className="bg-gradient-to-br from-amber-500 to-yellow-600 border-0 text-white shadow-xl">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-amber-100 text-sm font-medium">Puntata Media</p>
-                    <p className="text-3xl font-bold">{formatCurrency(averageStake)}</p>
+              <Card className="bg-gradient-to-br from-amber-500 to-yellow-600 border-0 text-white shadow-xl">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-amber-100 text-sm font-medium">Puntata Media</p>
+                      <p className="text-3xl font-bold">{formatCurrency(averageStake)}</p>
+                    </div>
+                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                      <DollarSign className="w-6 h-6" />
+                    </div>
                   </div>
-                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                    <DollarSign className="w-6 h-6" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
           {/* Charts Section */}
-          <div className={`grid grid-cols-1 ${shouldShowPerformanceChart() ? 'lg:grid-cols-2' : ''} gap-8`}>
+          <div className={`charts-section grid grid-cols-1 ${shouldShowPerformanceChart() ? 'lg:grid-cols-2' : ''} gap-8`}>
             {/* Bankroll Evolution Chart */}
             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
               <CardHeader>
@@ -547,7 +549,7 @@ const Analysis = () => {
           </div>
 
           {/* Second Row of Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="charts-section grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Sports Distribution Chart */}
             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
               <CardHeader>
@@ -606,45 +608,47 @@ const Analysis = () => {
           </div>
 
           {/* Sports Performance Table */}
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-            <CardHeader>
-              <CardTitle className="text-xl">Performance per Sport</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-4">Sport</th>
-                      <th className="text-left p-4">Scommesse</th>
-                      <th className="text-left p-4">Profitto</th>
-                      <th className="text-left p-4">Win Rate</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Object.entries(sportData).map(([sport, data]) => {
-                      const sportBets = filteredBets.filter(bet => (bet.sport || 'Altro') === sport);
-                      const sportWinRate = sportBets.length > 0 ? 
-                        (sportBets.filter(bet => bet.status === 'won').length / sportBets.length) * 100 : 0;
-                      
-                      return (
-                        <tr key={sport} className="border-b hover:bg-gray-50">
-                          <td className="p-4 font-medium">{sport}</td>
-                          <td className="p-4">{data.count}</td>
-                          <td className="p-4">
-                            <span className={data.profit >= 0 ? 'text-green-600' : 'text-red-600'}>
-                              {formatCurrency(data.profit)}
-                            </span>
-                          </td>
-                          <td className="p-4">{sportWinRate.toFixed(1)}%</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="sports-table">
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+              <CardHeader>
+                <CardTitle className="text-xl">Performance per Sport</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-4">Sport</th>
+                        <th className="text-left p-4">Scommesse</th>
+                        <th className="text-left p-4">Profitto</th>
+                        <th className="text-left p-4">Win Rate</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(sportData).map(([sport, data]) => {
+                        const sportBets = filteredBets.filter(bet => (bet.sport || 'Altro') === sport);
+                        const sportWinRate = sportBets.length > 0 ? 
+                          (sportBets.filter(bet => bet.status === 'won').length / sportBets.length) * 100 : 0;
+                        
+                        return (
+                          <tr key={sport} className="border-b hover:bg-gray-50">
+                            <td className="p-4 font-medium">{sport}</td>
+                            <td className="p-4">{data.count}</td>
+                            <td className="p-4">
+                              <span className={data.profit >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                {formatCurrency(data.profit)}
+                              </span>
+                            </td>
+                            <td className="p-4">{sportWinRate.toFixed(1)}%</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
