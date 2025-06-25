@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { formatCurrency, calculateROI, groupBetsByMonthWithROI, calculateAverageOdds, calculateAverageStake } from "@/utils/betUtils";
+import { exportToPDF } from "@/utils/pdfExport";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Bet } from "@/types/bet";
-import { TrendingUp, DollarSign, Percent, Target, Activity, BarChart3, CalendarIcon } from "lucide-react";
+import { TrendingUp, DollarSign, Percent, Target, Activity, BarChart3, CalendarIcon, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,7 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 const Analysis = () => {
   const [bets, setBets] = useState<Bet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
   const [timeFilter, setTimeFilter] = useState("all");
   const [customDateRange, setCustomDateRange] = useState<{from: Date | undefined, to: Date | undefined}>({
     from: undefined,
@@ -183,6 +185,31 @@ const Analysis = () => {
     return false;
   };
 
+  const handleExportPDF = async () => {
+    setIsExporting(true);
+    try {
+      const currentDate = new Date().toLocaleDateString('it-IT');
+      const filename = `analisi-prestazioni-${currentDate.replace(/\//g, '-')}.pdf`;
+      
+      await exportToPDF('analysis-content', filename);
+      
+      toast({
+        title: "Successo",
+        description: "Report PDF esportato con successo!",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error('Errore durante l\'esportazione PDF:', error);
+      toast({
+        title: "Errore",
+        description: "Impossibile esportare il PDF. Riprova.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   if (bets.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
@@ -258,353 +285,367 @@ const Analysis = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header Section */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl mb-4">
-            <BarChart3 className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Analisi Prestazioni
-          </h1>
-          <p className="text-gray-600 text-lg">
-            Analizza le tue performance e identifica tendenze
-          </p>
-        </div>
-
-        {/* Filters Section */}
-        <div className="space-y-6">
-          {/* Time Filter */}
-          <div className="flex justify-center">
-            <ToggleGroup 
-              type="single" 
-              value={timeFilter} 
-              onValueChange={(value) => value && setTimeFilter(value)}
-              className="bg-white/80 backdrop-blur-sm p-1 rounded-xl shadow-lg"
-            >
-              <ToggleGroupItem value="all" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
-                Tutto
-              </ToggleGroupItem>
-              <ToggleGroupItem value="year" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
-                Quest'anno
-              </ToggleGroupItem>
-              <ToggleGroupItem value="month" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
-                Questo mese
-              </ToggleGroupItem>
-              <ToggleGroupItem value="week" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
-                Questa settimana
-              </ToggleGroupItem>
-              <ToggleGroupItem value="custom" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
-                Scegli
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </div>
-
-          {/* Custom Date Range Picker */}
-          {timeFilter === "custom" && (
-            <div className="flex justify-center gap-4">
-              <div className="flex flex-col items-center gap-2">
-                <label className="text-sm font-medium text-gray-600">Data Inizio</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-48 justify-start text-left font-normal bg-white/80 backdrop-blur-sm",
-                        !customDateRange.from && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {customDateRange.from ? format(customDateRange.from, "dd/MM/yyyy") : "Seleziona data"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={customDateRange.from}
-                      onSelect={(date) => setCustomDateRange(prev => ({ ...prev, from: date }))}
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="flex flex-col items-center gap-2">
-                <label className="text-sm font-medium text-gray-600">Data Fine</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-48 justify-start text-left font-normal bg-white/80 backdrop-blur-sm",
-                        !customDateRange.to && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {customDateRange.to ? format(customDateRange.to, "dd/MM/yyyy") : "Seleziona data"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={customDateRange.to}
-                      onSelect={(date) => setCustomDateRange(prev => ({ ...prev, to: date }))}
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+        <div id="analysis-content" className="space-y-8">
+          {/* Header Section */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl mb-4">
+              <BarChart3 className="w-8 h-8 text-white" />
             </div>
-          )}
-        </div>
+            <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              Analisi Prestazioni
+            </h1>
+            <p className="text-gray-600 text-lg">
+              Analizza le tue performance e identifica tendenze
+            </p>
+          </div>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="bg-gradient-to-br from-green-500 to-emerald-600 border-0 text-white shadow-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-green-100 text-sm font-medium">Profitto Totale</p>
-                  <p className="text-3xl font-bold">{formatCurrency(totalProfit)}</p>
+          {/* Export Button */}
+          <div className="flex justify-center mb-8">
+            <Button
+              onClick={handleExportPDF}
+              disabled={isExporting}
+              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              {isExporting ? 'Esportazione in corso...' : 'Esporta PDF'}
+            </Button>
+          </div>
+
+          {/* Filters Section */}
+          <div className="space-y-6">
+            {/* Time Filter */}
+            <div className="flex justify-center">
+              <ToggleGroup 
+                type="single" 
+                value={timeFilter} 
+                onValueChange={(value) => value && setTimeFilter(value)}
+                className="bg-white/80 backdrop-blur-sm p-1 rounded-xl shadow-lg"
+              >
+                <ToggleGroupItem value="all" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
+                  Tutto
+                </ToggleGroupItem>
+                <ToggleGroupItem value="year" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
+                  Quest'anno
+                </ToggleGroupItem>
+                <ToggleGroupItem value="month" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
+                  Questo mese
+                </ToggleGroupItem>
+                <ToggleGroupItem value="week" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
+                  Questa settimana
+                </ToggleGroupItem>
+                <ToggleGroupItem value="custom" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
+                  Scegli
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+
+            {/* Custom Date Range Picker */}
+            {timeFilter === "custom" && (
+              <div className="flex justify-center gap-4">
+                <div className="flex flex-col items-center gap-2">
+                  <label className="text-sm font-medium text-gray-600">Data Inizio</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-48 justify-start text-left font-normal bg-white/80 backdrop-blur-sm",
+                          !customDateRange.from && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {customDateRange.from ? format(customDateRange.from, "dd/MM/yyyy") : "Seleziona data"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={customDateRange.from}
+                        onSelect={(date) => setCustomDateRange(prev => ({ ...prev, from: date }))}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6" />
+
+                <div className="flex flex-col items-center gap-2">
+                  <label className="text-sm font-medium text-gray-600">Data Fine</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-48 justify-start text-left font-normal bg-white/80 backdrop-blur-sm",
+                          !customDateRange.to && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {customDateRange.to ? format(customDateRange.to, "dd/MM/yyyy") : "Seleziona data"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={customDateRange.to}
+                        onSelect={(date) => setCustomDateRange(prev => ({ ...prev, to: date }))}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </div>
 
-          <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 border-0 text-white shadow-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-blue-100 text-sm font-medium">ROI</p>
-                  <p className="text-3xl font-bold">{overallROI.toFixed(1)}%</p>
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card className="bg-gradient-to-br from-green-500 to-emerald-600 border-0 text-white shadow-xl">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-green-100 text-sm font-medium">Profitto Totale</p>
+                    <p className="text-3xl font-bold">{formatCurrency(totalProfit)}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                    <TrendingUp className="w-6 h-6" />
+                  </div>
                 </div>
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Percent className="w-6 h-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-gradient-to-br from-purple-500 to-pink-600 border-0 text-white shadow-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-100 text-sm font-medium">Win Rate</p>
-                  <p className="text-3xl font-bold">{winRate.toFixed(1)}%</p>
+            <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 border-0 text-white shadow-xl">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-blue-100 text-sm font-medium">ROI</p>
+                    <p className="text-3xl font-bold">{overallROI.toFixed(1)}%</p>
+                  </div>
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                    <Percent className="w-6 h-6" />
+                  </div>
                 </div>
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Target className="w-6 h-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-gradient-to-br from-orange-500 to-red-600 border-0 text-white shadow-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-orange-100 text-sm font-medium">Scommesse Totali</p>
-                  <p className="text-3xl font-bold">{filteredBets.length}</p>
+            <Card className="bg-gradient-to-br from-purple-500 to-pink-600 border-0 text-white shadow-xl">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-purple-100 text-sm font-medium">Win Rate</p>
+                    <p className="text-3xl font-bold">{winRate.toFixed(1)}%</p>
+                  </div>
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                    <Target className="w-6 h-6" />
+                  </div>
                 </div>
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <BarChart3 className="w-6 h-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-gradient-to-br from-teal-500 to-cyan-600 border-0 text-white shadow-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-teal-100 text-sm font-medium">Quota Media</p>
-                  <p className="text-3xl font-bold">{averageOdds.toFixed(2)}</p>
+            <Card className="bg-gradient-to-br from-orange-500 to-red-600 border-0 text-white shadow-xl">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-orange-100 text-sm font-medium">Scommesse Totali</p>
+                    <p className="text-3xl font-bold">{filteredBets.length}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                    <BarChart3 className="w-6 h-6" />
+                  </div>
                 </div>
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Activity className="w-6 h-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-gradient-to-br from-amber-500 to-yellow-600 border-0 text-white shadow-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-amber-100 text-sm font-medium">Puntata Media</p>
-                  <p className="text-3xl font-bold">{formatCurrency(averageStake)}</p>
+            <Card className="bg-gradient-to-br from-teal-500 to-cyan-600 border-0 text-white shadow-xl">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-teal-100 text-sm font-medium">Quota Media</p>
+                    <p className="text-3xl font-bold">{averageOdds.toFixed(2)}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                    <Activity className="w-6 h-6" />
+                  </div>
                 </div>
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <DollarSign className="w-6 h-6" />
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-amber-500 to-yellow-600 border-0 text-white shadow-xl">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-amber-100 text-sm font-medium">Puntata Media</p>
+                    <p className="text-3xl font-bold">{formatCurrency(averageStake)}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                    <DollarSign className="w-6 h-6" />
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </div>
 
-        {/* Charts Section */}
-        <div className={`grid grid-cols-1 ${shouldShowPerformanceChart() ? 'lg:grid-cols-2' : ''} gap-8`}>
-          {/* Bankroll Evolution Chart */}
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-            <CardHeader>
-              <CardTitle className="text-xl">Evoluzione Bankroll</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={bankrollEvolutionData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis domain={['dataMin - 50', 'dataMax + 50']} />
-                  <Tooltip 
-                    formatter={(value: number, name: string) => [
-                      formatCurrency(value),
-                      name === 'bankroll' ? 'Bankroll' : 'Profitto Giornaliero'
-                    ]}
-                    labelFormatter={(label) => `Data: ${label}`}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="bankroll" 
-                    stroke="#10b981" 
-                    strokeWidth={3}
-                    name="bankroll"
-                    dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          {/* Performance (ROI) Chart - Conditional */}
-          {shouldShowPerformanceChart() && (
+          {/* Charts Section */}
+          <div className={`grid grid-cols-1 ${shouldShowPerformanceChart() ? 'lg:grid-cols-2' : ''} gap-8`}>
+            {/* Bankroll Evolution Chart */}
             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
               <CardHeader>
-                <CardTitle className="text-xl">Performance (ROI)</CardTitle>
+                <CardTitle className="text-xl">Evoluzione Bankroll</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={monthlyPerformanceData}>
+                  <LineChart data={bankrollEvolutionData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
+                    <XAxis dataKey="date" />
+                    <YAxis domain={['dataMin - 50', 'dataMax + 50']} />
                     <Tooltip 
                       formatter={(value: number, name: string) => [
-                        name === 'roi' ? `${value.toFixed(1)}%` : formatCurrency(value),
-                        name === 'roi' ? 'ROI' : 'Profitto'
+                        formatCurrency(value),
+                        name === 'bankroll' ? 'Bankroll' : 'Profitto Giornaliero'
                       ]}
+                      labelFormatter={(label) => `Data: ${label}`}
                     />
-                    <Bar dataKey="profit" fill="#8884d8" name="profit" />
-                    <Line type="monotone" dataKey="roi" stroke="#82ca9d" name="roi" />
+                    <Line 
+                      type="monotone" 
+                      dataKey="bankroll" 
+                      stroke="#10b981" 
+                      strokeWidth={3}
+                      name="bankroll"
+                      dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
-          )}
-        </div>
 
-        {/* Second Row of Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Sports Distribution Chart */}
+            {/* Performance (ROI) Chart - Conditional */}
+            {shouldShowPerformanceChart() && (
+              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+                <CardHeader>
+                  <CardTitle className="text-xl">Performance (ROI)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={monthlyPerformanceData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip 
+                        formatter={(value: number, name: string) => [
+                          name === 'roi' ? `${value.toFixed(1)}%` : formatCurrency(value),
+                          name === 'roi' ? 'ROI' : 'Profitto'
+                        ]}
+                      />
+                      <Bar dataKey="profit" fill="#8884d8" name="profit" />
+                      <Line type="monotone" dataKey="roi" stroke="#82ca9d" name="roi" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Second Row of Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Sports Distribution Chart */}
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+              <CardHeader>
+                <CardTitle className="text-xl">Distribuzione per Sport</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ sport, percent }: any) => `${sport} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="scommesse"
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* Bookmaker Distribution Chart */}
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+              <CardHeader>
+                <CardTitle className="text-xl">Distribuzione per Bookmaker</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={bookmakerChartData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ bookmaker, percent }: any) => `${bookmaker} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="scommesse"
+                    >
+                      {bookmakerChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sports Performance Table */}
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
             <CardHeader>
-              <CardTitle className="text-xl">Distribuzione per Sport</CardTitle>
+              <CardTitle className="text-xl">Performance per Sport</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ sport, percent }: any) => `${sport} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="scommesse"
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          {/* Bookmaker Distribution Chart */}
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-            <CardHeader>
-              <CardTitle className="text-xl">Distribuzione per Bookmaker</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={bookmakerChartData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ bookmaker, percent }: any) => `${bookmaker} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="scommesse"
-                  >
-                    {bookmakerChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-4">Sport</th>
+                      <th className="text-left p-4">Scommesse</th>
+                      <th className="text-left p-4">Profitto</th>
+                      <th className="text-left p-4">Win Rate</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(sportData).map(([sport, data]) => {
+                      const sportBets = filteredBets.filter(bet => (bet.sport || 'Altro') === sport);
+                      const sportWinRate = sportBets.length > 0 ? 
+                        (sportBets.filter(bet => bet.status === 'won').length / sportBets.length) * 100 : 0;
+                      
+                      return (
+                        <tr key={sport} className="border-b hover:bg-gray-50">
+                          <td className="p-4 font-medium">{sport}</td>
+                          <td className="p-4">{data.count}</td>
+                          <td className="p-4">
+                            <span className={data.profit >= 0 ? 'text-green-600' : 'text-red-600'}>
+                              {formatCurrency(data.profit)}
+                            </span>
+                          </td>
+                          <td className="p-4">{sportWinRate.toFixed(1)}%</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </CardContent>
           </Card>
         </div>
-
-        {/* Sports Performance Table */}
-        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-          <CardHeader>
-            <CardTitle className="text-xl">Performance per Sport</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-4">Sport</th>
-                    <th className="text-left p-4">Scommesse</th>
-                    <th className="text-left p-4">Profitto</th>
-                    <th className="text-left p-4">Win Rate</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(sportData).map(([sport, data]) => {
-                    const sportBets = filteredBets.filter(bet => (bet.sport || 'Altro') === sport);
-                    const sportWinRate = sportBets.length > 0 ? 
-                      (sportBets.filter(bet => bet.status === 'won').length / sportBets.length) * 100 : 0;
-                    
-                    return (
-                      <tr key={sport} className="border-b hover:bg-gray-50">
-                        <td className="p-4 font-medium">{sport}</td>
-                        <td className="p-4">{data.count}</td>
-                        <td className="p-4">
-                          <span className={data.profit >= 0 ? 'text-green-600' : 'text-red-600'}>
-                            {formatCurrency(data.profit)}
-                          </span>
-                        </td>
-                        <td className="p-4">{sportWinRate.toFixed(1)}%</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
