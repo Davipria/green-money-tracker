@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,7 +10,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Bell, Shield, Target, TrendingUp, Calendar, Euro, Camera, Upload } from "lucide-react";
+import { User, Bell, Shield, Target, TrendingUp, Calendar, Euro, Camera, Upload, Instagram } from "lucide-react";
+import { Send as Telegram } from "lucide-react";
 
 interface Profile {
   id: string;
@@ -382,8 +382,8 @@ const Profile = () => {
               {/* Social Media Links */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="instagram" className="text-sm font-medium flex items-center space-x-1">
-                    <span>📷</span>
+                  <Label htmlFor="instagram" className="text-sm font-medium flex items-center space-x-2">
+                    <Instagram className="h-4 w-4" />
                     <span>Instagram</span>
                   </Label>
                   <Input 
@@ -395,8 +395,8 @@ const Profile = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="telegram" className="text-sm font-medium flex items-center space-x-1">
-                    <span>✈️</span>
+                  <Label htmlFor="telegram" className="text-sm font-medium flex items-center space-x-2">
+                    <Telegram className="h-4 w-4" />
                     <span>Telegram</span>
                   </Label>
                   <Input 
