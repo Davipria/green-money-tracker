@@ -42,9 +42,9 @@ const Profile = () => {
     }
   }, [user]);
 
-  // Sync theme with profile dark_mode setting
+  // Sync theme with profile dark_mode setting - only when profile is loaded
   useEffect(() => {
-    if (profile?.dark_mode !== null) {
+    if (profile && profile.dark_mode !== null) {
       const newTheme = profile.dark_mode ? "dark" : "light";
       if (theme !== newTheme) {
         setTheme(newTheme);
