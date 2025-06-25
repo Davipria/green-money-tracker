@@ -1,3 +1,4 @@
+
 -- Update the handle_new_user function to include profile_type
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
@@ -14,4 +15,4 @@ BEGIN
   );
   RETURN new;
 END;
-$$; 
+$$;
