@@ -11,10 +11,42 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { LogOut, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+
+interface UserProfile {
+  nickname: string | null;
+  avatar_url: string | null;
+  first_name: string | null;
+  last_name: string | null;
+}
 
 const UserMenu = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      fetchProfile();
+    }
+  }, [user]);
+
+  const fetchProfile = async () => {
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('nickname, avatar_url, first_name, last_name')
+        .eq('id', user?.id)
+        .single();
+      
+      if (data) {
+        setProfile(data);
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -22,10 +54,20 @@ const UserMenu = () => {
   };
 
   const getInitials = () => {
-    if (user?.user_metadata?.first_name && user?.user_metadata?.last_name) {
-      return `${user.user_metadata.first_name[0]}${user.user_metadata.last_name[0]}`.toUpperCase();
+    if (profile?.first_name && profile?.last_name) {
+      return `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase();
     }
     return user?.email?.[0].toUpperCase() || 'U';
+  };
+
+  const getDisplayName = () => {
+    if (profile?.nickname) {
+      return profile.nickname;
+    }
+    if (profile?.first_name && profile?.last_name) {
+      return `${profile.first_name} ${profile.last_name}`;
+    }
+    return user?.email || 'Utente';
   };
 
   return (
@@ -33,7 +75,7 @@ const UserMenu = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src="" alt="Avatar" />
+            <AvatarImage src={profile?.avatar_url || ""} alt="Avatar" />
             <AvatarFallback>{getInitials()}</AvatarFallback>
           </Avatar>
         </Button>
@@ -41,7 +83,7 @@ const UserMenu = () => {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <div className="flex flex-col space-y-1 p-2">
           <p className="text-sm font-medium leading-none">
-            {user?.user_metadata?.first_name} {user?.user_metadata?.last_name}
+            {getDisplayName()}
           </p>
           <p className="text-xs leading-none text-muted-foreground">
             {user?.email}

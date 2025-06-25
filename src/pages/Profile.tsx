@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,15 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Bell, Shield, Target, TrendingUp, Calendar, Euro } from "lucide-react";
+import { User, Bell, Shield, Target, TrendingUp, Calendar, Euro, Camera, Upload } from "lucide-react";
 
 interface Profile {
   id: string;
   first_name: string | null;
   last_name: string | null;
+  nickname: string | null;
+  avatar_url: string | null;
   bankroll: number | null;
   bio: string | null;
   favorite_sport: string | null;
@@ -32,6 +34,7 @@ const Profile = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -52,11 +55,12 @@ const Profile = () => {
       }
 
       if (data) {
-        // Ensure all fields are properly mapped (excluding dark_mode)
         const profileData: Profile = {
           id: data.id,
           first_name: data.first_name,
           last_name: data.last_name,
+          nickname: data.nickname,
+          avatar_url: data.avatar_url,
           bankroll: data.bankroll,
           bio: data.bio,
           favorite_sport: data.favorite_sport,
@@ -68,11 +72,12 @@ const Profile = () => {
         };
         setProfile(profileData);
       } else {
-        // Create profile if it doesn't exist (without dark_mode)
         const newProfile: Profile = {
           id: user?.id!,
           first_name: user?.user_metadata?.first_name || null,
           last_name: user?.user_metadata?.last_name || null,
+          nickname: null,
+          avatar_url: null,
           bankroll: 1000.00,
           bio: null,
           favorite_sport: null,
@@ -91,11 +96,12 @@ const Profile = () => {
 
         if (createError) throw createError;
         
-        // Map the created profile data properly (excluding dark_mode)
         const createdProfileData: Profile = {
           id: createdProfile.id,
           first_name: createdProfile.first_name,
           last_name: createdProfile.last_name,
+          nickname: createdProfile.nickname,
+          avatar_url: createdProfile.avatar_url,
           bankroll: createdProfile.bankroll,
           bio: createdProfile.bio,
           favorite_sport: createdProfile.favorite_sport,
@@ -119,6 +125,51 @@ const Profile = () => {
     }
   };
 
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/avatar.${fileExt}`;
+
+      // Remove old avatar if exists
+      if (profile?.avatar_url) {
+        const oldPath = profile.avatar_url.split('/').pop();
+        if (oldPath) {
+          await supabase.storage.from('avatars').remove([`${user.id}/${oldPath}`]);
+        }
+      }
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      setProfile(prev => prev ? { ...prev, avatar_url: publicUrl } : null);
+
+      toast({
+        title: "✅ Avatar caricato!",
+        description: "La tua foto profilo è stata aggiornata"
+      });
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      toast({
+        title: "Errore",
+        description: "Impossibile caricare l'avatar",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSaveProfile = async () => {
     if (!profile) return;
     
@@ -129,6 +180,8 @@ const Profile = () => {
         .update({
           first_name: profile.first_name,
           last_name: profile.last_name,
+          nickname: profile.nickname,
+          avatar_url: profile.avatar_url,
           bankroll: profile.bankroll,
           bio: profile.bio,
           favorite_sport: profile.favorite_sport,
@@ -156,6 +209,13 @@ const Profile = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const getInitials = () => {
+    if (profile?.first_name && profile?.last_name) {
+      return `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase();
+    }
+    return user?.email?.[0].toUpperCase() || 'U';
   };
 
   const sportOptions = [
@@ -231,6 +291,38 @@ const Profile = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Avatar Section */}
+              <div className="flex flex-col items-center space-y-4">
+                <div className="relative">
+                  <Avatar className="h-24 w-24">
+                    <AvatarImage src={profile?.avatar_url || ""} alt="Avatar" />
+                    <AvatarFallback className="text-2xl">{getInitials()}</AvatarFallback>
+                  </Avatar>
+                  <div className="absolute -bottom-2 -right-2">
+                    <label htmlFor="avatar-upload" className="cursor-pointer">
+                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors">
+                        {uploading ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        ) : (
+                          <Camera className="h-4 w-4 text-white" />
+                        )}
+                      </div>
+                    </label>
+                    <input
+                      id="avatar-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      className="hidden"
+                      disabled={uploading}
+                    />
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Clicca sulla fotocamera per cambiare la foto profilo
+                </p>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="firstName" className="text-sm font-medium">Nome</Label>
@@ -250,6 +342,17 @@ const Profile = () => {
                     className="h-11"
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="nickname" className="text-sm font-medium">Nickname</Label>
+                <Input 
+                  id="nickname" 
+                  placeholder="Il tuo nickname unico"
+                  value={profile?.nickname || ''} 
+                  onChange={(e) => setProfile(prev => prev ? {...prev, nickname: e.target.value} : null)}
+                  className="h-11"
+                />
               </div>
               
               <div className="space-y-2">

@@ -157,6 +157,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           bankroll: number | null
           bio: string | null
           created_at: string
@@ -167,6 +168,7 @@ export type Database = {
           last_name: string | null
           monthly_budget: number | null
           monthly_reports_enabled: boolean | null
+          nickname: string | null
           notifications_email: boolean | null
           notifications_reminders: boolean | null
           risk_level: string | null
@@ -174,6 +176,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          avatar_url?: string | null
           bankroll?: number | null
           bio?: string | null
           created_at?: string
@@ -184,6 +187,7 @@ export type Database = {
           last_name?: string | null
           monthly_budget?: number | null
           monthly_reports_enabled?: boolean | null
+          nickname?: string | null
           notifications_email?: boolean | null
           notifications_reminders?: boolean | null
           risk_level?: string | null
@@ -191,6 +195,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          avatar_url?: string | null
           bankroll?: number | null
           bio?: string | null
           created_at?: string
@@ -201,6 +206,7 @@ export type Database = {
           last_name?: string | null
           monthly_budget?: number | null
           monthly_reports_enabled?: boolean | null
+          nickname?: string | null
           notifications_email?: boolean | null
           notifications_reminders?: boolean | null
           risk_level?: string | null
