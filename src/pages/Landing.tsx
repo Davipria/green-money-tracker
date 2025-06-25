@@ -76,7 +76,7 @@ const Landing = () => {
             Gestisci il tuo bankroll come un professionista e massimizza i tuoi risultati.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/auth">
+            <Link to="/auth?signup=true">
               <Button size="lg" className="text-lg px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
                 Registrati Gratis
                 <ArrowRight className="w-5 h-5 ml-2" />
@@ -153,7 +153,7 @@ const Landing = () => {
           <p className="text-gray-600 text-xl mb-10 max-w-3xl mx-auto leading-relaxed">
             Unisciti a migliaia di scommettitori che hanno migliorato i loro risultati con BetTracker Pro
           </p>
-          <Link to="/auth">
+          <Link to="/auth?signup=true">
             <Button size="lg" className="text-lg px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
               Crea il Tuo Account Gratuito
               <ArrowRight className="w-5 h-5 ml-2" />
