@@ -1,17 +1,16 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Settings, Bell, Shield, Target, TrendingUp, Calendar, Euro } from "lucide-react";
+import { User, Bell, Shield, Target, TrendingUp, Calendar, Euro } from "lucide-react";
 
 interface Profile {
   id: string;
@@ -24,14 +23,12 @@ interface Profile {
   risk_level: string | null;
   notifications_email: boolean | null;
   notifications_reminders: boolean | null;
-  dark_mode: boolean | null;
   show_balance: boolean | null;
 }
 
 const Profile = () => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const { theme, setTheme } = useTheme();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -41,16 +38,6 @@ const Profile = () => {
       fetchProfile();
     }
   }, [user]);
-
-  // Sync theme with profile dark_mode setting - only when profile is loaded
-  useEffect(() => {
-    if (profile && profile.dark_mode !== null) {
-      const newTheme = profile.dark_mode ? "dark" : "light";
-      if (theme !== newTheme) {
-        setTheme(newTheme);
-      }
-    }
-  }, [profile?.dark_mode, theme, setTheme]);
 
   const fetchProfile = async () => {
     try {
@@ -65,7 +52,7 @@ const Profile = () => {
       }
 
       if (data) {
-        // Ensure all fields are properly mapped
+        // Ensure all fields are properly mapped (excluding dark_mode)
         const profileData: Profile = {
           id: data.id,
           first_name: data.first_name,
@@ -77,12 +64,11 @@ const Profile = () => {
           risk_level: data.risk_level,
           notifications_email: data.notifications_email,
           notifications_reminders: data.notifications_reminders,
-          dark_mode: data.dark_mode,
           show_balance: data.show_balance,
         };
         setProfile(profileData);
       } else {
-        // Create profile if it doesn't exist
+        // Create profile if it doesn't exist (without dark_mode)
         const newProfile: Profile = {
           id: user?.id!,
           first_name: user?.user_metadata?.first_name || null,
@@ -94,7 +80,6 @@ const Profile = () => {
           risk_level: 'medium',
           notifications_email: true,
           notifications_reminders: true,
-          dark_mode: false,
           show_balance: true,
         };
         
@@ -106,7 +91,7 @@ const Profile = () => {
 
         if (createError) throw createError;
         
-        // Map the created profile data properly
+        // Map the created profile data properly (excluding dark_mode)
         const createdProfileData: Profile = {
           id: createdProfile.id,
           first_name: createdProfile.first_name,
@@ -118,7 +103,6 @@ const Profile = () => {
           risk_level: createdProfile.risk_level,
           notifications_email: createdProfile.notifications_email,
           notifications_reminders: createdProfile.notifications_reminders,
-          dark_mode: createdProfile.dark_mode,
           show_balance: createdProfile.show_balance,
         };
         setProfile(createdProfileData);
@@ -152,7 +136,6 @@ const Profile = () => {
           risk_level: profile.risk_level,
           notifications_email: profile.notifications_email,
           notifications_reminders: profile.notifications_reminders,
-          dark_mode: profile.dark_mode,
           show_balance: profile.show_balance,
         })
         .eq('id', profile.id);
@@ -173,11 +156,6 @@ const Profile = () => {
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleDarkModeToggle = (checked: boolean) => {
-    setProfile(prev => prev ? {...prev, dark_mode: checked} : null);
-    setTheme(checked ? "dark" : "light");
   };
 
   const sportOptions = [
@@ -413,23 +391,12 @@ const Profile = () => {
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center space-x-3 text-lg">
                 <div className="p-2 bg-purple-100 rounded-lg">
-                  <Settings className="h-4 w-4 text-purple-600" />
+                  <User className="h-4 w-4 text-purple-600" />
                 </div>
                 <span>Visualizzazione</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                <div className="space-y-0.5">
-                  <Label className="text-sm font-medium">Tema Scuro</Label>
-                  <p className="text-xs text-muted-foreground">Modalità scura</p>
-                </div>
-                <Switch 
-                  checked={profile?.dark_mode || false}
-                  onCheckedChange={handleDarkModeToggle}
-                />
-              </div>
-              
               <div className="flex items-center justify-between p-3 bg-white rounded-lg">
                 <div className="space-y-0.5">
                   <Label className="text-sm font-medium">Mostra Saldo</Label>
