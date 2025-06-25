@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Settings, Bell, Shield, Target, TrendingUp, Calendar, Euro } from "lucide-react";
 
@@ -30,6 +31,7 @@ interface Profile {
 const Profile = () => {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -39,6 +41,16 @@ const Profile = () => {
       fetchProfile();
     }
   }, [user]);
+
+  // Sync theme with profile dark_mode setting
+  useEffect(() => {
+    if (profile?.dark_mode !== null) {
+      const newTheme = profile.dark_mode ? "dark" : "light";
+      if (theme !== newTheme) {
+        setTheme(newTheme);
+      }
+    }
+  }, [profile?.dark_mode, theme, setTheme]);
 
   const fetchProfile = async () => {
     try {
@@ -161,6 +173,11 @@ const Profile = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleDarkModeToggle = (checked: boolean) => {
+    setProfile(prev => prev ? {...prev, dark_mode: checked} : null);
+    setTheme(checked ? "dark" : "light");
   };
 
   const sportOptions = [
@@ -409,7 +426,7 @@ const Profile = () => {
                 </div>
                 <Switch 
                   checked={profile?.dark_mode || false}
-                  onCheckedChange={(checked) => setProfile(prev => prev ? {...prev, dark_mode: checked} : null)}
+                  onCheckedChange={handleDarkModeToggle}
                 />
               </div>
               
