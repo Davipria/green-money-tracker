@@ -37,17 +37,17 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
   });
 
   const bookmakers = [
-    { value: "bet365", label: "Bet365", logo: "🏆" },
-    { value: "betfair", label: "Betfair", logo: "💼" },
-    { value: "sisal", label: "Sisal", logo: "🎯" },
-    { value: "planetwin365", label: "Planetwin365", logo: "🌍" },
-    { value: "eurobet", label: "Eurobet", logo: "🇪🇺" },
-    { value: "goldbet", label: "Goldbet", logo: "🥇" },
-    { value: "snai", label: "Snai", logo: "🐎" },
-    { value: "unibet", label: "Unibet", logo: "🎲" },
-    { value: "begamestar", label: "Begamestar", logo: "⭐" },
-    { value: "betflag", label: "Betflag", logo: "🏁" },
-    { value: "betic", label: "Betic", logo: "🎰" }
+    { value: "bet365", label: "Bet365" },
+    { value: "betfair", label: "Betfair" },
+    { value: "sisal", label: "Sisal" },
+    { value: "planetwin365", label: "Planetwin365" },
+    { value: "eurobet", label: "Eurobet" },
+    { value: "goldbet", label: "Goldbet" },
+    { value: "snai", label: "Snai" },
+    { value: "unibet", label: "Unibet" },
+    { value: "begamestar", label: "Begamestar" },
+    { value: "betflag", label: "Betflag" },
+    { value: "betic", label: "Betic" }
   ];
 
   useEffect(() => {
@@ -201,10 +201,7 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
                 <SelectContent className="bg-white">
                   {bookmakers.map((bookmaker) => (
                     <SelectItem key={bookmaker.value} value={bookmaker.value}>
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">{bookmaker.logo}</span>
-                        <span>{bookmaker.label}</span>
-                      </div>
+                      {bookmaker.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
