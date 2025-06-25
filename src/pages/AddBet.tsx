@@ -324,6 +324,20 @@ const AddBet = () => {
     { value: 'exchange', label: 'Exchange', icon: DollarSign, description: 'Punta o banca su betting exchange', color: 'text-orange-600' }
   ];
 
+  const bookmakers = [
+    { value: "bet365", label: "Bet365", logo: "🏆" },
+    { value: "betfair", label: "Betfair", logo: "💼" },
+    { value: "sisal", label: "Sisal", logo: "🎯" },
+    { value: "planetwin365", label: "Planetwin365", logo: "🌍" },
+    { value: "eurobet", label: "Eurobet", logo: "🇪🇺" },
+    { value: "goldbet", label: "Goldbet", logo: "🥇" },
+    { value: "snai", label: "Snai", logo: "🐎" },
+    { value: "unibet", label: "Unibet", logo: "🎲" },
+    { value: "begamestar", label: "Begamestar", logo: "⭐" },
+    { value: "betflag", label: "Betflag", logo: "🏁" },
+    { value: "betic", label: "Betic", logo: "🎰" }
+  ];
+
   return (
     <div className="container mx-auto py-8 px-4">
       {/* Header */}
@@ -451,16 +465,15 @@ const AddBet = () => {
                   <SelectTrigger className="border-blue-300 focus:border-blue-500">
                     <SelectValue placeholder="Seleziona bookmaker" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="bet365">Bet365</SelectItem>
-                    <SelectItem value="william-hill">William Hill</SelectItem>
-                    <SelectItem value="betfair">Betfair</SelectItem>
-                    <SelectItem value="unibet">Unibet</SelectItem>
-                    <SelectItem value="bwin">Bwin</SelectItem>
-                    <SelectItem value="betway">Betway</SelectItem>
-                    <SelectItem value="eurobet">Eurobet</SelectItem>
-                    <SelectItem value="sisal">Sisal</SelectItem>
-                    <SelectItem value="altro">Altro</SelectItem>
+                  <SelectContent className="bg-white">
+                    {bookmakers.map((bookmaker) => (
+                      <SelectItem key={bookmaker.value} value={bookmaker.value}>
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">{bookmaker.logo}</span>
+                          <span>{bookmaker.label}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

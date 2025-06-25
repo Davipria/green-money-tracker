@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -36,6 +35,20 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
     odds: "",
     selection: "",
   });
+
+  const bookmakers = [
+    { value: "bet365", label: "Bet365", logo: "🏆" },
+    { value: "betfair", label: "Betfair", logo: "💼" },
+    { value: "sisal", label: "Sisal", logo: "🎯" },
+    { value: "planetwin365", label: "Planetwin365", logo: "🌍" },
+    { value: "eurobet", label: "Eurobet", logo: "🇪🇺" },
+    { value: "goldbet", label: "Goldbet", logo: "🥇" },
+    { value: "snai", label: "Snai", logo: "🐎" },
+    { value: "unibet", label: "Unibet", logo: "🎲" },
+    { value: "begamestar", label: "Begamestar", logo: "⭐" },
+    { value: "betflag", label: "Betflag", logo: "🏁" },
+    { value: "betic", label: "Betic", logo: "🎰" }
+  ];
 
   useEffect(() => {
     if (bet) {
@@ -185,16 +198,15 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
                 <SelectTrigger>
                   <SelectValue placeholder="Seleziona bookmaker" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bet365">Bet365</SelectItem>
-                  <SelectItem value="william-hill">William Hill</SelectItem>
-                  <SelectItem value="betfair">Betfair</SelectItem>
-                  <SelectItem value="unibet">Unibet</SelectItem>
-                  <SelectItem value="bwin">Bwin</SelectItem>
-                  <SelectItem value="betway">Betway</SelectItem>
-                  <SelectItem value="eurobet">Eurobet</SelectItem>
-                  <SelectItem value="sisal">Sisal</SelectItem>
-                  <SelectItem value="altro">Altro</SelectItem>
+                <SelectContent className="bg-white">
+                  {bookmakers.map((bookmaker) => (
+                    <SelectItem key={bookmaker.value} value={bookmaker.value}>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{bookmaker.logo}</span>
+                        <span>{bookmaker.label}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
