@@ -7,13 +7,20 @@ import { useToast } from "@/hooks/use-toast";
 import { Bet } from "@/types/bet";
 import { Link } from "react-router-dom";
 
+interface UserProfile {
+  nickname: string | null;
+  first_name: string | null;
+  last_name: string | null;
+}
+
 const Dashboard = () => {
   const [bets, setBets] = useState<Bet[]>([]);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchBets = async () => {
+    const fetchData = async () => {
       try {
         const { data: user } = await supabase.auth.getUser();
         if (!user.user) {
@@ -21,6 +28,18 @@ const Dashboard = () => {
           return;
         }
 
+        // Fetch user profile
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('nickname, first_name, last_name')
+          .eq('id', user.user.id)
+          .single();
+
+        if (profileData) {
+          setProfile(profileData);
+        }
+
+        // Fetch bets
         const { data, error } = await supabase
           .from('bets')
           .select('*')
@@ -43,8 +62,18 @@ const Dashboard = () => {
       }
     };
 
-    fetchBets();
+    fetchData();
   }, [toast]);
+
+  const getDisplayName = () => {
+    if (profile?.nickname) {
+      return profile.nickname;
+    }
+    if (profile?.first_name) {
+      return profile.first_name;
+    }
+    return "Utente";
+  };
 
   const totalProfit = bets.reduce((sum, bet) => sum + (bet.profit || 0), 0);
   const totalStake = bets.reduce((sum, bet) => sum + bet.stake, 0);
@@ -86,7 +115,7 @@ const Dashboard = () => {
         {/* Header Section */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Panoramica delle tue scommesse sportive
+            Bentornato {getDisplayName()}, ecco la panoramica delle tue scommesse sportive
           </h1>
         </div>
 
