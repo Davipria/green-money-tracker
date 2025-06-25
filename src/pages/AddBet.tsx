@@ -325,17 +325,18 @@ const AddBet = () => {
   ];
 
   const bookmakers = [
+    { value: "begamestar", label: "Begamestar" },
     { value: "bet365", label: "Bet365" },
     { value: "betfair", label: "Betfair" },
-    { value: "sisal", label: "Sisal" },
-    { value: "planetwin365", label: "Planetwin365" },
+    { value: "betflag", label: "Betflag" },
+    { value: "betic", label: "Betic" },
     { value: "eurobet", label: "Eurobet" },
     { value: "goldbet", label: "Goldbet" },
+    { value: "planetwin365", label: "Planetwin365" },
+    { value: "sisal", label: "Sisal" },
     { value: "snai", label: "Snai" },
     { value: "unibet", label: "Unibet" },
-    { value: "begamestar", label: "Begamestar" },
-    { value: "betflag", label: "Betflag" },
-    { value: "betic", label: "Betic" }
+    { value: "altro", label: "Altro" }
   ];
 
   return (
