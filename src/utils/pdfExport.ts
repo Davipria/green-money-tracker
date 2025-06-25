@@ -35,13 +35,6 @@ export const exportToPDF = async (elementId: string, filename: string = 'analisi
     });
     pdf.text(`Generato il ${currentDate}`, pageWidth / 2, 70, { align: 'center' });
 
-    // Find main sections to capture separately
-    const sections = [
-      { selector: '.stats-overview', title: 'Panoramica Statistiche' },
-      { selector: '.charts-section', title: 'Grafici Performance' },
-      { selector: '.sports-table', title: 'Performance per Sport' }
-    ];
-
     let currentY = 90; // Start position after title
 
     // Hide export button during capture
@@ -116,74 +109,167 @@ export const exportToPDF = async (elementId: string, filename: string = 'analisi
       }
     }
 
-    // Capture charts section
-    const chartsContainer = element.querySelector('.grid.grid-cols-1.lg\\:grid-cols-2.gap-8');
-    if (chartsContainer) {
-      // Add new page for charts
-      pdf.addPage();
-      currentY = margin;
-      
-      pdf.setFontSize(16);
-      pdf.text('Grafici e Analisi', margin, currentY);
-      currentY += 15;
+    // Add new page for charts
+    pdf.addPage();
+    currentY = margin;
+    
+    pdf.setFontSize(16);
+    pdf.text('Grafici e Analisi', margin, currentY);
+    currentY += 15;
 
-      const chartCards = chartsContainer.querySelectorAll('.bg-white\\/80');
-      
-      for (const chartCard of chartCards) {
-        try {
-          const canvas = await html2canvas(chartCard as HTMLElement, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#ffffff',
-            width: (chartCard as HTMLElement).scrollWidth,
-            height: (chartCard as HTMLElement).scrollHeight,
-          });
-          
-          const imgData = canvas.toDataURL('image/png');
-          const imgWidth = contentWidth;
-          const imgHeight = (canvas.height * imgWidth) / canvas.width;
-          
-          // Check if we need a new page
-          if (currentY + imgHeight > contentHeight) {
-            pdf.addPage();
-            currentY = margin;
-          }
-          
-          pdf.addImage(imgData, 'PNG', margin, currentY, imgWidth, imgHeight);
-          currentY += imgHeight + 15;
-          
-        } catch (error) {
-          console.error('Error capturing chart:', error);
-        }
-      }
-    }
-
-    // Capture sports performance table
-    const sportsTable = element.querySelector('.bg-white\\/80.backdrop-blur-sm.border-0.shadow-xl');
-    if (sportsTable && sportsTable.textContent?.includes('Performance per Sport')) {
-      // Add new page for table
-      pdf.addPage();
-      currentY = margin;
-      
+    // Capture bankroll evolution chart (first chart)
+    const bankrollChart = element.querySelector('.charts-section .bg-white\\/80');
+    if (bankrollChart) {
       try {
-        const canvas = await html2canvas(sportsTable as HTMLElement, {
+        const canvas = await html2canvas(bankrollChart as HTMLElement, {
           scale: 2,
           useCORS: true,
           allowTaint: true,
           backgroundColor: '#ffffff',
-          width: (sportsTable as HTMLElement).scrollWidth,
-          height: (sportsTable as HTMLElement).scrollHeight,
+          width: (bankrollChart as HTMLElement).scrollWidth,
+          height: (bankrollChart as HTMLElement).scrollHeight,
         });
         
         const imgData = canvas.toDataURL('image/png');
         const imgWidth = contentWidth;
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
         
+        // Check if we need a new page
+        if (currentY + imgHeight > contentHeight) {
+          pdf.addPage();
+          currentY = margin;
+        }
+        
         pdf.addImage(imgData, 'PNG', margin, currentY, imgWidth, imgHeight);
+        currentY += imgHeight + 15;
         
       } catch (error) {
-        console.error('Error capturing table:', error);
+        console.error('Error capturing bankroll chart:', error);
+      }
+    }
+
+    // Capture performance chart if it exists (conditional chart)
+    const performanceChart = element.querySelector('.charts-section .bg-white\\/80:nth-child(2)');
+    if (performanceChart && performanceChart.textContent?.includes('Performance (ROI)')) {
+      try {
+        const canvas = await html2canvas(performanceChart as HTMLElement, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          width: (performanceChart as HTMLElement).scrollWidth,
+          height: (performanceChart as HTMLElement).scrollHeight,
+        });
+        
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = contentWidth;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        // Check if we need a new page
+        if (currentY + imgHeight > contentHeight) {
+          pdf.addPage();
+          currentY = margin;
+        }
+        
+        pdf.addImage(imgData, 'PNG', margin, currentY, imgWidth, imgHeight);
+        currentY += imgHeight + 15;
+        
+      } catch (error) {
+        console.error('Error capturing performance chart:', error);
+      }
+    }
+
+    // Add new page for pie charts
+    pdf.addPage();
+    currentY = margin;
+    
+    pdf.setFontSize(16);
+    pdf.text('Distribuzione Dati', margin, currentY);
+    currentY += 15;
+
+    // Find all charts sections and capture pie charts specifically
+    const allChartSections = element.querySelectorAll('.charts-section');
+    
+    // The pie charts are in the second charts-section
+    if (allChartSections.length > 1) {
+      const pieChartsSection = allChartSections[1]; // Second charts section contains pie charts
+      const pieCharts = pieChartsSection.querySelectorAll('.bg-white\\/80');
+      
+      for (const pieChart of pieCharts) {
+        // Check if this card contains a pie chart by looking for specific text
+        if (pieChart.textContent?.includes('Distribuzione per Sport') || 
+            pieChart.textContent?.includes('Distribuzione per Bookmaker')) {
+          
+          try {
+            const canvas = await html2canvas(pieChart as HTMLElement, {
+              scale: 2,
+              useCORS: true,
+              allowTaint: true,
+              backgroundColor: '#ffffff',
+              width: (pieChart as HTMLElement).scrollWidth,
+              height: (pieChart as HTMLElement).scrollHeight,
+            });
+            
+            const imgData = canvas.toDataURL('image/png');
+            const imgWidth = contentWidth / 2 - 5; // Half width for side by side
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            
+            // Position charts side by side
+            const isFirstChart = pieChart.textContent?.includes('Distribuzione per Sport');
+            const xPosition = isFirstChart ? margin : margin + imgWidth + 10;
+            
+            // Check if we need a new page (only for the first chart of the pair)
+            if (isFirstChart && currentY + imgHeight > contentHeight) {
+              pdf.addPage();
+              currentY = margin;
+            }
+            
+            pdf.addImage(imgData, 'PNG', xPosition, currentY, imgWidth, imgHeight);
+            
+            // Move Y position only after both charts are placed
+            if (!isFirstChart) {
+              currentY += imgHeight + 15;
+            }
+            
+          } catch (error) {
+            console.error('Error capturing pie chart:', error);
+          }
+        }
+      }
+    }
+
+    // Add new page for sports performance table
+    pdf.addPage();
+    currentY = margin;
+    
+    pdf.setFontSize(16);
+    pdf.text('Performance per Sport', margin, currentY);
+    currentY += 15;
+
+    // Find and capture the sports performance table
+    const sportsTableSection = element.querySelector('.sports-table');
+    if (sportsTableSection) {
+      const sportsTable = sportsTableSection.querySelector('.bg-white\\/80');
+      if (sportsTable) {
+        try {
+          const canvas = await html2canvas(sportsTable as HTMLElement, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff',
+            width: (sportsTable as HTMLElement).scrollWidth,
+            height: (sportsTable as HTMLElement).scrollHeight,
+          });
+          
+          const imgData = canvas.toDataURL('image/png');
+          const imgWidth = contentWidth;
+          const imgHeight = (canvas.height * imgWidth) / canvas.width;
+          
+          pdf.addImage(imgData, 'PNG', margin, currentY, imgWidth, imgHeight);
+          
+        } catch (error) {
+          console.error('Error capturing sports table:', error);
+        }
       }
     }
 
