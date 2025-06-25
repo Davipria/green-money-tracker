@@ -172,6 +172,7 @@ export type Database = {
           nickname: string | null
           notifications_email: boolean | null
           notifications_reminders: boolean | null
+          profile_type: string | null
           risk_level: string | null
           show_balance: boolean | null
           telegram_url: string | null
@@ -193,6 +194,7 @@ export type Database = {
           nickname?: string | null
           notifications_email?: boolean | null
           notifications_reminders?: boolean | null
+          profile_type?: string | null
           risk_level?: string | null
           show_balance?: boolean | null
           telegram_url?: string | null
@@ -214,6 +216,7 @@ export type Database = {
           nickname?: string | null
           notifications_email?: boolean | null
           notifications_reminders?: boolean | null
+          profile_type?: string | null
           risk_level?: string | null
           show_balance?: boolean | null
           telegram_url?: string | null

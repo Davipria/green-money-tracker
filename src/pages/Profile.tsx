@@ -29,6 +29,7 @@ interface Profile {
   show_balance: boolean | null;
   instagram_url: string | null;
   telegram_url: string | null;
+  profile_type: string | null;
 }
 
 const Profile = () => {
@@ -74,6 +75,7 @@ const Profile = () => {
           show_balance: data.show_balance,
           instagram_url: data.instagram_url,
           telegram_url: data.telegram_url,
+          profile_type: data.profile_type,
         };
         setProfile(profileData);
       } else {
@@ -93,6 +95,7 @@ const Profile = () => {
           show_balance: true,
           instagram_url: null,
           telegram_url: null,
+          profile_type: 'personal',
         };
         
         const { data: createdProfile, error: createError } = await supabase
@@ -119,6 +122,7 @@ const Profile = () => {
           show_balance: createdProfile.show_balance,
           instagram_url: createdProfile.instagram_url,
           telegram_url: createdProfile.telegram_url,
+          profile_type: createdProfile.profile_type,
         };
         setProfile(createdProfileData);
       }
@@ -201,6 +205,7 @@ const Profile = () => {
           show_balance: profile.show_balance,
           instagram_url: profile.instagram_url,
           telegram_url: profile.telegram_url,
+          profile_type: profile.profile_type,
         })
         .eq('id', profile.id);
 
@@ -424,6 +429,56 @@ const Profile = () => {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* Profile Type Toggle */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Tipo di Profilo</Label>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setProfile(prev => prev ? {...prev, profile_type: 'personal'} : null)}
+                    className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all ${
+                      profile?.profile_type === 'personal' 
+                        ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center space-y-2">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                        <User className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div className="text-center">
+                        <div className="font-medium">Personale</div>
+                        <div className="text-xs text-gray-500">Per uso privato</div>
+                      </div>
+                    </div>
+                  </button>
+                  
+                  <button
+                    onClick={() => setProfile(prev => prev ? {...prev, profile_type: 'tipster'} : null)}
+                    className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all ${
+                      profile?.profile_type === 'tipster' 
+                        ? 'border-purple-500 bg-purple-50 text-purple-700' 
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center space-y-2">
+                      <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                        <TrendingUp className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <div className="text-center">
+                        <div className="font-medium">Tipster</div>
+                        <div className="text-xs text-gray-500">Per condividere scommesse</div>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {profile?.profile_type === 'tipster' 
+                    ? 'Il profilo tipster ti permette di condividere le tue scommesse e statistiche con altri utenti.'
+                    : 'Il profilo personale mantiene private le tue scommesse e statistiche.'
+                  }
+                </p>
               </div>
             </CardContent>
           </Card>

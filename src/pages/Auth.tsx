@@ -15,6 +15,7 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [profileType, setProfileType] = useState<'personal' | 'tipster'>('personal');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
@@ -51,7 +52,7 @@ const Auth = () => {
           navigate('/app');
         }
       } else {
-        const { error } = await signUp(email, password, firstName, lastName);
+        const { error } = await signUp(email, password, firstName, lastName, profileType);
         if (error) {
           toast({
             title: "Errore di registrazione",
@@ -175,6 +176,60 @@ const Auth = () => {
                   </button>
                 </div>
               </div>
+
+              {/* Profile Type Selection - Only for registration */}
+              {!isLogin && (
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Tipo di Profilo</Label>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setProfileType('personal')}
+                      className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all ${
+                        profileType === 'personal' 
+                          ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                          : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="flex flex-col items-center space-y-2">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                          <User className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div className="text-center">
+                          <div className="font-medium text-sm">Personale</div>
+                          <div className="text-xs text-gray-500">Per uso privato</div>
+                        </div>
+                      </div>
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={() => setProfileType('tipster')}
+                      className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all ${
+                        profileType === 'tipster' 
+                          ? 'border-purple-500 bg-purple-50 text-purple-700' 
+                          : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="flex flex-col items-center space-y-2">
+                        <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                          <TrendingUp className="h-4 w-4 text-purple-600" />
+                        </div>
+                        <div className="text-center">
+                          <div className="font-medium text-sm">Tipster</div>
+                          <div className="text-xs text-gray-500">Per condividere scommesse</div>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 text-center">
+                    {profileType === 'tipster' 
+                      ? 'Il profilo tipster ti permette di condividere le tue scommesse e statistiche con altri utenti.'
+                      : 'Il profilo personale mantiene private le tue scommesse e statistiche.'
+                    }
+                  </p>
+                </div>
+              )}
               
               <Button 
                 type="submit" 
