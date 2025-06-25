@@ -165,6 +165,7 @@ export type Database = {
           favorite_sport: string | null
           first_name: string | null
           id: string
+          instagram_url: string | null
           last_name: string | null
           monthly_budget: number | null
           monthly_reports_enabled: boolean | null
@@ -173,6 +174,7 @@ export type Database = {
           notifications_reminders: boolean | null
           risk_level: string | null
           show_balance: boolean | null
+          telegram_url: string | null
           updated_at: string
         }
         Insert: {
@@ -184,6 +186,7 @@ export type Database = {
           favorite_sport?: string | null
           first_name?: string | null
           id: string
+          instagram_url?: string | null
           last_name?: string | null
           monthly_budget?: number | null
           monthly_reports_enabled?: boolean | null
@@ -192,6 +195,7 @@ export type Database = {
           notifications_reminders?: boolean | null
           risk_level?: string | null
           show_balance?: boolean | null
+          telegram_url?: string | null
           updated_at?: string
         }
         Update: {
@@ -203,6 +207,7 @@ export type Database = {
           favorite_sport?: string | null
           first_name?: string | null
           id?: string
+          instagram_url?: string | null
           last_name?: string | null
           monthly_budget?: number | null
           monthly_reports_enabled?: boolean | null
@@ -211,6 +216,7 @@ export type Database = {
           notifications_reminders?: boolean | null
           risk_level?: string | null
           show_balance?: boolean | null
+          telegram_url?: string | null
           updated_at?: string
         }
         Relationships: []

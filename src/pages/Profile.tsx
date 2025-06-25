@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,8 @@ interface Profile {
   notifications_email: boolean | null;
   notifications_reminders: boolean | null;
   show_balance: boolean | null;
+  instagram_url: string | null;
+  telegram_url: string | null;
 }
 
 const Profile = () => {
@@ -69,6 +72,8 @@ const Profile = () => {
           notifications_email: data.notifications_email,
           notifications_reminders: data.notifications_reminders,
           show_balance: data.show_balance,
+          instagram_url: data.instagram_url,
+          telegram_url: data.telegram_url,
         };
         setProfile(profileData);
       } else {
@@ -86,6 +91,8 @@ const Profile = () => {
           notifications_email: true,
           notifications_reminders: true,
           show_balance: true,
+          instagram_url: null,
+          telegram_url: null,
         };
         
         const { data: createdProfile, error: createError } = await supabase
@@ -110,6 +117,8 @@ const Profile = () => {
           notifications_email: createdProfile.notifications_email,
           notifications_reminders: createdProfile.notifications_reminders,
           show_balance: createdProfile.show_balance,
+          instagram_url: createdProfile.instagram_url,
+          telegram_url: createdProfile.telegram_url,
         };
         setProfile(createdProfileData);
       }
@@ -190,6 +199,8 @@ const Profile = () => {
           notifications_email: profile.notifications_email,
           notifications_reminders: profile.notifications_reminders,
           show_balance: profile.show_balance,
+          instagram_url: profile.instagram_url,
+          telegram_url: profile.telegram_url,
         })
         .eq('id', profile.id);
 
@@ -366,6 +377,36 @@ const Profile = () => {
                   onChange={(e) => setProfile(prev => prev ? {...prev, bio: e.target.value} : null)}
                   className="min-h-[80px] resize-none"
                 />
+              </div>
+
+              {/* Social Media Links */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="instagram" className="text-sm font-medium flex items-center space-x-1">
+                    <span>📷</span>
+                    <span>Instagram</span>
+                  </Label>
+                  <Input 
+                    id="instagram" 
+                    placeholder="https://instagram.com/username"
+                    value={profile?.instagram_url || ''} 
+                    onChange={(e) => setProfile(prev => prev ? {...prev, instagram_url: e.target.value} : null)}
+                    className="h-11"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="telegram" className="text-sm font-medium flex items-center space-x-1">
+                    <span>✈️</span>
+                    <span>Telegram</span>
+                  </Label>
+                  <Input 
+                    id="telegram" 
+                    placeholder="https://t.me/username"
+                    value={profile?.telegram_url || ''} 
+                    onChange={(e) => setProfile(prev => prev ? {...prev, telegram_url: e.target.value} : null)}
+                    className="h-11"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
