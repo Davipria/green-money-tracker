@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -140,7 +141,7 @@ const Landing = () => {
       <section className="bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 text-white py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Perché Scegliere BetTracker Pro?</h2>
+            <h2 className="text-3xl font-bold mb-4">I Vantaggi Concreti</h2>
             <p className="text-blue-100 text-lg">La differenza che fa la differenza</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8 text-center">
