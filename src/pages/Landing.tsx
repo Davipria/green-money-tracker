@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -137,25 +136,28 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Statistics Section */}
-      <section className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white py-20">
+      {/* Why Choose Us Section */}
+      <section className="bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 text-white py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">I Nostri Risultati</h2>
-            <p className="text-blue-100 text-lg">Numeri che parlano da soli</p>
+            <h2 className="text-3xl font-bold mb-4">Perché Scegliere BetTracker Pro?</h2>
+            <p className="text-blue-100 text-lg">La differenza che fa la differenza</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8 text-center">
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 hover:bg-white/20 transition-all duration-300">
-              <div className="text-5xl font-bold mb-3">10,000+</div>
-              <div className="text-lg text-blue-100">Scommesse Monitorate</div>
+              <div className="text-4xl font-bold mb-3 text-green-300">+35%</div>
+              <div className="text-lg text-blue-100 mb-2">Aumento Profitti</div>
+              <div className="text-sm text-blue-200">Media degli utenti che usano le nostre analisi</div>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 hover:bg-white/20 transition-all duration-300">
-              <div className="text-5xl font-bold mb-3">95%</div>
-              <div className="text-lg text-blue-100">Accuratezza Tracking</div>
+              <div className="text-4xl font-bold mb-3 text-yellow-300">-60%</div>
+              <div className="text-lg text-blue-100 mb-2">Perdite Ridotte</div>
+              <div className="text-sm text-blue-200">Grazie al controllo del bankroll intelligente</div>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 hover:bg-white/20 transition-all duration-300">
-              <div className="text-5xl font-bold mb-3">24/7</div>
-              <div className="text-lg text-blue-100">Supporto Clienti</div>
+              <div className="text-4xl font-bold mb-3 text-blue-300">3x</div>
+              <div className="text-lg text-blue-100 mb-2">Velocità di Analisi</div>
+              <div className="text-sm text-blue-200">Rispetto ai metodi tradizionali di tracking</div>
             </div>
           </div>
         </div>
