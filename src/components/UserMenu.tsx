@@ -15,7 +15,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface UserProfile {
-  nickname: string | null;
+  username: string | null;
   avatar_url: string | null;
   first_name: string | null;
   last_name: string | null;
@@ -36,7 +36,7 @@ const UserMenu = () => {
     try {
       const { data } = await supabase
         .from('profiles')
-        .select('nickname, avatar_url, first_name, last_name')
+        .select('username, avatar_url, first_name, last_name')
         .eq('id', user?.id)
         .single();
       
@@ -61,8 +61,8 @@ const UserMenu = () => {
   };
 
   const getDisplayName = () => {
-    if (profile?.nickname) {
-      return profile.nickname;
+    if (profile?.username) {
+      return profile.username;
     }
     if (profile?.first_name && profile?.last_name) {
       return `${profile.first_name} ${profile.last_name}`;

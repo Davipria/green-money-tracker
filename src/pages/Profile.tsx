@@ -17,7 +17,7 @@ interface Profile {
   id: string;
   first_name: string | null;
   last_name: string | null;
-  nickname: string | null;
+  username: string | null;
   avatar_url: string | null;
   bankroll: number | null;
   bio: string | null;
@@ -63,7 +63,7 @@ const Profile = () => {
           id: data.id,
           first_name: data.first_name,
           last_name: data.last_name,
-          nickname: data.nickname,
+          username: data.username,
           avatar_url: data.avatar_url,
           bankroll: data.bankroll,
           bio: data.bio,
@@ -83,7 +83,7 @@ const Profile = () => {
           id: user?.id!,
           first_name: user?.user_metadata?.first_name || null,
           last_name: user?.user_metadata?.last_name || null,
-          nickname: null,
+          username: null,
           avatar_url: null,
           bankroll: 1000.00,
           bio: null,
@@ -110,7 +110,7 @@ const Profile = () => {
           id: createdProfile.id,
           first_name: createdProfile.first_name,
           last_name: createdProfile.last_name,
-          nickname: createdProfile.nickname,
+          username: createdProfile.username,
           avatar_url: createdProfile.avatar_url,
           bankroll: createdProfile.bankroll,
           bio: createdProfile.bio,
@@ -193,7 +193,7 @@ const Profile = () => {
         .update({
           first_name: profile.first_name,
           last_name: profile.last_name,
-          nickname: profile.nickname,
+          username: profile.username,
           avatar_url: profile.avatar_url,
           bankroll: profile.bankroll,
           bio: profile.bio,
@@ -363,12 +363,12 @@ const Profile = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="nickname" className="text-sm font-medium">Nickname</Label>
+                <Label htmlFor="username" className="text-sm font-medium">Username</Label>
                 <Input 
-                  id="nickname" 
-                  placeholder="Il tuo nickname unico"
-                  value={profile?.nickname || ''} 
-                  onChange={(e) => setProfile(prev => prev ? {...prev, nickname: e.target.value} : null)}
+                  id="username" 
+                  placeholder="Il tuo username unico"
+                  value={profile?.username || ''} 
+                  onChange={(e) => setProfile(prev => prev ? {...prev, username: e.target.value} : null)}
                   className="h-11"
                 />
               </div>

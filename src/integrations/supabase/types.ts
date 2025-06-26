@@ -169,7 +169,6 @@ export type Database = {
           last_name: string | null
           monthly_budget: number | null
           monthly_reports_enabled: boolean | null
-          nickname: string | null
           notifications_email: boolean | null
           notifications_reminders: boolean | null
           profile_type: string | null
@@ -177,6 +176,7 @@ export type Database = {
           show_balance: boolean | null
           telegram_url: string | null
           updated_at: string
+          username: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -191,7 +191,6 @@ export type Database = {
           last_name?: string | null
           monthly_budget?: number | null
           monthly_reports_enabled?: boolean | null
-          nickname?: string | null
           notifications_email?: boolean | null
           notifications_reminders?: boolean | null
           profile_type?: string | null
@@ -199,6 +198,7 @@ export type Database = {
           show_balance?: boolean | null
           telegram_url?: string | null
           updated_at?: string
+          username?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -213,7 +213,6 @@ export type Database = {
           last_name?: string | null
           monthly_budget?: number | null
           monthly_reports_enabled?: boolean | null
-          nickname?: string | null
           notifications_email?: boolean | null
           notifications_reminders?: boolean | null
           profile_type?: string | null
@@ -221,6 +220,7 @@ export type Database = {
           show_balance?: boolean | null
           telegram_url?: string | null
           updated_at?: string
+          username?: string | null
         }
         Relationships: []
       }
