@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { getTipstersWithStatsByPeriod } from "@/hooks/useTipsters";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
@@ -44,6 +45,7 @@ export default function Ranking() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string|null>(null);
   const [showSlow, setShowSlow] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<string>("");
   const navigate = useNavigate();
 
   const { start, end } = period === 'week' ? getLastWeekRange() : getLastMonthRange();
@@ -52,16 +54,34 @@ export default function Ranking() {
     setLoading(true);
     setError(null);
     setShowSlow(false);
+    setDebugInfo("");
+    
+    console.log("🔍 Ranking - Iniziando caricamento dati");
+    console.log("📅 Periodo:", period, "da", start.toISOString(), "a", end.toISOString());
+    
     const timer = setTimeout(() => setShowSlow(true), 2000);
+    
     getTipstersWithStatsByPeriod(start, end)
       .then(tipsters => {
+        console.log("👥 Tipsters trovati:", tipsters.length);
+        console.log("📊 Tipsters con scommesse nel periodo:", tipsters.filter(t => t.periodBets > 0).length);
+        
+        // Debug info per l'utente
+        const debugMsg = `Trovati ${tipsters.length} tipster totali, ${tipsters.filter(t => t.periodBets > 0).length} con scommesse nel periodo`;
+        setDebugInfo(debugMsg);
+        
         const sorted = tipsters
           .filter(t => t.periodBets > 0)
           .sort((a, b) => tab === 'roi' ? b.stats.roi - a.stats.roi : b.stats.winRate - a.stats.winRate)
           .slice(0, 10);
+        
+        console.log("🏆 Classifica finale:", sorted.length, "tipster");
         setRanking(sorted);
       })
-      .catch(e => setError("Errore nel caricamento classifica"))
+      .catch(e => {
+        console.error("❌ Errore caricamento classifica:", e);
+        setError("Errore nel caricamento classifica: " + e.message);
+      })
       .finally(() => {
         setLoading(false);
         clearTimeout(timer);
@@ -85,6 +105,13 @@ export default function Ranking() {
         <p className="text-muted-foreground text-center max-w-xl">Scopri i migliori tipster per ROI % e Win Rate. La classifica si aggiorna ogni lunedì (settimanale) e ogni primo del mese (mensile).</p>
       </div>
 
+      {/* Debug Info */}
+      {debugInfo && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+          <strong>Debug:</strong> {debugInfo}
+        </div>
+      )}
+
       {/* Tabs e Periodo */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <Tabs value={tab} onValueChange={v => setTab(v as any)} className="w-full md:w-auto">
@@ -99,7 +126,8 @@ export default function Ranking() {
         </div>
       </div>
 
-      {error && <div className="text-red-600 text-center mb-4">{error}</div>}
+      {error && <div className="text-red-600 text-center mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">{error}</div>}
+      
       {loading ? (
         <>
           {/* Skeleton Podio */}
@@ -115,7 +143,6 @@ export default function Ranking() {
               </div>
             ))}
           </div>
-          {/* Skeleton Tabella */}
           <div className="bg-white/80 rounded-xl shadow-lg overflow-x-auto">
             <Table>
               <TableHeader>
@@ -144,63 +171,79 @@ export default function Ranking() {
         </>
       ) : (
         <>
-          {/* Podio */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-            {podium.map((t, idx) => (
-              <div
-                key={t.id}
-                className={`relative bg-gradient-to-br ${medalColors[idx]} border-2 rounded-2xl shadow-lg p-5 flex flex-col items-center cursor-pointer hover:scale-105 transition-transform duration-200`}
-                onClick={() => navigate(`/app/tipsters/${t.id}`)}
-              >
-                <span className={`absolute -top-4 left-1/2 -translate-x-1/2 text-3xl font-black drop-shadow-lg ${idx===0?'text-yellow-400':idx===1?'text-gray-400':'text-orange-400'}`}>{idx+1}</span>
-                <Avatar className="w-16 h-16 mb-2 ring-4 ring-white">
-                  <AvatarImage src={t.avatar_url || ''} />
-                  <AvatarFallback>{t.username?.charAt(0).toUpperCase() || t.first_name?.charAt(0).toUpperCase() || 'T'}</AvatarFallback>
-                </Avatar>
-                <div className="text-lg font-bold text-center mb-1">{t.username || `${t.first_name} ${t.last_name}`}</div>
-                <div className="flex gap-2 text-xs text-muted-foreground mb-2">
-                  <span>{t.periodBets} scommesse</span>
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <span className={`font-bold text-lg ${t.stats.roi > 0 ? 'text-green-600' : t.stats.roi < 0 ? 'text-red-600' : 'text-gray-700'}`}>{t.stats.roi.toFixed(2)}% <span className="text-xs font-normal text-muted-foreground">ROI</span></span>
-                  <span className={`font-bold text-lg ${t.stats.winRate > 0 ? 'text-green-600' : t.stats.winRate < 0 ? 'text-red-600' : 'text-gray-700'}`}>{t.stats.winRate.toFixed(2)}% <span className="text-xs font-normal text-muted-foreground">Win Rate</span></span>
-                </div>
+          {ranking.length === 0 ? (
+            <div className="text-center py-12">
+              <Trophy className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-600 mb-2">Nessun tipster trovato</h3>
+              <p className="text-gray-500 mb-4">Non ci sono tipster con scommesse nel periodo selezionato.</p>
+              <div className="text-sm text-gray-400">
+                <p>Per vedere la classifica, i tipster devono avere:</p>
+                <ul className="list-disc list-inside mt-2 space-y-1">
+                  <li>Profilo impostato come "tipster"</li>
+                  <li>Almeno una scommessa nel periodo selezionato</li>
+                  <li>Scommesse con status: vinte, perse o cashout</li>
+                </ul>
               </div>
-            ))}
-          </div>
-          {/* Tabella altri tipster */}
-          <div className="bg-white/80 rounded-xl shadow-lg overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>#</TableHead>
-                  <TableHead>Tipster</TableHead>
-                  <TableHead className="text-right">ROI %</TableHead>
-                  <TableHead className="text-right">Win Rate</TableHead>
-                  <TableHead className="text-right">Scommesse</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {others.length === 0 ? (
-                  <TableRow><TableCell colSpan={5}>Nessun tipster trovato</TableCell></TableRow>
-                ) : others.map((t, idx) => (
-                  <TableRow key={t.id} className="cursor-pointer hover:bg-primary/10 transition" onClick={()=>navigate(`/app/tipsters/${t.id}`)}>
-                    <TableCell className="font-bold">{idx+4}</TableCell>
-                    <TableCell className="flex items-center gap-2">
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage src={t.avatar_url || ''} />
-                        <AvatarFallback>{t.username?.charAt(0).toUpperCase() || t.first_name?.charAt(0).toUpperCase() || 'T'}</AvatarFallback>
-                      </Avatar>
-                      <span>{t.username || `${t.first_name} ${t.last_name}`}</span>
-                    </TableCell>
-                    <TableCell className={`text-right font-semibold ${t.stats.roi > 0 ? 'text-green-600' : t.stats.roi < 0 ? 'text-red-600' : ''}`}>{t.stats.roi.toFixed(2)}%</TableCell>
-                    <TableCell className={`text-right font-semibold ${t.stats.winRate > 0 ? 'text-green-600' : t.stats.winRate < 0 ? 'text-red-600' : ''}`}>{t.stats.winRate.toFixed(2)}%</TableCell>
-                    <TableCell className="text-right">{t.periodBets}</TableCell>
-                  </TableRow>
+            </div>
+          ) : (
+            <>
+              {/* Podio */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+                {podium.map((t, idx) => (
+                  <div
+                    key={t.id}
+                    className={`relative bg-gradient-to-br ${medalColors[idx]} border-2 rounded-2xl shadow-lg p-5 flex flex-col items-center cursor-pointer hover:scale-105 transition-transform duration-200`}
+                    onClick={() => navigate(`/app/tipsters/${t.id}`)}
+                  >
+                    <span className={`absolute -top-4 left-1/2 -translate-x-1/2 text-3xl font-black drop-shadow-lg ${idx===0?'text-yellow-400':idx===1?'text-gray-400':'text-orange-400'}`}>{idx+1}</span>
+                    <Avatar className="w-16 h-16 mb-2 ring-4 ring-white">
+                      <AvatarImage src={t.avatar_url || ''} />
+                      <AvatarFallback>{t.username?.charAt(0).toUpperCase() || t.first_name?.charAt(0).toUpperCase() || 'T'}</AvatarFallback>
+                    </Avatar>
+                    <div className="text-lg font-bold text-center mb-1">{t.username || `${t.first_name} ${t.last_name}`}</div>
+                    <div className="flex gap-2 text-xs text-muted-foreground mb-2">
+                      <span>{t.periodBets} scommesse</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-1">
+                      <span className={`font-bold text-lg ${t.stats.roi > 0 ? 'text-green-600' : t.stats.roi < 0 ? 'text-red-600' : 'text-gray-700'}`}>{t.stats.roi.toFixed(2)}% <span className="text-xs font-normal text-muted-foreground">ROI</span></span>
+                      <span className={`font-bold text-lg ${t.stats.winRate > 0 ? 'text-green-600' : t.stats.winRate < 0 ? 'text-red-600' : 'text-gray-700'}`}>{t.stats.winRate.toFixed(2)}% <span className="text-xs font-normal text-muted-foreground">Win Rate</span></span>
+                    </div>
+                  </div>
                 ))}
-              </TableBody>
-            </Table>
-          </div>
+              </div>
+              {/* Tabella altri tipster */}
+              <div className="bg-white/80 rounded-xl shadow-lg overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>#</TableHead>
+                      <TableHead>Tipster</TableHead>
+                      <TableHead className="text-right">ROI %</TableHead>
+                      <TableHead className="text-right">Win Rate</TableHead>
+                      <TableHead className="text-right">Scommesse</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {others.map((t, idx) => (
+                      <TableRow key={t.id} className="cursor-pointer hover:bg-primary/10 transition" onClick={()=>navigate(`/app/tipsters/${t.id}`)}>
+                        <TableCell className="font-bold">{idx+4}</TableCell>
+                        <TableCell className="flex items-center gap-2">
+                          <Avatar className="w-8 h-8">
+                            <AvatarImage src={t.avatar_url || ''} />
+                            <AvatarFallback>{t.username?.charAt(0).toUpperCase() || t.first_name?.charAt(0).toUpperCase() || 'T'}</AvatarFallback>
+                          </Avatar>
+                          <span>{t.username || `${t.first_name} ${t.last_name}`}</span>
+                        </TableCell>
+                        <TableCell className={`text-right font-semibold ${t.stats.roi > 0 ? 'text-green-600' : t.stats.roi < 0 ? 'text-red-600' : ''}`}>{t.stats.roi.toFixed(2)}%</TableCell>
+                        <TableCell className={`text-right font-semibold ${t.stats.winRate > 0 ? 'text-green-600' : t.stats.winRate < 0 ? 'text-red-600' : ''}`}>{t.stats.winRate.toFixed(2)}%</TableCell>
+                        <TableCell className="text-right">{t.periodBets}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
+          )}
         </>
       )}
     </div>
