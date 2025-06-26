@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +13,8 @@ import Archive from "./pages/Archive";
 import AddBet from "./pages/AddBet";
 import Analysis from "./pages/Analysis";
 import Profile from "./pages/Profile";
+import Tipsters from "./pages/Tipsters";
+import TipsterDetail from "./pages/TipsterDetail";
 import Auth from "./pages/Auth";
 import Landing from "./pages/Landing";
 import NotFound from "./pages/NotFound";
@@ -99,6 +100,38 @@ const App = () => {
                           <UserMenu />
                         </div>
                         <Analysis />
+                      </main>
+                    </div>
+                  </SidebarProvider>
+                </ProtectedRoute>
+              } />
+              <Route path="/app/tipsters" element={
+                <ProtectedRoute>
+                  <SidebarProvider>
+                    <div className="min-h-screen flex w-full">
+                      <AppSidebar />
+                      <main className="flex-1">
+                        <div className="p-2 flex justify-between items-center">
+                          <SidebarTrigger />
+                          <UserMenu />
+                        </div>
+                        <Tipsters />
+                      </main>
+                    </div>
+                  </SidebarProvider>
+                </ProtectedRoute>
+              } />
+              <Route path="/app/tipsters/:tipsterId" element={
+                <ProtectedRoute>
+                  <SidebarProvider>
+                    <div className="min-h-screen flex w-full">
+                      <AppSidebar />
+                      <main className="flex-1">
+                        <div className="p-2 flex justify-between items-center">
+                          <SidebarTrigger />
+                          <UserMenu />
+                        </div>
+                        <TipsterDetail />
                       </main>
                     </div>
                   </SidebarProvider>
