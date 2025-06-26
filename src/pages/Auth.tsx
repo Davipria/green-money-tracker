@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { TrendingUp, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -18,6 +19,9 @@ const Auth = () => {
   const [profileType, setProfileType] = useState<'personal' | 'tipster'>('personal');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [username, setUsername] = useState('');
+  const [bankroll, setBankroll] = useState('');
+  const [usernameError, setUsernameError] = useState<string | null>(null);
   
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
@@ -52,7 +56,7 @@ const Auth = () => {
           navigate('/app');
         }
       } else {
-        const { error } = await signUp(email, password, firstName, lastName, profileType);
+        const { error } = await signUp(email, password, firstName, lastName, profileType, username, bankroll);
         if (error) {
           toast({
             title: "Errore di registrazione",
@@ -74,6 +78,21 @@ const Auth = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Funzione per controllare l'unicità dell'username
+  const checkUsernameUnique = async (username: string) => {
+    if (!username) return;
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('username', username)
+      .maybeSingle();
+    if (data) {
+      setUsernameError('Username già in uso');
+    } else {
+      setUsernameError(null);
     }
   };
 
@@ -131,6 +150,41 @@ const Auth = () => {
                         required={!isLogin}
                         className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                         placeholder="Rossi"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2 col-span-2">
+                    <Label htmlFor="username" className="text-sm font-medium">Username</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="username"
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        onBlur={() => checkUsernameUnique(username)}
+                        required={!isLogin}
+                        className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="username unico"
+                      />
+                    </div>
+                    {usernameError && (
+                      <p className="text-red-500 text-xs mt-1">{usernameError}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2 col-span-2">
+                    <Label htmlFor="bankroll" className="text-sm font-medium">Bankroll iniziale (€)</Label>
+                    <div className="relative">
+                      <Input
+                        id="bankroll"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={bankroll}
+                        onChange={(e) => setBankroll(e.target.value)}
+                        required={!isLogin}
+                        className="pl-4 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="1000.00"
                       />
                     </div>
                   </div>
@@ -234,7 +288,7 @@ const Auth = () => {
               <Button 
                 type="submit" 
                 className="w-full h-12 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105" 
-                disabled={loading}
+                disabled={loading || !!usernameError}
               >
                 {loading ? (
                   <div className="flex items-center">
