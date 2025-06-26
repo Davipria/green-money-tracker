@@ -96,14 +96,14 @@ export default function Tipsters() {
                   <Avatar className="h-12 w-12">
                     <AvatarImage src={tipster.avatar_url || ""} />
                     <AvatarFallback>
-                      {tipster.nickname?.charAt(0).toUpperCase() || 
+                      {tipster.username?.charAt(0).toUpperCase() || 
                        tipster.first_name?.charAt(0).toUpperCase() || 
                        "T"}
                     </AvatarFallback>
                   </Avatar>
                   <div>
                     <CardTitle className="text-lg">
-                      {tipster.nickname || `${tipster.first_name} ${tipster.last_name}`}
+                      {tipster.username || `${tipster.first_name} ${tipster.last_name}`}
                     </CardTitle>
                     <p className="text-sm text-muted-foreground">
                       {tipster.favorite_sport || "Sport preferito non specificato"}
@@ -181,4 +181,4 @@ export default function Tipsters() {
       )}
     </div>
   );
-} 
+}

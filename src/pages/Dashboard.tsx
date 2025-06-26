@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/utils/betUtils";
 import { TrendingUp, TrendingDown, Target, Trophy, Calendar, Zap } from "lucide-react";
@@ -8,7 +9,7 @@ import { Bet } from "@/types/bet";
 import { Link } from "react-router-dom";
 
 interface UserProfile {
-  nickname: string | null;
+  username: string | null;
   first_name: string | null;
   last_name: string | null;
 }
@@ -31,7 +32,7 @@ const Dashboard = () => {
         // Fetch user profile
         const { data: profileData } = await supabase
           .from('profiles')
-          .select('nickname, first_name, last_name')
+          .select('username, first_name, last_name')
           .eq('id', user.user.id)
           .single();
 
@@ -66,8 +67,8 @@ const Dashboard = () => {
   }, [toast]);
 
   const getDisplayName = () => {
-    if (profile?.nickname) {
-      return profile.nickname;
+    if (profile?.username) {
+      return profile.username;
     }
     if (profile?.first_name) {
       return profile.first_name;

@@ -213,7 +213,7 @@ export default function TipsterDetail() {
           Torna ai Tipster
         </Button>
         <h1 className="text-3xl font-bold mb-2">
-          {tipster.nickname || `${tipster.first_name} ${tipster.last_name}`}
+          {tipster.username || `${tipster.first_name} ${tipster.last_name}`}
         </h1>
         <p className="text-muted-foreground">
           Profilo del tipster e statistiche dettagliate
@@ -228,14 +228,14 @@ export default function TipsterDetail() {
                 <Avatar className="h-16 w-16">
                   <AvatarImage src={tipster.avatar_url || ""} />
                   <AvatarFallback className="text-lg">
-                    {tipster.nickname?.charAt(0).toUpperCase() || 
+                    {tipster.username?.charAt(0).toUpperCase() || 
                      tipster.first_name?.charAt(0).toUpperCase() || 
                      "T"}
                   </AvatarFallback>
                 </Avatar>
                 <div>
                   <CardTitle className="text-xl">
-                    {tipster.nickname || `${tipster.first_name} ${tipster.last_name}`}
+                    {tipster.username || `${tipster.first_name} ${tipster.last_name}`}
                   </CardTitle>
                   <p className="text-sm text-muted-foreground">
                     {tipster.favorite_sport || "Sport preferito non specificato"}
