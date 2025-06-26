@@ -344,7 +344,7 @@ const AddBet = () => {
       {/* Header */}
       <div className="mb-8 text-center">
         <div className="flex items-center justify-center gap-3 mb-4">
-          <h1 className="text-3xl font-bold text-foreground bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex items-center gap-3">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex items-center gap-3">
             <PlusCircle className="h-8 w-8 text-blue-600" />
             Nuova Scommessa
           </h1>

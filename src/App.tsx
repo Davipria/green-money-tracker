@@ -18,6 +18,7 @@ import TipsterDetail from "./pages/TipsterDetail";
 import Auth from "./pages/Auth";
 import Landing from "./pages/Landing";
 import NotFound from "./pages/NotFound";
+import Ranking from "./pages/Ranking";
 import { useState } from "react";
 
 const App = () => {
@@ -148,6 +149,22 @@ const App = () => {
                           <UserMenu />
                         </div>
                         <Profile />
+                      </main>
+                    </div>
+                  </SidebarProvider>
+                </ProtectedRoute>
+              } />
+              <Route path="/app/ranking" element={
+                <ProtectedRoute>
+                  <SidebarProvider>
+                    <div className="min-h-screen flex w-full">
+                      <AppSidebar />
+                      <main className="flex-1">
+                        <div className="p-2 flex justify-between items-center">
+                          <SidebarTrigger />
+                          <UserMenu />
+                        </div>
+                        <Ranking />
                       </main>
                     </div>
                   </SidebarProvider>

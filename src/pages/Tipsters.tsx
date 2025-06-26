@@ -3,16 +3,28 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, TrendingUp, Target, Calendar } from "lucide-react";
+import { Users, TrendingUp, Target, Calendar, Dice2 } from "lucide-react";
 import { useTipsters } from "@/hooks/useTipsters";
+import { useState } from "react";
 
 export default function Tipsters() {
   const navigate = useNavigate();
   const { tipsters, loading, error } = useTipsters();
+  const [search, setSearch] = useState("");
 
   const handleTipsterClick = (tipsterId: string) => {
     navigate(`/app/tipsters/${tipsterId}`);
   };
+
+  // Filtra i tipster in base al testo di ricerca
+  const filteredTipsters = tipsters.filter((tipster) => {
+    const searchLower = search.toLowerCase();
+    return (
+      tipster.username?.toLowerCase().includes(searchLower) ||
+      tipster.first_name?.toLowerCase().includes(searchLower) ||
+      tipster.last_name?.toLowerCase().includes(searchLower)
+    );
+  });
 
   if (loading) {
     return (
@@ -73,7 +85,7 @@ export default function Tipsters() {
         </p>
       </div>
 
-      {tipsters.length === 0 ? (
+      {filteredTipsters.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Users className="h-12 w-12 text-muted-foreground mb-4" />
@@ -85,7 +97,7 @@ export default function Tipsters() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tipsters.map((tipster) => (
+          {filteredTipsters.map((tipster) => (
             <Card 
               key={tipster.id} 
               className="cursor-pointer hover:shadow-lg transition-shadow"
@@ -131,23 +143,23 @@ export default function Tipsters() {
                   </div>
                   <div className="text-center">
                     <div className="flex items-center justify-center mb-1">
-                      <Calendar className="h-4 w-4 text-muted-foreground mr-1" />
+                      <Dice2 className="h-4 w-4 text-muted-foreground mr-1" />
                     </div>
                     <p className="text-sm font-medium">
-                      {tipster.stats?.totalProfit ? 
-                        `€${tipster.stats.totalProfit > 0 ? '+' : ''}${tipster.stats.totalProfit.toFixed(2)}` : 
-                        "€0.00"}
+                      {tipster.stats?.avgOdds ? tipster.stats.avgOdds.toFixed(2) : "-"}
                     </p>
-                    <p className="text-xs text-muted-foreground">Profitto</p>
+                    <p className="text-xs text-muted-foreground">Quota Media</p>
                   </div>
                   <div className="text-center">
                     <div className="flex items-center justify-center mb-1">
-                      <Users className="h-4 w-4 text-muted-foreground mr-1" />
+                      <Calendar className="h-4 w-4 text-muted-foreground mr-1" />
                     </div>
                     <p className="text-sm font-medium">
-                      {tipster.stats?.totalStake ? `€${tipster.stats.totalStake.toFixed(2)}` : "€0.00"}
+                      {tipster.stats?.profitPercent !== undefined
+                        ? `${tipster.stats.profitPercent > 0 ? '+' : ''}${tipster.stats.profitPercent.toFixed(1)}%`
+                        : '0.0%'}
                     </p>
-                    <p className="text-xs text-muted-foreground">Stake Totale</p>
+                    <p className="text-xs text-muted-foreground">Profitto %</p>
                   </div>
                 </div>
                 

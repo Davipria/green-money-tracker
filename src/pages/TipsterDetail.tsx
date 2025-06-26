@@ -19,7 +19,8 @@ import {
   MessageCircle, 
   BarChart3, 
   Calendar as CalendarIcon,
-  Trophy
+  Trophy,
+  Send as Telegram
 } from "lucide-react";
 import { useTipsters, TipsterProfile } from "@/hooks/useTipsters";
 import { Bet } from "@/types/bet";
@@ -28,6 +29,120 @@ import { Select } from "@/components/ui/select";
 import { addDays, subDays, subMonths, subYears, isAfter, isBefore, isWithinInterval } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
+import { formatCurrency } from "@/utils/betUtils";
+
+// --- RankingsSection Component ---
+import React from "react";
+
+function RankingsSection() {
+  const navigate = useNavigate();
+  const { tipsters, loading } = useTipsters();
+  const [period, setPeriod] = useState<'week' | 'month' | 'year'>('week');
+
+  // Calcola l'intervallo di date per il periodo selezionato
+  const now = new Date();
+  let from: Date;
+  if (period === 'week') {
+    const day = now.getDay() === 0 ? 6 : now.getDay() - 1;
+    from = new Date(now);
+    from.setDate(now.getDate() - day);
+  } else if (period === 'month') {
+    from = new Date(now.getFullYear(), now.getMonth(), 1);
+  } else {
+    from = new Date(now.getFullYear(), 0, 1);
+  }
+
+  // Per ogni tipster, calcola le stats solo sulle scommesse del periodo
+  const rankedTipsters = useMemo(() => {
+    if (loading) return [];
+    return tipsters.map(t => {
+      if (!t.stats || !t.id) return null;
+      // Filtro le scommesse del periodo
+      const bets = (t.bets || []).filter(bet => {
+        const d = new Date(bet.date);
+        return d >= from && d <= now;
+      });
+      // Se non ci sono bets, stats a 0
+      if (!bets.length) return { ...t, stats: { ...t.stats, totalProfit: 0, roi: 0, winRate: 0 } };
+      // Calcola stats periodo
+      const totalProfit = bets.reduce((sum, bet) => sum + (bet.profit || 0), 0);
+      const totalStake = bets.reduce((sum, bet) => sum + bet.stake, 0);
+      const roi = totalStake > 0 ? (totalProfit / totalStake) * 100 : 0;
+      const wonBets = bets.filter(bet => bet.status === 'won').length;
+      const winRate = bets.length > 0 ? (wonBets / bets.length) * 100 : 0;
+      return {
+        ...t,
+        stats: {
+          ...t.stats,
+          totalProfit,
+          roi,
+          winRate,
+        },
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => (b!.stats!.totalProfit - a!.stats!.totalProfit))
+    .slice(0, 20);
+  }, [tipsters, period, loading]);
+
+  return (
+    <div>
+      <div className="flex gap-2 mb-4">
+        <button
+          className={`px-3 py-1 rounded ${period === 'week' ? 'bg-primary text-white' : 'bg-muted'}`}
+          onClick={() => setPeriod('week')}
+        >
+          Settimanale
+        </button>
+        <button
+          className={`px-3 py-1 rounded ${period === 'month' ? 'bg-primary text-white' : 'bg-muted'}`}
+          onClick={() => setPeriod('month')}
+        >
+          Mensile
+        </button>
+        <button
+          className={`px-3 py-1 rounded ${period === 'year' ? 'bg-primary text-white' : 'bg-muted'}`}
+          onClick={() => setPeriod('year')}
+        >
+          Annuale
+        </button>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-sm">
+          <thead>
+            <tr className="bg-muted">
+              <th className="px-3 py-2 text-left">#</th>
+              <th className="px-3 py-2 text-left">Username</th>
+              <th className="px-3 py-2 text-right">Profitto (€)</th>
+              <th className="px-3 py-2 text-right">ROI %</th>
+              <th className="px-3 py-2 text-right">Winrate %</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={5} className="text-center py-4">Caricamento...</td></tr>
+            ) : rankedTipsters.length === 0 ? (
+              <tr><td colSpan={5} className="text-center py-4">Nessun tipster trovato</td></tr>
+            ) : rankedTipsters.map((t, idx) => (
+              <tr
+                key={t!.id}
+                className={`cursor-pointer ${idx % 2 === 0 ? '' : 'bg-muted/40'} hover:bg-primary/10`}
+                onClick={() => navigate(`/app/tipsters/${t!.id}`)}
+              >
+                <td className="px-3 py-2 font-bold">{idx + 1}</td>
+                <td className="px-3 py-2">{t!.username || t!.first_name + ' ' + t!.last_name}</td>
+                <td className={`px-3 py-2 text-right font-semibold ${t!.stats!.totalProfit > 0 ? 'text-green-600' : t!.stats!.totalProfit < 0 ? 'text-red-600' : ''}`}>{t!.stats!.totalProfit > 0 ? '+' : ''}{t!.stats!.totalProfit.toFixed(2)}</td>
+                <td className={`px-3 py-2 text-right ${t!.stats!.roi > 0 ? 'text-green-600' : t!.stats!.roi < 0 ? 'text-red-600' : ''}`}>{t!.stats!.roi > 0 ? '+' : ''}{t!.stats!.roi.toFixed(2)}%</td>
+                <td className="px-3 py-2 text-right">{t!.stats!.winRate.toFixed(2)}%</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
 
 export default function TipsterDetail() {
   const { tipsterId } = useParams<{ tipsterId: string }>();
@@ -263,7 +378,7 @@ export default function TipsterDetail() {
                 {tipster.telegram_url && (
                   <Button variant="outline" size="sm" asChild className="flex-1">
                     <a href={tipster.telegram_url} target="_blank" rel="noopener noreferrer">
-                      <MessageCircle className="w-4 h-4 mr-2" />
+                      <Telegram className="w-4 h-4 mr-2" />
                       Telegram
                     </a>
                   </Button>
@@ -446,7 +561,9 @@ export default function TipsterDetail() {
             <TabsContent value="stats" className="mt-0">
               <Card>
                 <CardHeader>
-                  <CardTitle>Statistiche Dettagliate</CardTitle>
+                  <CardTitle>Statistiche dettagliate</CardTitle>
+                </CardHeader>
+                <CardContent>
                   <div className="mt-2 flex flex-wrap gap-2 items-center">
                     <label className="font-medium text-sm">Periodo:</label>
                     <button className={`px-3 py-1 rounded ${period==='all' ? 'bg-primary text-white' : 'bg-muted'}`} onClick={()=>setPeriod('all')}>Tutto</button>
@@ -474,9 +591,142 @@ export default function TipsterDetail() {
                       </PopoverContent>
                     </Popover>
                   </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+                    <div>
+                      <h4 className="font-semibold mb-3">Scommesse totali</h4>
+                      <p className="text-3xl font-bold text-blue-700">
+                        {filteredBets.length}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-3">Scommesse vinte</h4>
+                      <p className="text-3xl font-bold text-green-600">
+                        {filteredBets.filter(bet => bet.status === 'won').length}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-3">Scommesse perse</h4>
+                      <p className="text-3xl font-bold text-red-600">
+                        {filteredBets.filter(bet => bet.status === 'lost').length}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-3">Scommesse in corso</h4>
+                      <p className="text-3xl font-bold text-yellow-600">
+                        {filteredBets.filter(bet => bet.status === 'pending').length}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-3">Scommesse cashout</h4>
+                      <p className="text-3xl font-bold text-blue-600">
+                        {filteredBets.filter(bet => bet.status === 'cashout').length}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-3">Win Rate %</h4>
+                      <p className="text-3xl font-bold text-purple-600">
+                        {filteredStats.winRate.toFixed(2)}%
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-3">ROI %</h4>
+                      <p className="text-3xl font-bold text-pink-600">
+                        {filteredStats.totalStake > 0 ? `${filteredStats.roi > 0 ? '+' : ''}${filteredStats.roi.toFixed(2)}%` : '0%'}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-3">Quota media</h4>
+                      <p className="text-3xl font-bold text-indigo-600">
+                        {filteredStats.avgOdds?.toFixed(2) || '0.00'}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle>Evoluzione Bankroll (%)</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {/* ...resto invariato... */}
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={(() => {
+                      // Calcolo i dati per l'evoluzione percentuale del bankroll
+                      const initialBankroll = tipster.bankroll || 0;
+                      if (!initialBankroll) return [];
+                      const betsByDate = filteredBets
+                        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                        .reduce((acc, bet) => {
+                          const dateKey = bet.date;
+                          if (!acc[dateKey]) acc[dateKey] = [];
+                          acc[dateKey].push(bet);
+                          return acc;
+                        }, {} as Record<string, Bet[]>);
+                      let runningBankroll = initialBankroll;
+                      const dailyData: Array<{date: string, bankrollPerc: number, dailyProfit: number}> = [];
+                      Object.entries(betsByDate).forEach(([dateKey, dayBets]) => {
+                        const dailyProfit = dayBets.reduce((sum, bet) => sum + (bet.profit || 0), 0);
+                        runningBankroll += dailyProfit;
+                        const perc = (runningBankroll / initialBankroll) * 100;
+                        dailyData.push({
+                          date: new Date(dateKey).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }),
+                          bankrollPerc: perc,
+                          dailyProfit: dailyProfit
+                        });
+                      });
+                      return dailyData;
+                    })()} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis domain={(() => {
+                        // Rende il dominio simile a quello della sezione Analisi
+                        const data = (() => {
+                          const initialBankroll = tipster.bankroll || 0;
+                          if (!initialBankroll) return [];
+                          const betsByDate = filteredBets
+                            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                            .reduce((acc, bet) => {
+                              const dateKey = bet.date;
+                              if (!acc[dateKey]) acc[dateKey] = [];
+                              acc[dateKey].push(bet);
+                              return acc;
+                            }, {} as Record<string, Bet[]>);
+                          let runningBankroll = initialBankroll;
+                          const dailyData: Array<{date: string, bankrollPerc: number, dailyProfit: number}> = [];
+                          Object.entries(betsByDate).forEach(([dateKey, dayBets]) => {
+                            const dailyProfit = dayBets.reduce((sum, bet) => sum + (bet.profit || 0), 0);
+                            runningBankroll += dailyProfit;
+                            const perc = (runningBankroll / initialBankroll) * 100;
+                            dailyData.push({
+                              date: new Date(dateKey).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }),
+                              bankrollPerc: perc,
+                              dailyProfit: dailyProfit
+                            });
+                          });
+                          return dailyData;
+                        })();
+                        if (!data.length) return [80, 120];
+                        const values = data.map(d => d.bankrollPerc);
+                        const min = Math.min(...values);
+                        const max = Math.max(...values);
+                        return [min - 5, max + 5];
+                      })()} tickFormatter={v => `${v.toFixed(0)}%`} />
+                      <Tooltip 
+                        formatter={(value: number, name: string) => [
+                          `${value.toFixed(2)}%`,
+                          name === 'bankrollPerc' ? 'Bankroll %' : 'Profitto Giornaliero'
+                        ]}
+                        labelFormatter={(label) => `Data: ${label}`}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="bankrollPerc" 
+                        stroke="#10b981" 
+                        strokeWidth={3}
+                        name="bankrollPerc"
+                        dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </CardContent>
               </Card>
             </TabsContent>
