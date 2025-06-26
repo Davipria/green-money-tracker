@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +23,7 @@ const Auth = () => {
   const [username, setUsername] = useState('');
   const [bankroll, setBankroll] = useState('');
   const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
   
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
@@ -43,11 +45,19 @@ const Auth = () => {
       if (isLogin) {
         const { error } = await signIn(email, password);
         if (error) {
-          toast({
-            title: "Errore di accesso",
-            description: error.message,
-            variant: "destructive",
-          });
+          if (error.message.includes('Invalid login credentials')) {
+            toast({
+              title: "Errore di accesso",
+              description: "Email o password non corretti",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Errore di accesso",
+              description: error.message,
+              variant: "destructive",
+            });
+          }
         } else {
           toast({
             title: "Accesso effettuato!",
@@ -58,11 +68,27 @@ const Auth = () => {
       } else {
         const { error } = await signUp(email, password, firstName, lastName, profileType, username, bankroll);
         if (error) {
-          toast({
-            title: "Errore di registrazione",
-            description: error.message,
-            variant: "destructive",
-          });
+          if (error.message.includes('User already registered')) {
+            toast({
+              title: "Errore di registrazione",
+              description: "Un account con questa email esiste già. Prova ad accedere invece.",
+              variant: "destructive",
+            });
+            setEmailError('Email già registrata');
+          } else if (error.message.includes('duplicate') && error.message.includes('username')) {
+            toast({
+              title: "Errore di registrazione",
+              description: "Username già in uso. Scegline un altro.",
+              variant: "destructive",
+            });
+            setUsernameError('Username già in uso');
+          } else {
+            toast({
+              title: "Errore di registrazione",
+              description: error.message,
+              variant: "destructive",
+            });
+          }
         } else {
           toast({
             title: "Registrazione completata!",
@@ -83,7 +109,10 @@ const Auth = () => {
 
   // Funzione per controllare l'unicità dell'username
   const checkUsernameUnique = async (username: string) => {
-    if (!username) return;
+    if (!username) {
+      setUsernameError(null);
+      return;
+    }
     const { data, error } = await supabase
       .from('profiles')
       .select('id')
@@ -93,6 +122,29 @@ const Auth = () => {
       setUsernameError('Username già in uso');
     } else {
       setUsernameError(null);
+    }
+  };
+
+  // Funzione per controllare l'unicità dell'email
+  const checkEmailUnique = async (email: string) => {
+    if (!email || !email.includes('@')) {
+      setEmailError(null);
+      return;
+    }
+    
+    // Check if email exists in auth.users via RPC or by attempting a password reset
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://example.com/reset' // Dummy URL just to test
+    });
+    
+    // If no error, email exists; if error contains "User not found", email is available
+    if (!error) {
+      setEmailError('Email già registrata');
+    } else if (error.message.includes('User not found') || error.message.includes('not found')) {
+      setEmailError(null);
+    } else {
+      // For other errors, don't show validation error
+      setEmailError(null);
     }
   };
 
@@ -161,7 +213,10 @@ const Auth = () => {
                         id="username"
                         type="text"
                         value={username}
-                        onChange={(e) => setUsername(e.target.value)}
+                        onChange={(e) => {
+                          setUsername(e.target.value);
+                          setUsernameError(null); // Clear error on change
+                        }}
                         onBlur={() => checkUsernameUnique(username)}
                         required={!isLogin}
                         className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
@@ -199,12 +254,19 @@ const Auth = () => {
                     id="email"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setEmailError(null); // Clear error on change
+                    }}
+                    onBlur={() => !isLogin && checkEmailUnique(email)}
                     required
                     className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                     placeholder="mario.rossi@email.com"
                   />
                 </div>
+                {emailError && (
+                  <p className="text-red-500 text-xs mt-1">{emailError}</p>
+                )}
               </div>
               
               <div className="space-y-2">
@@ -288,7 +350,7 @@ const Auth = () => {
               <Button 
                 type="submit" 
                 className="w-full h-12 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105" 
-                disabled={loading || !!usernameError}
+                disabled={loading || !!usernameError || !!emailError}
               >
                 {loading ? (
                   <div className="flex items-center">
