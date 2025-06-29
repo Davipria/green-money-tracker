@@ -4,10 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/utils/betUtils";
-import { Edit, Trash2, Calendar, Target, TrendingUp, User, Clock, BookOpen, FileText, DollarSign, Percent } from "lucide-react";
+import { Edit, Trash2, Calendar, Target, TrendingUp, User, Clock, BookOpen, FileText, DollarSign, Percent, List } from "lucide-react";
 import { Bet } from "@/types/bet";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+
+interface BetSelection {
+  id: string;
+  sport?: string;
+  event: string;
+  odds: number;
+  selection?: string;
+}
 
 interface BetDetailsDialogProps {
   bet: Bet | null;
@@ -19,6 +27,8 @@ interface BetDetailsDialogProps {
 
 const BetDetailsDialog = ({ bet, open, onOpenChange, onEdit, onDelete }: BetDetailsDialogProps) => {
   const [bankroll, setBankroll] = useState<number>(1000);
+  const [betSelections, setBetSelections] = useState<BetSelection[]>([]);
+  const [loadingSelections, setLoadingSelections] = useState(false);
 
   useEffect(() => {
     const fetchBankroll = async () => {
@@ -40,10 +50,34 @@ const BetDetailsDialog = ({ bet, open, onOpenChange, onEdit, onDelete }: BetDeta
       }
     };
 
-    if (open) {
+    const fetchBetSelections = async () => {
+      if (!bet?.id) return;
+      
+      try {
+        setLoadingSelections(true);
+        const { data: selections, error } = await supabase
+          .from('bet_selections')
+          .select('*')
+          .eq('bet_id', bet.id)
+          .order('created_at', { ascending: true });
+
+        if (error) {
+          console.error('Error fetching bet selections:', error);
+        } else {
+          setBetSelections(selections || []);
+        }
+      } catch (error) {
+        console.error('Error fetching bet selections:', error);
+      } finally {
+        setLoadingSelections(false);
+      }
+    };
+
+    if (open && bet) {
       fetchBankroll();
+      fetchBetSelections();
     }
-  }, [open]);
+  }, [open, bet]);
 
   if (!bet) return null;
 
@@ -75,6 +109,8 @@ const BetDetailsDialog = ({ bet, open, onOpenChange, onEdit, onDelete }: BetDeta
     return (bet.stake / bankroll) * 100;
   };
 
+  const isMultipleBet = betSelections.length > 1;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -102,6 +138,12 @@ const BetDetailsDialog = ({ bet, open, onOpenChange, onEdit, onDelete }: BetDeta
                       <Calendar className="w-4 h-4 mr-1" />
                       {new Date(bet.date).toLocaleDateString('it-IT')}
                     </span>
+                    {isMultipleBet && (
+                      <Badge variant="outline" className="px-2 py-1 text-xs">
+                        <List className="w-3 h-3 mr-1" />
+                        Multipla
+                      </Badge>
+                    )}
                   </div>
                 </div>
                 <div className="text-right">
@@ -114,10 +156,55 @@ const BetDetailsDialog = ({ bet, open, onOpenChange, onEdit, onDelete }: BetDeta
             </CardContent>
           </Card>
 
+          {/* Multiple Bet Selections */}
+          {isMultipleBet && (
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-2 mb-4">
+                  <List className="w-5 h-5 text-blue-600" />
+                  <span className="font-medium text-gray-700">Selezioni Multipla</span>
+                </div>
+                {loadingSelections ? (
+                  <div className="text-center py-4">
+                    <div className="text-sm text-gray-500">Caricamento selezioni...</div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {betSelections.map((selection, index) => (
+                      <div key={selection.id} className="bg-gray-50 rounded-lg p-4 border">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
+                                {index + 1}
+                              </span>
+                              {selection.sport && (
+                                <Badge variant="outline" className="text-xs">
+                                  {selection.sport}
+                                </Badge>
+                              )}
+                            </div>
+                            <h4 className="font-medium text-gray-900 mb-1">{selection.event}</h4>
+                            {selection.selection && (
+                              <p className="text-sm text-gray-600">{selection.selection}</p>
+                            )}
+                          </div>
+                          <div className="text-right ml-4">
+                            <span className="text-lg font-semibold text-gray-900">@{selection.odds}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Bet Details Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Sport & Competition */}
-            {bet.sport && (
+            {bet.sport && !isMultipleBet && (
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-2 mb-2">
@@ -141,8 +228,8 @@ const BetDetailsDialog = ({ bet, open, onOpenChange, onEdit, onDelete }: BetDeta
               </Card>
             )}
 
-            {/* Selection & Odds - Reordered */}
-            {bet.selection && (
+            {/* Selection & Odds - Only show for single bets */}
+            {bet.selection && !isMultipleBet && (
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-2 mb-2">
@@ -158,7 +245,9 @@ const BetDetailsDialog = ({ bet, open, onOpenChange, onEdit, onDelete }: BetDeta
               <CardContent className="p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <DollarSign className="w-5 h-5 text-blue-600" />
-                  <span className="font-medium text-gray-700">Quote</span>
+                  <span className="font-medium text-gray-700">
+                    {isMultipleBet ? 'Quota Totale' : 'Quote'}
+                  </span>
                 </div>
                 <p className="text-gray-900 text-lg font-semibold">{bet.odds}</p>
               </CardContent>
@@ -233,6 +322,19 @@ const BetDetailsDialog = ({ bet, open, onOpenChange, onEdit, onDelete }: BetDeta
                   <p className="text-gray-900 capitalize">
                     {bet.timing === 'prematch' ? 'Prematch' : 'Live'}
                   </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Multiple Title */}
+            {bet.multiple_title && (
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <List className="w-5 h-5 text-blue-600" />
+                    <span className="font-medium text-gray-700">Titolo Multipla</span>
+                  </div>
+                  <p className="text-gray-900">{bet.multiple_title}</p>
                 </CardContent>
               </Card>
             )}
