@@ -1,3 +1,4 @@
+
 import { Bet, MonthlyStats } from "@/types/bet";
 
 export const calculateProfit = (bet: Bet): number => {
@@ -7,6 +8,8 @@ export const calculateProfit = (bet: Bet): number => {
     return -bet.stake;
   } else if (bet.status === 'cashout' && bet.cashout_amount) {
     return bet.cashout_amount - bet.stake;
+  } else if (bet.status === 'void') {
+    return 0; // Scommesse annullate hanno profitto 0
   }
   return 0;
 };

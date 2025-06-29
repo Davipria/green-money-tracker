@@ -130,6 +130,8 @@ const Archive = () => {
       return -bet.stake;
     } else if (bet.status === 'cashout' && bet.cashout_amount) {
       return bet.cashout_amount - bet.stake;
+    } else if (bet.status === 'void') {
+      return 0;
     }
     return 0;
   };
@@ -349,12 +351,13 @@ const Archive = () => {
                                           Puntata: {formatCurrency(bet.stake)}
                                         </div>
                                         <Badge 
-                                          variant={bet.status === 'won' ? 'default' : bet.status === 'lost' ? 'destructive' : bet.status === 'cashout' ? 'secondary' : 'secondary'}
-                                          className={`px-3 py-1 font-medium ${bet.status === 'won' ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : ''}`}
+                                          variant={bet.status === 'won' ? 'default' : bet.status === 'lost' ? 'destructive' : bet.status === 'cashout' ? 'secondary' : bet.status === 'void' ? 'outline' : 'secondary'}
+                                          className={`px-3 py-1 font-medium ${bet.status === 'won' ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : bet.status === 'void' ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : ''}`}
                                         >
                                           {bet.status === 'won' ? 'Vinta' : 
                                            bet.status === 'lost' ? 'Persa' : 
-                                           bet.status === 'cashout' ? 'Cashout' : 'In attesa'}
+                                           bet.status === 'cashout' ? 'Cashout' : 
+                                           bet.status === 'void' ? 'Annullata' : 'In attesa'}
                                         </Badge>
                                       </div>
                                     </div>

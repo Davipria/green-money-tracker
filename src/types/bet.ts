@@ -8,7 +8,7 @@ export interface Bet {
   bet_type: string;
   odds: number;
   stake: number;
-  status: 'pending' | 'won' | 'lost' | 'cashout';
+  status: 'pending' | 'won' | 'lost' | 'cashout' | 'void';
   payout?: number;
   profit?: number;
   notes?: string;

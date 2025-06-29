@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -28,7 +27,7 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
     timing: "prematch" as 'prematch' | 'live',
     stake: "",
     notes: "",
-    status: "pending" as 'pending' | 'won' | 'lost' | 'cashout',
+    status: "pending" as 'pending' | 'won' | 'lost' | 'cashout' | 'void',
     cashoutAmount: "",
     sport: "",
     event: "",
@@ -110,6 +109,10 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
       } else if (formData.status === 'cashout' && formData.cashoutAmount) {
         payout = parseFloat(formData.cashoutAmount);
         profit = parseFloat(formData.cashoutAmount) - parseFloat(formData.stake);
+      } else if (formData.status === 'void') {
+        // Per le scommesse annullate, payout e profit sono 0
+        payout = parseFloat(formData.stake);
+        profit = 0;
       }
 
       const updateData = {
@@ -304,7 +307,7 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
 
             <div className="space-y-3">
               <Label className="text-base font-semibold">Stato Scommessa</Label>
-              <Select value={formData.status} onValueChange={(value: 'pending' | 'won' | 'lost' | 'cashout') => handleInputChange("status", value)}>
+              <Select value={formData.status} onValueChange={(value: 'pending' | 'won' | 'lost' | 'cashout' | 'void') => handleInputChange("status", value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleziona stato" />
                 </SelectTrigger>
@@ -313,6 +316,7 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
                   <SelectItem value="won">Vinta</SelectItem>
                   <SelectItem value="lost">Persa</SelectItem>
                   <SelectItem value="cashout">Cashout</SelectItem>
+                  <SelectItem value="void">Annullata</SelectItem>
                 </SelectContent>
               </Select>
             </div>

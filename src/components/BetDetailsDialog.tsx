@@ -86,7 +86,8 @@ const BetDetailsDialog = ({ bet, open, onOpenChange, onEdit, onDelete }: BetDeta
       won: { label: "Vinta", variant: "default" as const, className: "bg-emerald-100 text-emerald-800 hover:bg-emerald-200" },
       lost: { label: "Persa", variant: "destructive" as const, className: "" },
       pending: { label: "In Attesa", variant: "secondary" as const, className: "" },
-      cashout: { label: "Cashout", variant: "secondary" as const, className: "" }
+      cashout: { label: "Cashout", variant: "secondary" as const, className: "" },
+      void: { label: "Annullata", variant: "outline" as const, className: "bg-gray-100 text-gray-700 hover:bg-gray-200" }
     };
     
     return statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
@@ -101,6 +102,8 @@ const BetDetailsDialog = ({ bet, open, onOpenChange, onEdit, onDelete }: BetDeta
       return -bet.stake;
     } else if (bet.status === 'cashout' && bet.cashout_amount) {
       return bet.cashout_amount - bet.stake;
+    } else if (bet.status === 'void') {
+      return 0; // Scommesse annullate hanno profitto 0
     }
     return 0;
   };
