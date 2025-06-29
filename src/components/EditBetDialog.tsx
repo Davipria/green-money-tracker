@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,17 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Bet } from "@/types/bet";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { List, Plus, Trash2 } from "lucide-react";
+
+interface BetSelection {
+  id: string;
+  sport?: string;
+  event: string;
+  odds: number;
+  selection?: string;
+}
 
 interface EditBetDialogProps {
   bet: Bet | null;
@@ -20,6 +32,9 @@ interface EditBetDialogProps {
 const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogProps) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [betSelections, setBetSelections] = useState<BetSelection[]>([]);
+  const [loadingSelections, setLoadingSelections] = useState(false);
+  const [isMultipleBet, setIsMultipleBet] = useState(false);
   const [formData, setFormData] = useState({
     date: "",
     bookmaker: "",
@@ -34,6 +49,7 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
     manifestation: "",
     odds: "",
     selection: "",
+    multiple_title: "",
   });
 
   const bookmakers = [
@@ -51,6 +67,35 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
     { value: "altro", label: "Altro" }
   ];
 
+  // Fetch bet selections when dialog opens
+  useEffect(() => {
+    const fetchBetSelections = async () => {
+      if (!bet?.id || !open) return;
+      
+      try {
+        setLoadingSelections(true);
+        const { data: selections, error } = await supabase
+          .from('bet_selections')
+          .select('*')
+          .eq('bet_id', bet.id)
+          .order('created_at', { ascending: true });
+
+        if (error) {
+          console.error('Error fetching bet selections:', error);
+        } else {
+          setBetSelections(selections || []);
+          setIsMultipleBet((selections || []).length > 1);
+        }
+      } catch (error) {
+        console.error('Error fetching bet selections:', error);
+      } finally {
+        setLoadingSelections(false);
+      }
+    };
+
+    fetchBetSelections();
+  }, [bet?.id, open]);
+
   useEffect(() => {
     if (bet) {
       setFormData({
@@ -67,22 +112,85 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
         manifestation: bet.manifestation || "",
         odds: bet.odds.toString(),
         selection: bet.selection || "",
+        multiple_title: bet.multiple_title || "",
       });
     }
   }, [bet]);
+
+  const addSelection = () => {
+    const newSelection: BetSelection = {
+      id: `temp-${Date.now()}`,
+      sport: "",
+      event: "",
+      odds: 1.5,
+      selection: ""
+    };
+    setBetSelections([...betSelections, newSelection]);
+    setIsMultipleBet(true);
+  };
+
+  const removeSelection = (index: number) => {
+    const newSelections = betSelections.filter((_, i) => i !== index);
+    setBetSelections(newSelections);
+    setIsMultipleBet(newSelections.length > 1);
+  };
+
+  const updateSelection = (index: number, field: keyof BetSelection, value: string | number) => {
+    const newSelections = [...betSelections];
+    newSelections[index] = { ...newSelections[index], [field]: value };
+    setBetSelections(newSelections);
+    
+    // Update total odds if this is a multiple bet
+    if (isMultipleBet) {
+      const totalOdds = newSelections.reduce((total, sel) => total * sel.odds, 1);
+      setFormData(prev => ({ ...prev, odds: totalOdds.toFixed(2) }));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!bet) return;
 
-    if (!formData.date || !formData.bookmaker || !formData.stake || !formData.event) {
+    if (!formData.date || !formData.bookmaker || !formData.stake) {
       toast({
         title: "Errore",
         description: "Compila tutti i campi obbligatori",
         variant: "destructive"
       });
       return;
+    }
+
+    // Validation for multiple bets
+    if (isMultipleBet) {
+      if (betSelections.length < 2) {
+        toast({
+          title: "Errore",
+          description: "Una scommessa multipla deve avere almeno 2 selezioni",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const invalidSelections = betSelections.some(sel => !sel.event || sel.odds <= 0);
+      if (invalidSelections) {
+        toast({
+          title: "Errore",
+          description: "Tutte le selezioni devono avere evento e quote valide",
+          variant: "destructive"
+        });
+        return;
+      }
+    } else {
+      // Single bet validation
+      if (!formData.event) {
+        toast({
+          title: "Errore",
+          description: "Inserisci l'evento per la scommessa",
+          variant: "destructive"
+        });
+        return;
+      }
     }
 
     if (formData.status === 'cashout' && !formData.cashoutAmount) {
@@ -97,7 +205,7 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
     setIsSubmitting(true);
 
     try {
-      // Calcola payout e profit in base allo stato
+      // Calculate payout and profit based on status
       let payout = null;
       let profit = null;
       
@@ -110,15 +218,14 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
         payout = parseFloat(formData.cashoutAmount);
         profit = parseFloat(formData.cashoutAmount) - parseFloat(formData.stake);
       } else if (formData.status === 'void') {
-        // Per le scommesse annullate, payout e profit sono 0
         payout = parseFloat(formData.stake);
         profit = 0;
       }
 
       const updateData = {
         date: formData.date,
-        sport: formData.sport || null,
-        event: formData.event,
+        sport: isMultipleBet ? null : (formData.sport || null),
+        event: isMultipleBet ? (formData.multiple_title || "Scommessa Multipla") : formData.event,
         manifestation: formData.manifestation || null,
         odds: parseFloat(formData.odds),
         stake: parseFloat(formData.stake),
@@ -130,23 +237,60 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
         bookmaker: formData.bookmaker,
         tipster: formData.tipster || null,
         timing: formData.timing,
-        selection: formData.selection || null,
+        selection: isMultipleBet ? null : (formData.selection || null),
+        multiple_title: isMultipleBet ? (formData.multiple_title || null) : null,
         updated_at: new Date().toISOString()
       };
 
-      const { error } = await supabase
+      const { error: betError } = await supabase
         .from('bets')
         .update(updateData)
         .eq('id', bet.id);
 
-      if (error) {
-        console.error('Errore durante l\'aggiornamento:', error);
+      if (betError) {
+        console.error('Errore durante l\'aggiornamento:', betError);
         toast({
           title: "Errore",
           description: "Errore durante l'aggiornamento della scommessa",
           variant: "destructive"
         });
         return;
+      }
+
+      // Update bet selections if it's a multiple bet
+      if (isMultipleBet) {
+        // Delete existing selections
+        const { error: deleteError } = await supabase
+          .from('bet_selections')
+          .delete()
+          .eq('bet_id', bet.id);
+
+        if (deleteError) {
+          console.error('Error deleting old selections:', deleteError);
+        }
+
+        // Insert new selections
+        const selectionsToInsert = betSelections.map(selection => ({
+          bet_id: bet.id,
+          sport: selection.sport || null,
+          event: selection.event,
+          odds: selection.odds,
+          selection: selection.selection || null
+        }));
+
+        const { error: insertError } = await supabase
+          .from('bet_selections')
+          .insert(selectionsToInsert);
+
+        if (insertError) {
+          console.error('Error inserting selections:', insertError);
+          toast({
+            title: "Errore",
+            description: "Errore durante l'aggiornamento delle selezioni",
+            variant: "destructive"
+          });
+          return;
+        }
       }
 
       toast({
@@ -180,12 +324,21 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Modifica Scommessa</DialogTitle>
+          <DialogTitle className="flex items-center space-x-2">
+            <span>Modifica Scommessa</span>
+            {isMultipleBet && (
+              <Badge variant="outline" className="px-2 py-1 text-xs">
+                <List className="w-3 h-3 mr-1" />
+                Multipla
+              </Badge>
+            )}
+          </DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="date">Data *</Label>
@@ -214,69 +367,184 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
             </div>
           </div>
 
+          {/* Multiple Bet Selections */}
+          {isMultipleBet && (
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-2">
+                    <List className="w-5 h-5 text-blue-600" />
+                    <Label className="text-base font-semibold">Selezioni Multipla</Label>
+                  </div>
+                  <Button type="button" onClick={addSelection} variant="outline" size="sm">
+                    <Plus className="w-4 h-4 mr-1" />
+                    Aggiungi
+                  </Button>
+                </div>
+
+                {loadingSelections ? (
+                  <div className="text-center py-4">
+                    <div className="text-sm text-gray-500">Caricamento selezioni...</div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {betSelections.map((selection, index) => (
+                      <div key={selection.id} className="bg-gray-50 rounded-lg p-4 border">
+                        <div className="flex items-start justify-between mb-3">
+                          <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
+                            {index + 1}
+                          </span>
+                          {betSelections.length > 2 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeSelection(index)}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="space-y-2">
+                            <Label>Sport</Label>
+                            <Select 
+                              value={selection.sport || ""} 
+                              onValueChange={(value) => updateSelection(index, "sport", value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleziona sport" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="calcio">Calcio</SelectItem>
+                                <SelectItem value="tennis">Tennis</SelectItem>
+                                <SelectItem value="basket">Basket</SelectItem>
+                                <SelectItem value="formula1">Formula 1</SelectItem>
+                                <SelectItem value="pallavolo">Pallavolo</SelectItem>
+                                <SelectItem value="rugby">Rugby</SelectItem>
+                                <SelectItem value="altro">Altro</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label>Quote *</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              placeholder="Es. 2.50"
+                              value={selection.odds}
+                              onChange={(e) => updateSelection(index, "odds", parseFloat(e.target.value) || 0)}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="mt-3 space-y-2">
+                          <Label>Evento *</Label>
+                          <Input
+                            placeholder="Es. Inter vs Milan"
+                            value={selection.event}
+                            onChange={(e) => updateSelection(index, "event", e.target.value)}
+                          />
+                        </div>
+
+                        <div className="mt-3 space-y-2">
+                          <Label>Selezione</Label>
+                          <Input
+                            placeholder="Es. 1, Over 2.5, ecc."
+                            value={selection.selection || ""}
+                            onChange={(e) => updateSelection(index, "selection", e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="mt-4 space-y-2">
+                  <Label htmlFor="multiple_title">Titolo Multipla</Label>
+                  <Input
+                    id="multiple_title"
+                    placeholder="Es. Tripla del Weekend"
+                    value={formData.multiple_title}
+                    onChange={(e) => handleInputChange("multiple_title", e.target.value)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Single Bet Fields */}
+          {!isMultipleBet && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="sport">Sport</Label>
+                  <Select value={formData.sport} onValueChange={(value) => handleInputChange("sport", value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleziona sport" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="calcio">Calcio</SelectItem>
+                      <SelectItem value="tennis">Tennis</SelectItem>
+                      <SelectItem value="basket">Basket</SelectItem>
+                      <SelectItem value="formula1">Formula 1</SelectItem>
+                      <SelectItem value="pallavolo">Pallavolo</SelectItem>
+                      <SelectItem value="rugby">Rugby</SelectItem>
+                      <SelectItem value="altro">Altro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="odds">Quote *</Label>
+                  <Input
+                    id="odds"
+                    type="number"
+                    step="0.01"
+                    placeholder="Es. 2.50"
+                    value={formData.odds}
+                    onChange={(e) => handleInputChange("odds", e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="manifestation">Manifestazione</Label>
+                <Input
+                  id="manifestation"
+                  placeholder="Es. Serie A, ATP Roma, Champions League..."
+                  value={formData.manifestation}
+                  onChange={(e) => handleInputChange("manifestation", e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="event">Evento *</Label>
+                <Input
+                  id="event"
+                  placeholder="Es. Inter vs Milan"
+                  value={formData.event}
+                  onChange={(e) => handleInputChange("event", e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="selection">Selezione</Label>
+                <Input
+                  id="selection"
+                  placeholder="Es. 1, Over 2.5, ecc."
+                  value={formData.selection}
+                  onChange={(e) => handleInputChange("selection", e.target.value)}
+                />
+              </div>
+            </>
+          )}
+
+          {/* Common Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="sport">Sport</Label>
-              <Select value={formData.sport} onValueChange={(value) => handleInputChange("sport", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona sport" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="calcio">Calcio</SelectItem>
-                  <SelectItem value="tennis">Tennis</SelectItem>
-                  <SelectItem value="basket">Basket</SelectItem>
-                  <SelectItem value="formula1">Formula 1</SelectItem>
-                  <SelectItem value="pallavolo">Pallavolo</SelectItem>
-                  <SelectItem value="rugby">Rugby</SelectItem>
-                  <SelectItem value="altro">Altro</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="odds">Quote *</Label>
-              <Input
-                id="odds"
-                type="number"
-                step="0.01"
-                placeholder="Es. 2.50"
-                value={formData.odds}
-                onChange={(e) => handleInputChange("odds", e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="manifestation">Manifestazione</Label>
-            <Input
-              id="manifestation"
-              placeholder="Es. Serie A, ATP Roma, Champions League..."
-              value={formData.manifestation}
-              onChange={(e) => handleInputChange("manifestation", e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="event">Evento *</Label>
-            <Input
-              id="event"
-              placeholder="Es. Inter vs Milan"
-              value={formData.event}
-              onChange={(e) => handleInputChange("event", e.target.value)}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="selection">Selezione</Label>
-              <Input
-                id="selection"
-                placeholder="Es. 1, Over 2.5, ecc."
-                value={formData.selection}
-                onChange={(e) => handleInputChange("selection", e.target.value)}
-              />
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor="stake">Puntata (€) *</Label>
               <Input
@@ -286,6 +554,18 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
                 placeholder="Es. 50.00"
                 value={formData.stake}
                 onChange={(e) => handleInputChange("stake", e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Quote Totali</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={formData.odds}
+                onChange={(e) => handleInputChange("odds", e.target.value)}
+                disabled={isMultipleBet}
+                className={isMultipleBet ? "bg-gray-100" : ""}
               />
             </div>
           </div>
