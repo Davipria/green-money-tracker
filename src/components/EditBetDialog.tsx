@@ -85,8 +85,17 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
         if (error) {
           console.error('Error fetching bet selections:', error);
         } else {
-          setBetSelections(selections || []);
-          setIsMultipleBet((selections || []).length > 1);
+          const typedSelections: BetSelection[] = (selections || []).map(selection => ({
+            id: selection.id,
+            sport: selection.sport || undefined,
+            event: selection.event,
+            odds: selection.odds,
+            selection: selection.selection || undefined,
+            status: (selection.status as 'pending' | 'won' | 'lost' | 'void') || 'pending',
+            payout: selection.payout || undefined,
+          }));
+          setBetSelections(typedSelections);
+          setIsMultipleBet(typedSelections.length > 1);
         }
       } catch (error) {
         console.error('Error fetching bet selections:', error);
