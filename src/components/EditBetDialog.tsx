@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -154,7 +153,9 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
     
     // Update total odds if this is a multiple bet
     if (isMultipleBet) {
-      const totalOdds = newSelections.reduce((total, sel) => total * sel.odds, 1);
+      // Calculate odds only for non-void selections (void selections are ignored)
+      const activeSelections = newSelections.filter(sel => sel.status !== 'void');
+      const totalOdds = activeSelections.reduce((total, sel) => total * sel.odds, 1);
       setFormData(prev => ({ ...prev, odds: totalOdds.toFixed(2) }));
     }
   };
@@ -166,21 +167,39 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
 
     // Auto-calculate overall bet status based on individual selections
     if (isMultipleBet) {
-      const allWon = newSelections.every(sel => sel.status === 'won');
-      const anyLost = newSelections.some(sel => sel.status === 'lost');
-      const anyVoid = newSelections.some(sel => sel.status === 'void');
+      // Filter out void selections (they don't count)
+      const activeSelections = newSelections.filter(sel => sel.status !== 'void');
+      
+      // If all selections are void, the bet is void
+      if (activeSelections.length === 0) {
+        setFormData(prev => ({ ...prev, status: 'void' }));
+        return;
+      }
+      
+      // Check status of active selections only
+      const allActiveWon = activeSelections.every(sel => sel.status === 'won');
+      const anyActiveLost = activeSelections.some(sel => sel.status === 'lost');
+      const allActiveFinished = activeSelections.every(sel => sel.status === 'won' || sel.status === 'lost');
 
       let overallStatus: 'pending' | 'won' | 'lost' | 'void' = 'pending';
       
-      if (allWon) {
-        overallStatus = 'won';
-      } else if (anyLost) {
+      if (anyActiveLost) {
+        // If any active selection is lost, the multiple is lost
         overallStatus = 'lost';
-      } else if (anyVoid && newSelections.every(sel => sel.status === 'won' || sel.status === 'void')) {
-        overallStatus = 'void';
+      } else if (allActiveWon) {
+        // If all active selections are won, the multiple is won
+        overallStatus = 'won';
+      } else if (allActiveFinished) {
+        // This shouldn't happen if logic is correct, but just in case
+        overallStatus = 'pending';
       }
+      // If not all active selections are finished, keep as pending
 
       setFormData(prev => ({ ...prev, status: overallStatus }));
+      
+      // Update odds to reflect only active selections
+      const totalOdds = activeSelections.reduce((total, sel) => total * sel.odds, 1);
+      setFormData(prev => ({ ...prev, odds: totalOdds.toFixed(2) }));
     }
   };
 
@@ -432,6 +451,9 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
                   <div className="flex items-center space-x-2">
                     <List className="w-5 h-5 text-blue-600" />
                     <Label className="text-base font-semibold">Selezioni Multipla</Label>
+                    <div className="text-sm text-gray-500">
+                      (Le selezioni annullate vengono ignorate nel calcolo)
+                    </div>
                   </div>
                   <Button type="button" onClick={addSelection} variant="outline" size="sm">
                     <Plus className="w-4 h-4 mr-1" />
@@ -455,6 +477,11 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
                             <Badge className={`px-2 py-1 text-xs ${getStatusColor(selection.status || 'pending')}`}>
                               {getStatusLabel(selection.status || 'pending')}
                             </Badge>
+                            {selection.status === 'void' && (
+                              <span className="text-xs text-gray-500 italic">
+                                (Ignorata nel calcolo)
+                              </span>
+                            )}
                           </div>
                           {betSelections.length > 2 && (
                             <Button
