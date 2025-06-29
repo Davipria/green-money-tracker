@@ -20,6 +20,8 @@ interface BetSelection {
   event: string;
   odds: number;
   selection?: string;
+  status?: 'pending' | 'won' | 'lost' | 'void';
+  payout?: number;
 }
 
 interface EditBetDialogProps {
@@ -123,7 +125,8 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
       sport: "",
       event: "",
       odds: 1.5,
-      selection: ""
+      selection: "",
+      status: 'pending'
     };
     setBetSelections([...betSelections, newSelection]);
     setIsMultipleBet(true);
@@ -144,6 +147,31 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
     if (isMultipleBet) {
       const totalOdds = newSelections.reduce((total, sel) => total * sel.odds, 1);
       setFormData(prev => ({ ...prev, odds: totalOdds.toFixed(2) }));
+    }
+  };
+
+  const updateSelectionStatus = (index: number, status: 'pending' | 'won' | 'lost' | 'void') => {
+    const newSelections = [...betSelections];
+    newSelections[index] = { ...newSelections[index], status };
+    setBetSelections(newSelections);
+
+    // Auto-calculate overall bet status based on individual selections
+    if (isMultipleBet) {
+      const allWon = newSelections.every(sel => sel.status === 'won');
+      const anyLost = newSelections.some(sel => sel.status === 'lost');
+      const anyVoid = newSelections.some(sel => sel.status === 'void');
+
+      let overallStatus: 'pending' | 'won' | 'lost' | 'void' = 'pending';
+      
+      if (allWon) {
+        overallStatus = 'won';
+      } else if (anyLost) {
+        overallStatus = 'lost';
+      } else if (anyVoid && newSelections.every(sel => sel.status === 'won' || sel.status === 'void')) {
+        overallStatus = 'void';
+      }
+
+      setFormData(prev => ({ ...prev, status: overallStatus }));
     }
   };
 
@@ -275,7 +303,9 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
           sport: selection.sport || null,
           event: selection.event,
           odds: selection.odds,
-          selection: selection.selection || null
+          selection: selection.selection || null,
+          status: selection.status || 'pending',
+          payout: selection.payout || null
         }));
 
         const { error: insertError } = await supabase
@@ -318,6 +348,24 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
       ...prev,
       [field]: value
     }));
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'won': return 'bg-green-100 text-green-800';
+      case 'lost': return 'bg-red-100 text-red-800';
+      case 'void': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-blue-100 text-blue-800';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'won': return 'Vinta';
+      case 'lost': return 'Persa';
+      case 'void': return 'Annullata';
+      default: return 'In Attesa';
+    }
   };
 
   if (!bet) return null;
@@ -391,9 +439,14 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
                     {betSelections.map((selection, index) => (
                       <div key={selection.id} className="bg-gray-50 rounded-lg p-4 border">
                         <div className="flex items-start justify-between mb-3">
-                          <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
-                            {index + 1}
-                          </span>
+                          <div className="flex items-center space-x-2">
+                            <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
+                              {index + 1}
+                            </span>
+                            <Badge className={`px-2 py-1 text-xs ${getStatusColor(selection.status || 'pending')}`}>
+                              {getStatusLabel(selection.status || 'pending')}
+                            </Badge>
+                          </div>
                           {betSelections.length > 2 && (
                             <Button
                               type="button"
@@ -407,7 +460,7 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
                           )}
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
                           <div className="space-y-2">
                             <Label>Sport</Label>
                             <Select 
@@ -439,24 +492,44 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
                               onChange={(e) => updateSelection(index, "odds", parseFloat(e.target.value) || 0)}
                             />
                           </div>
+
+                          <div className="space-y-2">
+                            <Label>Esito Selezione</Label>
+                            <Select 
+                              value={selection.status || 'pending'} 
+                              onValueChange={(value: 'pending' | 'won' | 'lost' | 'void') => updateSelectionStatus(index, value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="pending">In Attesa</SelectItem>
+                                <SelectItem value="won">Vinta</SelectItem>
+                                <SelectItem value="lost">Persa</SelectItem>
+                                <SelectItem value="void">Annullata</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
 
-                        <div className="mt-3 space-y-2">
-                          <Label>Evento *</Label>
-                          <Input
-                            placeholder="Es. Inter vs Milan"
-                            value={selection.event}
-                            onChange={(e) => updateSelection(index, "event", e.target.value)}
-                          />
-                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="space-y-2">
+                            <Label>Evento *</Label>
+                            <Input
+                              placeholder="Es. Inter vs Milan"
+                              value={selection.event}
+                              onChange={(e) => updateSelection(index, "event", e.target.value)}
+                            />
+                          </div>
 
-                        <div className="mt-3 space-y-2">
-                          <Label>Selezione</Label>
-                          <Input
-                            placeholder="Es. 1, Over 2.5, ecc."
-                            value={selection.selection || ""}
-                            onChange={(e) => updateSelection(index, "selection", e.target.value)}
-                          />
+                          <div className="space-y-2">
+                            <Label>Selezione</Label>
+                            <Input
+                              placeholder="Es. 1, Over 2.5, ecc."
+                              value={selection.selection || ""}
+                              onChange={(e) => updateSelection(index, "selection", e.target.value)}
+                            />
+                          </div>
                         </div>
                       </div>
                     ))}

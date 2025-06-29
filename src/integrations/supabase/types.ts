@@ -16,8 +16,10 @@ export type Database = {
           event: string
           id: string
           odds: number
+          payout: number | null
           selection: string | null
           sport: string | null
+          status: string | null
         }
         Insert: {
           bet_id: string
@@ -25,8 +27,10 @@ export type Database = {
           event: string
           id?: string
           odds: number
+          payout?: number | null
           selection?: string | null
           sport?: string | null
+          status?: string | null
         }
         Update: {
           bet_id?: string
@@ -34,8 +38,10 @@ export type Database = {
           event?: string
           id?: string
           odds?: number
+          payout?: number | null
           selection?: string | null
           sport?: string | null
+          status?: string | null
         }
         Relationships: [
           {
