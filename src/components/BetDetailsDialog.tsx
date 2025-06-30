@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/utils/betUtils";
-import { Edit, Trash2, Calendar, Target, TrendingUp, User, Clock, BookOpen, FileText, DollarSign, Percent, List } from "lucide-react";
+import { Edit, Trash2, Calendar, Target, TrendingUp, User, Clock, BookOpen, FileText, DollarSign, Percent, List, Gift } from "lucide-react";
 import { Bet } from "@/types/bet";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -97,7 +97,9 @@ const BetDetailsDialog = ({ bet, open, onOpenChange, onEdit, onDelete }: BetDeta
 
   const calculateProfit = (): number => {
     if (bet.status === 'won' && bet.payout) {
-      return bet.payout - bet.stake;
+      const baseProfit = bet.payout - bet.stake;
+      const bonus = bet.bonus || 0;
+      return baseProfit + bonus;
     } else if (bet.status === 'lost') {
       return -bet.stake;
     } else if (bet.status === 'cashout' && bet.cashout_amount) {
@@ -285,6 +287,19 @@ const BetDetailsDialog = ({ bet, open, onOpenChange, onEdit, onDelete }: BetDeta
                     <span className="font-medium text-gray-700">Vincita Potenziale</span>
                   </div>
                   <p className="text-gray-900 text-lg font-semibold">{formatCurrency(bet.payout)}</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Bonus - Show only if present */}
+            {bet.bonus && bet.bonus > 0 && (
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Gift className="w-5 h-5 text-purple-600" />
+                    <span className="font-medium text-gray-700">Bonus</span>
+                  </div>
+                  <p className="text-gray-900 text-lg font-semibold">{formatCurrency(bet.bonus)}</p>
                 </CardContent>
               </Card>
             )}

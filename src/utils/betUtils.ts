@@ -1,4 +1,3 @@
-
 import { Bet, MonthlyStats } from "@/types/bet";
 
 export const calculateProfit = (bet: Bet): number => {
