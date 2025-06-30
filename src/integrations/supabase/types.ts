@@ -56,6 +56,7 @@ export type Database = {
       bets: {
         Row: {
           bet_type: string
+          bonus: number | null
           bookmaker: string | null
           cashout_amount: number | null
           commission: number | null
@@ -83,6 +84,7 @@ export type Database = {
         }
         Insert: {
           bet_type: string
+          bonus?: number | null
           bookmaker?: string | null
           cashout_amount?: number | null
           commission?: number | null
@@ -110,6 +112,7 @@ export type Database = {
         }
         Update: {
           bet_type?: string
+          bonus?: number | null
           bookmaker?: string | null
           cashout_amount?: number | null
           commission?: number | null
