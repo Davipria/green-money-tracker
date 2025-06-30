@@ -51,6 +51,7 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
     odds: "",
     selection: "",
     multiple_title: "",
+    bonus: "",
   });
 
   const bookmakers = [
@@ -123,6 +124,7 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
         odds: bet.odds.toString(),
         selection: bet.selection || "",
         multiple_title: bet.multiple_title || "",
+        bonus: bet.bonus?.toString() || "",
       });
     }
   }, [bet]);
@@ -264,10 +266,11 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
       // Calculate payout and profit based on status
       let payout = null;
       let profit = null;
+      const bonus = formData.bonus ? parseFloat(formData.bonus) : 0;
       
       if (formData.status === 'won') {
         payout = parseFloat(formData.odds) * parseFloat(formData.stake);
-        profit = payout - parseFloat(formData.stake);
+        profit = payout - parseFloat(formData.stake) + bonus;
       } else if (formData.status === 'lost') {
         profit = -parseFloat(formData.stake);
       } else if (formData.status === 'cashout' && formData.cashoutAmount) {
@@ -295,6 +298,7 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
         timing: formData.timing,
         selection: isMultipleBet ? null : (formData.selection || null),
         multiple_title: isMultipleBet ? (formData.multiple_title || null) : null,
+        bonus: bonus > 0 ? bonus : null,
         updated_at: new Date().toISOString()
       };
 
@@ -580,6 +584,22 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
                     value={formData.multiple_title}
                     onChange={(e) => handleInputChange("multiple_title", e.target.value)}
                   />
+                </div>
+
+                {/* Campo Bonus per Multiple */}
+                <div className="mt-4 space-y-2">
+                  <Label htmlFor="bonus">Bonus (€)</Label>
+                  <Input
+                    id="bonus"
+                    type="number"
+                    step="0.01"
+                    placeholder="Es. 5.00"
+                    value={formData.bonus}
+                    onChange={(e) => handleInputChange("bonus", e.target.value)}
+                  />
+                  <div className="text-sm text-gray-500">
+                    Importo aggiuntivo che verrà aggiunto al profitto se la scommessa è vinta
+                  </div>
                 </div>
               </CardContent>
             </Card>

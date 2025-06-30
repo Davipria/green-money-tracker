@@ -22,6 +22,7 @@ export interface Bet {
   commission?: number;
   exchange_type?: string;
   cashout_amount?: number;
+  bonus?: number;
   created_at: string;
   updated_at: string;
   user_id: string;

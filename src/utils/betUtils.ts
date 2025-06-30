@@ -3,7 +3,9 @@ import { Bet, MonthlyStats } from "@/types/bet";
 
 export const calculateProfit = (bet: Bet): number => {
   if (bet.status === 'won' && bet.payout) {
-    return bet.payout - bet.stake;
+    const baseProfit = bet.payout - bet.stake;
+    const bonus = bet.bonus || 0;
+    return baseProfit + bonus;
   } else if (bet.status === 'lost') {
     return -bet.stake;
   } else if (bet.status === 'cashout' && bet.cashout_amount) {
