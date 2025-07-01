@@ -57,23 +57,38 @@ export const useTipsters = () => {
       setLoading(true);
       setError(null);
 
+      console.log("🔍 Fetching tipsters...");
+
       // Recupera tutti i profili che hanno profile_type = 'tipster'
       const { data: profiles, error: profileError } = await supabase
         .from("profiles")
         .select("*")
         .eq("profile_type", "tipster");
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error("❌ Error fetching profiles:", profileError);
+        throw profileError;
+      }
+
+      console.log("📊 Found tipster profiles:", profiles?.length || 0);
+      console.log("👥 Tipster profiles:", profiles);
 
       // Per ogni tipster, calcola le statistiche
       const tipstersWithStats = await Promise.all(
         profiles.map(async (profile) => {
+          console.log(`📈 Fetching bets for tipster: ${profile.username || profile.first_name}`);
+          
           const { data: dbBets, error: betsError } = await supabase
             .from("bets")
             .select("*")
             .eq("user_id", profile.id);
 
-          if (betsError) throw betsError;
+          if (betsError) {
+            console.error(`❌ Error fetching bets for ${profile.id}:`, betsError);
+            throw betsError;
+          }
+
+          console.log(`🎯 Found ${dbBets?.length || 0} bets for tipster: ${profile.username || profile.first_name}`);
 
           const bets = dbBets.map(convertToBet);
           const stats = calculateTipsterStats(bets, profile.bankroll);
@@ -86,9 +101,10 @@ export const useTipsters = () => {
         })
       );
 
+      console.log("✅ Tipsters with stats loaded:", tipstersWithStats.length);
       setTipsters(tipstersWithStats);
     } catch (err) {
-      console.error("Errore nel recupero dei tipster:", err);
+      console.error("💥 Errore nel recupero dei tipster:", err);
       setError(err instanceof Error ? err.message : "Errore sconosciuto");
     } finally {
       setLoading(false);
@@ -97,6 +113,8 @@ export const useTipsters = () => {
 
   const getTipsterById = async (tipsterId: string): Promise<TipsterProfile | null> => {
     try {
+      console.log(`🔍 Fetching tipster by ID: ${tipsterId}`);
+      
       // Recupera il profilo del tipster
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
@@ -105,7 +123,12 @@ export const useTipsters = () => {
         .eq("profile_type", "tipster")
         .single();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error("❌ Error fetching tipster profile:", profileError);
+        throw profileError;
+      }
+
+      console.log("👤 Found tipster profile:", profile);
 
       // Recupera le scommesse del tipster
       const { data: dbBets, error: betsError } = await supabase
@@ -114,7 +137,12 @@ export const useTipsters = () => {
         .eq("user_id", tipsterId)
         .order("date", { ascending: false });
 
-      if (betsError) throw betsError;
+      if (betsError) {
+        console.error("❌ Error fetching tipster bets:", betsError);
+        throw betsError;
+      }
+
+      console.log(`🎯 Found ${dbBets?.length || 0} bets for tipster`);
 
       const bets = dbBets.map(convertToBet);
       const stats = calculateTipsterStats(bets, profile.bankroll);
@@ -125,7 +153,7 @@ export const useTipsters = () => {
         bets,
       };
     } catch (error) {
-      console.error("Errore nel recupero del tipster:", error);
+      console.error("💥 Errore nel recupero del tipster:", error);
       return null;
     }
   };
