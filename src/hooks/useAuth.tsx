@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,14 +23,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('🔐 Auth state change:', event, session?.user?.email);
+        
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Handle session expiration or token refresh errors
+        if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+          if (!session && window.location.pathname.startsWith('/app')) {
+            console.log('🚪 Session expired, redirecting to login');
+            // Clean up any cached data
+            localStorage.removeItem('supabase.auth.token');
+            // Redirect to auth page
+            window.location.href = '/auth';
+          }
+        }
       }
     );
 
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('❌ Error getting session:', error);
+        // If there's an error getting the session, clean up and redirect
+        if (window.location.pathname.startsWith('/app')) {
+          localStorage.removeItem('supabase.auth.token');
+          window.location.href = '/auth';
+        }
+      }
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -37,6 +59,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Monitor session validity periodically
+  useEffect(() => {
+    if (!session || !user) return;
+
+    const checkSessionValidity = async () => {
+      try {
+        const { data: { user: currentUser }, error } = await supabase.auth.getUser();
+        
+        if (error || !currentUser) {
+          console.log('🚪 Invalid session detected, signing out');
+          await signOut();
+        }
+      } catch (error) {
+        console.error('❌ Error checking session validity:', error);
+        await signOut();
+      }
+    };
+
+    // Check session validity every 5 minutes
+    const interval = setInterval(checkSessionValidity, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [session, user]);
 
   const signUp = async (
     email: string,
@@ -75,7 +121,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      console.log('🚪 Signing out user');
+      
+      // Clean up local storage
+      localStorage.removeItem('supabase.auth.token');
+      
+      // Sign out from Supabase
+      await supabase.auth.signOut();
+      
+      // Reset state
+      setSession(null);
+      setUser(null);
+      
+      // Redirect to auth page if currently in protected route
+      if (window.location.pathname.startsWith('/app')) {
+        window.location.href = '/auth';
+      }
+    } catch (error) {
+      console.error('❌ Error signing out:', error);
+      // Force redirect even if sign out fails
+      window.location.href = '/auth';
+    }
   };
 
   const value = {
