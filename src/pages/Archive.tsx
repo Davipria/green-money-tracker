@@ -11,6 +11,7 @@ import { Bet, MonthlyStats } from "@/types/bet";
 import EditBetDialog from "@/components/EditBetDialog";
 import ExportBetsDialog from "@/components/ExportBetsDialog";
 import BetDetailsDialog from "@/components/BetDetailsDialog";
+import BetSelectionsDisplay from "@/components/BetSelectionsDisplay";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,21 +42,39 @@ const Archive = () => {
         return;
       }
 
-      const { data, error } = await supabase
+      // Fetch bets with their selections
+      const { data: betsData, error: betsError } = await supabase
         .from('bets')
         .select('*')
         .order('date', { ascending: false });
 
-      if (error) {
-        console.error('Errore caricamento scommesse:', error);
+      if (betsError) {
+        console.error('Errore caricamento scommesse:', betsError);
         toast({
           title: "Errore",
           description: "Impossibile caricare le scommesse",
           variant: "destructive"
         });
-      } else {
-        setBets((data || []) as Bet[]);
+        return;
       }
+
+      // Fetch selections for all bets
+      const { data: selectionsData, error: selectionsError } = await supabase
+        .from('bet_selections')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (selectionsError) {
+        console.error('Errore caricamento selezioni:', selectionsError);
+      }
+
+      // Combine bets with their selections
+      const betsWithSelections = (betsData || []).map(bet => ({
+        ...bet,
+        selections: (selectionsData || []).filter(selection => selection.bet_id === bet.id)
+      })) as Bet[];
+
+      setBets(betsWithSelections);
     } catch (error) {
       console.error('Errore imprevisto:', error);
     } finally {
@@ -361,6 +380,9 @@ const Archive = () => {
                                         </Badge>
                                       </div>
                                     </div>
+                                    
+                                    {/* Show selections for multiple bets */}
+                                    <BetSelectionsDisplay selections={bet.selections || []} />
                                   </div>
                                 </div>
                               </div>

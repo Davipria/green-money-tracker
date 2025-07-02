@@ -15,6 +15,7 @@ export type Database = {
           created_at: string
           event: string
           id: string
+          individual_status: string | null
           odds: number
           payout: number | null
           selection: string | null
@@ -26,6 +27,7 @@ export type Database = {
           created_at?: string
           event: string
           id?: string
+          individual_status?: string | null
           odds: number
           payout?: number | null
           selection?: string | null
@@ -37,6 +39,7 @@ export type Database = {
           created_at?: string
           event?: string
           id?: string
+          individual_status?: string | null
           odds?: number
           payout?: number | null
           selection?: string | null

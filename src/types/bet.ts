@@ -1,4 +1,3 @@
-
 export interface Bet {
   id: string;
   date: string;
@@ -26,6 +25,19 @@ export interface Bet {
   created_at: string;
   updated_at: string;
   user_id: string;
+  selections?: BetSelection[];
+}
+
+export interface BetSelection {
+  id: string;
+  bet_id: string;
+  sport?: string;
+  event: string;
+  odds: number;
+  selection?: string;
+  individual_status?: 'pending' | 'won' | 'lost' | 'void' | 'cashout';
+  payout?: number;
+  created_at: string;
 }
 
 export interface MonthlyStats {
