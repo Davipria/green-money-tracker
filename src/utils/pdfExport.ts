@@ -185,6 +185,60 @@ const generateBookmakerDistributionAnalysis = (bookmakerData: Array<{bookmaker: 
   return analysis;
 };
 
+// Helper function to generate detailed analysis for tipster performance table
+const generateTipsterPerformanceAnalysis = (tipsterData: Record<string, { count: number; profit: number }>, filteredBets: Bet[]) => {
+  if (Object.keys(tipsterData).length === 0) return "Nessun dato disponibile per l'analisi delle performance per tipster.";
+  
+  const totalBets = Object.values(tipsterData).reduce((sum, data) => sum + data.count, 0);
+  const totalProfit = Object.values(tipsterData).reduce((sum, data) => sum + data.profit, 0);
+  
+  // Calculate win rates for each tipster
+  const tipsterWinRates = Object.entries(tipsterData).map(([tipster, data]) => {
+    const tipsterBets = filteredBets.filter(bet => (bet.tipster || 'Nessun tipster') === tipster);
+    const wonBets = tipsterBets.filter(bet => bet.status === 'won').length;
+    const winRate = tipsterBets.length > 0 ? (wonBets / tipsterBets.length) * 100 : 0;
+    return { tipster, ...data, winRate };
+  });
+  
+  const bestWinRate = tipsterWinRates.reduce((max, tipster) => tipster.winRate > max.winRate ? tipster : max);
+  const worstWinRate = tipsterWinRates.reduce((min, tipster) => tipster.winRate < min.winRate ? tipster : min);
+  const mostProfitableTipster = tipsterWinRates.reduce((max, tipster) => tipster.profit > max.profit ? tipster : max);
+  const leastProfitableTipster = tipsterWinRates.reduce((min, tipster) => tipster.profit < min.profit ? tipster : min);
+  
+  let analysis = `ANALISI PERFORMANCE PER TIPSTER\n\n`;
+  analysis += `• Scommesse totali: ${totalBets}\n`;
+  analysis += `• Tipster analizzati: ${Object.keys(tipsterData).length}\n`;
+  analysis += `• Profitto totale: ${formatCurrency(totalProfit)}\n\n`;
+  
+  analysis += `PERFORMANCE WIN RATE:\n`;
+  analysis += `• Miglior win rate: ${bestWinRate.tipster} (${bestWinRate.winRate.toFixed(1)}%)\n`;
+  analysis += `• Peggior win rate: ${worstWinRate.tipster} (${worstWinRate.winRate.toFixed(1)}%)\n`;
+  
+  const avgWinRate = tipsterWinRates.reduce((sum, tipster) => sum + tipster.winRate, 0) / tipsterWinRates.length;
+  analysis += `• Win rate medio: ${avgWinRate.toFixed(1)}%\n\n`;
+  
+  analysis += `PERFORMANCE PROFITTO:\n`;
+  analysis += `• Tipster più redditizio: ${mostProfitableTipster.tipster} (${formatCurrency(mostProfitableTipster.profit)})\n`;
+  analysis += `• Tipster meno redditizio: ${leastProfitableTipster.tipster} (${formatCurrency(leastProfitableTipster.profit)})\n\n`;
+  
+  const profitableTipsters = tipsterWinRates.filter(tipster => tipster.profit > 0).length;
+  const unprofitableTipsters = tipsterWinRates.filter(tipster => tipster.profit < 0).length;
+  
+  analysis += `BILANCIO GENERALE:\n`;
+  analysis += `• Tipster redditizi: ${profitableTipsters}\n`;
+  analysis += `• Tipster in perdita: ${unprofitableTipsters}\n\n`;
+  
+  if (profitableTipsters > unprofitableTipsters) {
+    analysis += `CONCLUSIONE: La maggior parte dei tipster sono redditizi. `;
+    analysis += `Il miglior performer è ${mostProfitableTipster.tipster} con ${formatCurrency(mostProfitableTipster.profit)} di profitto.`;
+  } else {
+    analysis += `CONCLUSIONE: La maggior parte dei tipster sono in perdita. `;
+    analysis += `Considera di rivedere i tipster seguiti per migliorare le performance.`;
+  }
+  
+  return analysis;
+};
+
 // Helper function to generate detailed analysis for sports performance table
 const generateSportsPerformanceAnalysis = (sportData: Record<string, { count: number; profit: number }>, filteredBets: Bet[]) => {
   if (Object.keys(sportData).length === 0) return "Nessun dato disponibile per l'analisi delle performance per sport.";
@@ -665,29 +719,29 @@ export const exportToPDF = async (elementId: string, filename: string = 'analisi
       }
     }
 
-    // Add new page for sports performance table only if we don't have enough space
+    // Add new page for tipster performance table only if we don't have enough space
     if (currentY + 200 > contentHeight) { // Estimate space needed for table
       pdf.addPage();
       currentY = margin;
     }
     
     pdf.setFontSize(16);
-    pdf.text('Performance per Sport', margin, currentY);
+    pdf.text('Performance Tipster', margin, currentY);
     currentY += 15;
 
-    // Find and capture the sports performance table
-    const sportsTableSection = element.querySelector('.sports-table');
-    if (sportsTableSection) {
-      const sportsTable = sportsTableSection.querySelector('.bg-white\\/80');
-      if (sportsTable) {
+    // Find and capture the tipster performance table
+    const tipsterTableSection = element.querySelector('.tipster-table');
+    if (tipsterTableSection) {
+      const tipsterTable = tipsterTableSection.querySelector('.bg-white\\/80');
+      if (tipsterTable) {
         try {
-          const canvas = await html2canvas(sportsTable as HTMLElement, {
+          const canvas = await html2canvas(tipsterTable as HTMLElement, {
             scale: 2,
             useCORS: true,
             allowTaint: true,
             backgroundColor: '#ffffff',
-            width: (sportsTable as HTMLElement).scrollWidth,
-            height: (sportsTable as HTMLElement).scrollHeight,
+            width: (tipsterTable as HTMLElement).scrollWidth,
+            height: (tipsterTable as HTMLElement).scrollHeight,
           });
           
           const imgData = canvas.toDataURL('image/png');
@@ -703,12 +757,12 @@ export const exportToPDF = async (elementId: string, filename: string = 'analisi
           pdf.addImage(imgData, 'PNG', margin, currentY, imgWidth, imgHeight);
           currentY += imgHeight + 15;
           
-          // Add detailed analysis for sports performance table on the same page if possible
+          // Add detailed analysis for tipster performance table on the same page if possible
           if (analysisData) {
             pdf.setFontSize(10);
             pdf.setTextColor(0, 0, 0);
             
-            const sportsPerformanceAnalysis = generateSportsPerformanceAnalysis(analysisData.sportsPerformanceData, analysisData.filteredBets);
+            const tipsterPerformanceAnalysis = generateTipsterPerformanceAnalysis(analysisData.sportsPerformanceData, analysisData.filteredBets);
             
             // Check if we need a new page for the analysis
             if (currentY + 100 > contentHeight) {
@@ -716,12 +770,12 @@ export const exportToPDF = async (elementId: string, filename: string = 'analisi
               currentY = margin;
             }
             
-            currentY = addWrappedText(pdf, sportsPerformanceAnalysis, margin, currentY, contentWidth, 4);
+            currentY = addWrappedText(pdf, tipsterPerformanceAnalysis, margin, currentY, contentWidth, 4);
             currentY += 10;
           }
           
         } catch (error) {
-          console.error('Error capturing sports table:', error);
+          console.error('Error capturing tipster table:', error);
         }
       }
     }

@@ -219,6 +219,17 @@ const Analysis = () => {
     profitto: data.profit
   }));
 
+  // Create tipster data
+  const tipsterData = filteredBets.reduce((acc, bet) => {
+    const tipster = bet.tipster || 'Nessun tipster';
+    if (!acc[tipster]) {
+      acc[tipster] = { count: 0, profit: 0 };
+    }
+    acc[tipster].count += 1;
+    acc[tipster].profit += bet.profit || 0;
+    return acc;
+  }, {} as Record<string, { count: number; profit: number }>);
+
   if (bets.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
@@ -281,7 +292,7 @@ const Analysis = () => {
                 monthlyPerformanceData,
                 sportData: chartData,
                 bookmakerData: bookmakerChartData,
-                sportsPerformanceData: sportData,
+                sportsPerformanceData: tipsterData,
                 filteredBets,
                 initialBankroll,
                 totalBets: filteredBets.length
@@ -585,39 +596,39 @@ const Analysis = () => {
             </Card>
           </div>
 
-          {/* Sports Performance Table */}
-          <div className="sports-table">
+          {/* Tipster Performance Table */}
+          <div className="tipster-table">
             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
               <CardHeader>
-                <CardTitle className="text-xl">Performance per Sport</CardTitle>
+                <CardTitle className="text-xl">Performance Tipster</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b">
-                        <th className="text-left p-4">Sport</th>
+                        <th className="text-left p-4">Tipster</th>
                         <th className="text-left p-4">Scommesse</th>
                         <th className="text-left p-4">Profitto</th>
                         <th className="text-left p-4">Win Rate</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {Object.entries(sportData).map(([sport, data]) => {
-                        const sportBets = filteredBets.filter(bet => (bet.sport || 'Altro') === sport);
-                        const sportWinRate = sportBets.length > 0 ? 
-                          (sportBets.filter(bet => bet.status === 'won').length / sportBets.length) * 100 : 0;
+                      {Object.entries(tipsterData).map(([tipster, data]) => {
+                        const tipsterBets = filteredBets.filter(bet => (bet.tipster || 'Nessun tipster') === tipster);
+                        const tipsterWinRate = tipsterBets.length > 0 ? 
+                          (tipsterBets.filter(bet => bet.status === 'won').length / tipsterBets.length) * 100 : 0;
                         
                         return (
-                          <tr key={sport} className="border-b hover:bg-gray-50">
-                            <td className="p-4 font-medium">{sport}</td>
+                          <tr key={tipster} className="border-b hover:bg-gray-50">
+                            <td className="p-4 font-medium">{tipster}</td>
                             <td className="p-4">{data.count}</td>
                             <td className="p-4">
                               <span className={data.profit >= 0 ? 'text-green-600' : 'text-red-600'}>
                                 {formatCurrency(data.profit)}
                               </span>
                             </td>
-                            <td className="p-4">{sportWinRate.toFixed(1)}%</td>
+                            <td className="p-4">{tipsterWinRate.toFixed(1)}%</td>
                           </tr>
                         );
                       })}
