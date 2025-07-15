@@ -54,7 +54,17 @@ const Archive = () => {
           variant: "destructive"
         });
       } else {
-        setBets((data || []) as Bet[]);
+        // Sort bets: pending first, then by date (newest first)
+        const sortedBets = (data || []).sort((a, b) => {
+          // First, prioritize pending bets
+          if (a.status === 'pending' && b.status !== 'pending') return -1;
+          if (a.status !== 'pending' && b.status === 'pending') return 1;
+          
+          // Then sort by date (newest first)
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
+        });
+        
+        setBets(sortedBets as Bet[]);
       }
     } catch (error) {
       console.error('Errore imprevisto:', error);
@@ -193,6 +203,11 @@ const Archive = () => {
       const betDate = new Date(bet.date);
       const betMonth = betDate.toLocaleDateString('it-IT', { month: 'long' });
       return betMonth === month && betDate.getFullYear() === year;
+    }).sort((a, b) => {
+      // Sort within month: pending first, then by date (newest first)
+      if (a.status === 'pending' && b.status !== 'pending') return -1;
+      if (a.status !== 'pending' && b.status === 'pending') return 1;
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
     });
   };
 
@@ -325,7 +340,11 @@ const Archive = () => {
                                 className="cursor-pointer"
                                 onClick={() => handleViewBetDetails(bet)}
                               >
-                                <div className="flex items-center justify-between p-6 bg-gradient-to-r from-gray-50 to-white border border-gray-100 rounded-xl hover:shadow-lg transition-all duration-300 group-hover:border-blue-200 group-hover:shadow-xl">
+                                <div className={`flex items-center justify-between p-6 border border-gray-100 rounded-xl hover:shadow-lg transition-all duration-300 group-hover:border-blue-200 group-hover:shadow-xl ${
+                                  bet.status === 'pending' 
+                                    ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200' 
+                                    : 'bg-gradient-to-r from-gray-50 to-white'
+                                }`}>
                                   <div className="flex-1">
                                     <div className="flex items-center justify-between">
                                       <div>
@@ -352,7 +371,11 @@ const Archive = () => {
                                         </div>
                                         <Badge 
                                           variant={bet.status === 'won' ? 'default' : bet.status === 'lost' ? 'destructive' : bet.status === 'cashout' ? 'secondary' : bet.status === 'void' ? 'outline' : 'secondary'}
-                                          className={`px-3 py-1 font-medium ${bet.status === 'won' ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : bet.status === 'void' ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : ''}`}
+                                          className={`px-3 py-1 font-medium ${
+                                            bet.status === 'won' ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : 
+                                            bet.status === 'void' ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 
+                                            bet.status === 'pending' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' : ''
+                                          }`}
                                         >
                                           {bet.status === 'won' ? 'Vinta' : 
                                            bet.status === 'lost' ? 'Persa' : 
