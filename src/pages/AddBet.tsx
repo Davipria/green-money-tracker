@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Trash2, TrendingUp, Calculator, DollarSign, Target, Calendar, Building2, PlusCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 interface SingleBet {
   id: string;
@@ -22,10 +23,12 @@ interface SingleBet {
 const AddBet = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [betType, setBetType] = useState<'single' | 'multiple' | 'system' | 'exchange'>('single');
   const [exchangeType, setExchangeType] = useState<'back' | 'lay'>('back');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bankroll, setBankroll] = useState<string>("1000");
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   
   const [formData, setFormData] = useState({
     // Campi comuni
@@ -59,6 +62,39 @@ const AddBet = () => {
   const [multipleBets, setMultipleBets] = useState<SingleBet[]>([
     { id: '1', sport: '', event: '', odds: '', selection: '' }
   ]);
+
+  // Load user profile bankroll on component mount
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (!user) return;
+      
+      setIsLoadingProfile(true);
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('bankroll')
+          .eq('id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Error loading user profile:', error);
+          toast({
+            title: "Avviso",
+            description: "Non è stato possibile caricare il bankroll dal profilo. Utilizzando valore predefinito.",
+            variant: "default"
+          });
+        } else if (profile?.bankroll) {
+          setBankroll(profile.bankroll.toString());
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+
+    loadUserProfile();
+  }, [user, toast]);
 
   // Calcola le quote totali per multiple/sistema
   const calculateTotalOdds = () => {
@@ -440,15 +476,22 @@ const AddBet = () => {
                 <DollarSign className="h-4 w-4 text-green-600" />
                 Bankroll (€)
               </Label>
-              <Input
-                id="bankroll"
-                type="number"
-                step="0.01"
-                placeholder="Es. 1000.00"
-                value={bankroll}
-                onChange={(e) => setBankroll(e.target.value)}
-                className="border-green-300 focus:border-green-500"
-              />
+              {isLoadingProfile ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                  <span className="text-sm text-green-700">Caricamento dal profilo...</span>
+                </div>
+              ) : (
+                <Input
+                  id="bankroll"
+                  type="number"
+                  step="0.01"
+                  placeholder="Es. 1000.00"
+                  value={bankroll}
+                  onChange={(e) => setBankroll(e.target.value)}
+                  className="border-green-300 focus:border-green-500"
+                />
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
