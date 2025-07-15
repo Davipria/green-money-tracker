@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/utils/betUtils";
 import { TrendingUp, TrendingDown, Target, Trophy, Calendar, Zap } from "lucide-react";
@@ -119,6 +118,23 @@ const Dashboard = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="bg-gradient-to-br from-orange-500 to-red-600 border-0 text-white shadow-xl hover:shadow-2xl transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-orange-100 text-sm font-medium mb-1">Saldo Attuale</p>
+                  <p className="text-3xl font-bold">{formatCurrency(currentBalance)}</p>
+                  <p className="text-orange-100 text-xs mt-1">
+                    Bankroll + Profitto
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Calendar className="w-6 h-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="bg-gradient-to-br from-green-500 to-emerald-600 border-0 text-white shadow-xl hover:shadow-2xl transition-all duration-300">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -169,23 +185,6 @@ const Dashboard = () => {
                 </div>
                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
                   <Trophy className="w-6 h-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-orange-500 to-red-600 border-0 text-white shadow-xl hover:shadow-2xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-orange-100 text-sm font-medium mb-1">Saldo Attuale</p>
-                  <p className="text-3xl font-bold">{formatCurrency(currentBalance)}</p>
-                  <p className="text-orange-100 text-xs mt-1">
-                    Bankroll + Profitto
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Calendar className="w-6 h-6" />
                 </div>
               </div>
             </CardContent>
