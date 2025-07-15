@@ -1,6 +1,7 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/utils/betUtils";
-import { TrendingUp, TrendingDown, Target, Trophy, Calendar, Zap } from "lucide-react";
+import { TrendingUp, TrendingDown, Target, Trophy, DollarSign, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -129,7 +130,7 @@ const Dashboard = () => {
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Calendar className="w-6 h-6" />
+                  <DollarSign className="w-6 h-6" />
                 </div>
               </div>
             </CardContent>
