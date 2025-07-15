@@ -226,7 +226,7 @@ const Dashboard = () => {
                             {bet.sport || bet.bet_type}
                           </span>
                           <span className="flex items-center">
-                            <Calendar className="w-4 h-4 mr-1" />
+                            <DollarSign className="w-4 h-4 mr-1" />
                             {new Date(bet.date).toLocaleDateString('it-IT')}
                           </span>
                         </div>
