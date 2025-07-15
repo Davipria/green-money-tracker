@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/utils/betUtils";
 import { TrendingUp, TrendingDown, Target, Trophy, Calendar, Zap } from "lucide-react";
@@ -11,6 +12,7 @@ interface UserProfile {
   username: string | null;
   first_name: string | null;
   last_name: string | null;
+  bankroll: number | null;
 }
 
 const Dashboard = () => {
@@ -31,7 +33,7 @@ const Dashboard = () => {
         // Fetch user profile
         const { data: profileData } = await supabase
           .from('profiles')
-          .select('username, first_name, last_name')
+          .select('username, first_name, last_name, bankroll')
           .eq('id', user.user.id)
           .single();
 
