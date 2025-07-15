@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/utils/betUtils";
 import { TrendingUp, TrendingDown, Target, Trophy, Calendar, Zap } from "lucide-react";
@@ -82,12 +81,8 @@ const Dashboard = () => {
   const winRate = bets.length > 0 ? (wonBets / bets.length) * 100 : 0;
   const roi = totalStake > 0 ? (totalProfit / totalStake) * 100 : 0;
 
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
-  const thisMonthBets = bets.filter(bet => {
-    const betDate = new Date(bet.date);
-    return betDate.getMonth() === currentMonth && betDate.getFullYear() === currentYear;
-  });
+  // Calculate current balance (bankroll + profit)
+  const currentBalance = (profile?.bankroll || 0) + totalProfit;
 
   if (loading) {
     return (
@@ -181,10 +176,10 @@ const Dashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-orange-100 text-sm font-medium mb-1">Questo Mese</p>
-                  <p className="text-3xl font-bold">{thisMonthBets.length}</p>
+                  <p className="text-orange-100 text-sm font-medium mb-1">Saldo Attuale</p>
+                  <p className="text-3xl font-bold">{formatCurrency(currentBalance)}</p>
                   <p className="text-orange-100 text-xs mt-1">
-                    {new Date().toLocaleDateString('it-IT', { month: 'long' })}
+                    Bankroll + Profitto
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
