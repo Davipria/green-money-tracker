@@ -60,6 +60,7 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
     { value: "betfair", label: "Betfair" },
     { value: "betflag", label: "Betflag" },
     { value: "betic", label: "Betic" },
+    { value: "domusbet", label: "DomusBet" },
     { value: "eurobet", label: "Eurobet" },
     { value: "goldbet", label: "Goldbet" },
     { value: "planetwin365", label: "Planetwin365" },
