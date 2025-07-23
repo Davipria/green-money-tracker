@@ -121,7 +121,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="bg-gradient-to-br from-orange-500 to-red-600 border-0 text-white shadow-xl hover:shadow-2xl transition-all duration-300">
             <CardContent className="p-6">
-              <div className="text-right">
+              <div className="text-center">
                 <p className="text-orange-100 text-sm font-medium mb-1">Saldo Attuale</p>
                 <p className="text-3xl font-bold">{formatCurrency(currentBalance)}</p>
                 <p className="text-orange-100 text-xs mt-1">
@@ -133,7 +133,7 @@ const Dashboard = () => {
 
           <Card className="bg-gradient-to-br from-green-500 to-emerald-600 border-0 text-white shadow-xl hover:shadow-2xl transition-all duration-300">
             <CardContent className="p-6">
-              <div className="text-right">
+              <div className="text-center">
                 <p className="text-green-100 text-sm font-medium mb-1">Profitto Totale</p>
                 <p className="text-3xl font-bold">{formatCurrency(totalProfit)}</p>
                 <p className="text-green-100 text-xs mt-1">
@@ -145,7 +145,7 @@ const Dashboard = () => {
 
           <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 border-0 text-white shadow-xl hover:shadow-2xl transition-all duration-300">
             <CardContent className="p-6">
-              <div className="text-right">
+              <div className="text-center">
                 <p className="text-blue-100 text-sm font-medium mb-1">Puntata Totale</p>
                 <p className="text-3xl font-bold">{formatCurrency(totalStake)}</p>
                 <p className="text-blue-100 text-xs mt-1">
@@ -157,7 +157,7 @@ const Dashboard = () => {
 
           <Card className="bg-gradient-to-br from-purple-500 to-pink-600 border-0 text-white shadow-xl hover:shadow-2xl transition-all duration-300">
             <CardContent className="p-6">
-              <div className="text-right">
+              <div className="text-center">
                 <p className="text-purple-100 text-sm font-medium mb-1">Percentuale Vincite</p>
                 <p className="text-3xl font-bold">{winRate.toFixed(1)}%</p>
                 <p className="text-purple-100 text-xs mt-1">
