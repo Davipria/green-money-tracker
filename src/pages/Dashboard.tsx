@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/utils/betUtils";
-import { TrendingUp, TrendingDown, Target, Trophy, Euro, Zap } from "lucide-react";
+import { TrendingUp, TrendingDown, Target, Trophy, Banknote, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -130,7 +130,7 @@ const Dashboard = () => {
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Euro className="w-6 h-6" />
+                  <Banknote className="w-6 h-6" />
                 </div>
               </div>
             </CardContent>
@@ -226,7 +226,7 @@ const Dashboard = () => {
                             {bet.sport || bet.bet_type}
                           </span>
                           <span className="flex items-center">
-                            <Euro className="w-4 h-4 mr-1" />
+                            <Banknote className="w-4 h-4 mr-1" />
                             {new Date(bet.date).toLocaleDateString('it-IT')}
                           </span>
                         </div>
