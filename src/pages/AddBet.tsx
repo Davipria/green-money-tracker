@@ -133,10 +133,10 @@ const AddBet = () => {
     }
 
     // Validazione specifica per tipo
-    if (betType === 'single' && (!formData.sport || !formData.event || !formData.odds)) {
+    if ((betType === 'single' || betType === 'exchange') && (!formData.sport || !formData.event || !formData.odds)) {
       toast({
         title: "Errore",
-        description: "Compila tutti i campi della scommessa singola",
+        description: "Compila tutti i campi della scommessa",
         variant: "destructive"
       });
       return;
@@ -199,9 +199,9 @@ const AddBet = () => {
       const betData = {
         user_id: user.user.id,
         date: formData.date,
-        sport: betType === 'single' ? formData.sport : null,
-        manifestation: betType === 'single' ? formData.manifestation : null,
-        event: betType === 'single' ? formData.event : formData.multipleTitle,
+        sport: (betType === 'single' || betType === 'exchange') ? formData.sport : null,
+        manifestation: (betType === 'single' || betType === 'exchange') ? formData.manifestation : null,
+        event: (betType === 'single' || betType === 'exchange') ? formData.event : formData.multipleTitle,
         bet_type: betType,
         odds: totalOdds, // Usa sempre le quote totali calcolate
         stake: parseFloat(formData.stake),
@@ -213,7 +213,7 @@ const AddBet = () => {
         bookmaker: formData.bookmaker,
         tipster: formData.tipster || null,
         timing: formData.timing,
-        selection: betType === 'single' ? formData.selection : null,
+        selection: (betType === 'single' || betType === 'exchange') ? formData.selection : null,
         multiple_title: (betType === 'multiple' || betType === 'system') ? formData.multipleTitle : null,
         system_type: betType === 'system' ? formData.systemType : null,
         liability: betType === 'exchange' && exchangeType === 'lay' ? parseFloat(formData.liability) : null,
@@ -845,82 +845,6 @@ const AddBet = () => {
           </Card>
         )}
 
-        {/* Exchange Fields */}
-        {betType === 'exchange' && (
-          <Card className="border-2 border-orange-200 hover:border-orange-300 transition-colors">
-            <CardHeader className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-t-lg">
-              <CardTitle className="text-orange-900">Dettagli Exchange</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {exchangeType === 'lay' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="liability" className="text-sm font-medium text-orange-900">Responsabilità (€)</Label>
-                    <Input
-                      id="liability"
-                      type="number"
-                      step="0.01"
-                      placeholder="Es. 250.00"
-                      value={formData.liability}
-                      onChange={(e) => handleInputChange("liability", e.target.value)}
-                      className="border-orange-300 focus:border-orange-500"
-                    />
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="commission" className="text-sm font-medium text-orange-900">Commissione (%)</Label>
-                  <Input
-                    id="commission"
-                    type="number"
-                    step="0.1"
-                    placeholder="Es. 5.0"
-                    value={formData.commission}
-                    onChange={(e) => handleInputChange("commission", e.target.value)}
-                    className="border-orange-300 focus:border-orange-500"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="event" className="text-sm font-medium text-orange-900">Evento *</Label>
-                <Input
-                  id="event"
-                  placeholder="Es. Inter vs Milan"
-                  value={formData.event}
-                  onChange={(e) => handleInputChange("event", e.target.value)}
-                  className="border-orange-300 focus:border-orange-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="selection" className="text-sm font-medium text-orange-900">Selezione</Label>
-                  <Input
-                    id="selection"
-                    placeholder="Es. Inter vittoria"
-                    value={formData.selection}
-                    onChange={(e) => handleInputChange("selection", e.target.value)}
-                    className="border-orange-300 focus:border-orange-500"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="odds" className="text-sm font-medium text-orange-900">Quote *</Label>
-                  <Input
-                    id="odds"
-                    type="number"
-                    step="0.01"
-                    placeholder="Es. 2.50"
-                    value={formData.odds}
-                    onChange={(e) => handleInputChange("odds", e.target.value)}
-                    className="border-orange-300 focus:border-orange-500"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Note */}
         <Card className="border-2 hover:border-purple-200 transition-colors">

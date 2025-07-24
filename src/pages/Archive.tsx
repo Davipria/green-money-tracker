@@ -347,20 +347,27 @@ const Archive = () => {
                                 }`}>
                                   <div className="flex-1">
                                     <div className="flex items-center justify-between">
-                                      <div>
-                                        <div className="font-semibold text-gray-900 text-lg mb-2">{bet.event}</div>
-                                        <div className="text-sm text-gray-600 flex items-center space-x-4">
-                                          {bet.sport && (
-                                            <span className="flex items-center">
-                                              <Target className="w-4 h-4 mr-1" />
-                                              {bet.sport}
-                                            </span>
-                                          )}
-                                          <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
-                                            Quote {bet.odds}
-                                          </span>
-                                        </div>
-                                      </div>
+                                     <div>
+                                       <div className="font-semibold text-gray-900 text-lg mb-2">
+                                         {bet.event || bet.multiple_title || 'Evento non specificato'}
+                                       </div>
+                                       <div className="text-sm text-gray-600 flex items-center space-x-4">
+                                         {bet.sport && (
+                                           <span className="flex items-center">
+                                             <Target className="w-4 h-4 mr-1" />
+                                             {bet.sport}
+                                           </span>
+                                         )}
+                                         {bet.manifestation && (
+                                           <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
+                                             {bet.manifestation}
+                                           </span>
+                                         )}
+                                         <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                                           Quote {bet.odds}
+                                         </span>
+                                       </div>
+                                     </div>
                                       <div className="text-right">
                                         <div className="text-sm text-gray-500 mb-2 flex items-center">
                                           <Calendar className="w-4 h-4 mr-1" />
