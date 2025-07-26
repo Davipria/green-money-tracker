@@ -25,6 +25,7 @@ const Analysis = () => {
     to: undefined
   });
   const [initialBankroll, setInitialBankroll] = useState(1000);
+  const [sportData, setSportData] = useState<Record<string, { count: number; profit: number }>>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -71,6 +72,76 @@ const Analysis = () => {
 
     fetchBetsAndBankroll();
   }, [toast]);
+
+  // Calculate sport data based on filtered bets
+  useEffect(() => {
+    const calculateSportData = async () => {
+      // Calculate filtered bets
+      const now = new Date();
+      const filtered = bets.filter(bet => {
+        const betDate = new Date(bet.date);
+        
+        // Custom date range filter
+        if (timeFilter === "custom") {
+          if (customDateRange.from && betDate < customDateRange.from) return false;
+          if (customDateRange.to && betDate > new Date(customDateRange.to.getTime() + 24 * 60 * 60 * 1000 - 1)) return false;
+          return true;
+        }
+        
+        // Time filter
+        switch (timeFilter) {
+          case "week":
+            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            return betDate >= weekAgo;
+          case "month":
+            return betDate.getMonth() === now.getMonth() && betDate.getFullYear() === now.getFullYear();
+          case "year":
+            return betDate.getFullYear() === now.getFullYear();
+          default:
+            return true;
+        }
+      });
+
+      const sportsMap: Record<string, { count: number; profit: number }> = {};
+      
+      for (const bet of filtered) {
+        let sport = bet.sport || 'Altro';
+        
+        // For multiple bets without a sport, check if all selections are the same sport
+        if (!bet.sport && bet.multiple_title) {
+          try {
+            const { data: selections } = await supabase
+              .from('bet_selections')
+              .select('sport')
+              .eq('bet_id', bet.id);
+            
+            if (selections && selections.length > 0) {
+              const uniqueSports = [...new Set(selections.map(s => s.sport).filter(Boolean))];
+              if (uniqueSports.length === 1) {
+                sport = uniqueSports[0];
+              }
+            }
+          } catch (error) {
+            console.error('Error fetching bet selections:', error);
+          }
+        }
+        
+        if (!sportsMap[sport]) {
+          sportsMap[sport] = { count: 0, profit: 0 };
+        }
+        sportsMap[sport].count += 1;
+        sportsMap[sport].profit += bet.profit || 0;
+      }
+      
+      setSportData(sportsMap);
+    };
+
+    if (bets.length > 0) {
+      calculateSportData();
+    } else {
+      setSportData({});
+    }
+  }, [bets, timeFilter, customDateRange]);
 
   const now = new Date();
   const filteredBets = bets.filter(bet => {
@@ -186,16 +257,6 @@ const Analysis = () => {
 
   const monthlyData = groupBetsByMonthWithROI(filteredBets);
   
-  const sportData = filteredBets.reduce((acc, bet) => {
-    const sport = bet.sport || 'Altro';
-    if (!acc[sport]) {
-      acc[sport] = { count: 0, profit: 0 };
-    }
-    acc[sport].count += 1;
-    acc[sport].profit += bet.profit || 0;
-    return acc;
-  }, {} as Record<string, { count: number; profit: number }>);
-
   const chartData = Object.entries(sportData).map(([sport, data]) => ({
     sport,
     scommesse: data.count,
