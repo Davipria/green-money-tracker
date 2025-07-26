@@ -26,6 +26,7 @@ const Analysis = () => {
   });
   const [initialBankroll, setInitialBankroll] = useState(1000);
   const [sportData, setSportData] = useState<Record<string, { count: number; profit: number }>>({});
+  const [betsWithSport, setBetsWithSport] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -103,6 +104,7 @@ const Analysis = () => {
       });
 
       const sportsMap: Record<string, { count: number; profit: number }> = {};
+      const betSportMapping: Record<string, string> = {};
       
       for (const bet of filtered) {
         let sport = bet.sport || 'Altro';
@@ -126,6 +128,9 @@ const Analysis = () => {
           }
         }
         
+        // Store the sport mapping for this bet
+        betSportMapping[bet.id] = sport;
+        
         if (!sportsMap[sport]) {
           sportsMap[sport] = { count: 0, profit: 0 };
         }
@@ -134,12 +139,14 @@ const Analysis = () => {
       }
       
       setSportData(sportsMap);
+      setBetsWithSport(betSportMapping);
     };
 
     if (bets.length > 0) {
       calculateSportData();
     } else {
       setSportData({});
+      setBetsWithSport({});
     }
   }, [bets, timeFilter, customDateRange]);
 
@@ -692,14 +699,7 @@ const Analysis = () => {
                     </thead>
                     <tbody>
                       {Object.entries(sportData).map(([sport, data]) => {
-                        const sportBets = filteredBets.filter(bet => {
-                          // Check if it's a multiple bet with same sport selections
-                          if (!bet.sport && bet.multiple_title) {
-                            // For multiple bets, we need to check if they were categorized under this sport
-                            return Object.entries(sportData).find(([s, _]) => s === sport)?.[1].count > 0;
-                          }
-                          return (bet.sport || 'Altro') === sport;
-                        });
+                        const sportBets = filteredBets.filter(bet => betsWithSport[bet.id] === sport);
                         
                         const wonBets = sportBets.filter(bet => bet.status === 'won').length;
                         const sportWinRate = sportBets.length > 0 ? (wonBets / sportBets.length) * 100 : 0;
