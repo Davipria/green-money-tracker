@@ -29,13 +29,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
         setLoading(false);
 
-        // Handle session expiration or token refresh errors
-        if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
-          if (!session && window.location.pathname.startsWith('/app')) {
-            console.log('🚪 Session expired, redirecting to login');
-            // Clean up any cached data
-            localStorage.removeItem('supabase.auth.token');
-            // Redirect to auth page
+        // Handle successful sign in - redirect to app if on auth page
+        if (event === 'SIGNED_IN' && session?.user) {
+          console.log('✅ Successfully signed in, checking redirect...');
+          // Only redirect if we're on the auth page
+          if (window.location.pathname === '/auth') {
+            console.log('🚀 Redirecting to /app');
+            setTimeout(() => {
+              window.location.href = '/app';
+            }, 100); // Small delay to ensure state is set
+          }
+        }
+
+        // Handle session expiration or sign out
+        if (event === 'SIGNED_OUT' && !session) {
+          console.log('🚪 Session expired or signed out');
+          if (window.location.pathname.startsWith('/app')) {
+            console.log('🚪 Redirecting to login');
             window.location.href = '/auth';
           }
         }

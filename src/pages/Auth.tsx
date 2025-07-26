@@ -63,7 +63,7 @@ const Auth = () => {
             title: "Accesso effettuato!",
             description: "Benvenuto in BetTracker Pro",
           });
-          navigate('/app');
+          // Il redirect viene gestito automaticamente da useAuth
         }
       } else {
         const { error } = await signUp(email, password, firstName, lastName, profileType, username, bankroll);
