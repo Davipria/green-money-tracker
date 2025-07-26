@@ -240,6 +240,7 @@ const Profile = () => {
     { value: "basket", label: "🏀 Basket" },
     { value: "formula1", label: "🏎️ Formula 1" },
     { value: "pallavolo", label: "🏐 Pallavolo" },
+    { value: "ping-pong", label: "🏓 Ping Pong" },
     { value: "rugby", label: "🏉 Rugby" },
     { value: "altro", label: "🎯 Altro" }
   ];
