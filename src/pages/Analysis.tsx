@@ -217,8 +217,8 @@ const Analysis = () => {
           day: '2-digit', 
           month: '2-digit' 
         }),
-        bankroll: runningBankroll,
-        dailyProfit: dailyProfit
+        bankroll: Math.round(runningBankroll * 100) / 100, // Round to 2 decimals
+        dailyProfit: Math.round(dailyProfit * 100) / 100 // Round to 2 decimals
       });
     });
 
