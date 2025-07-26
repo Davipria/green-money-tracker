@@ -670,6 +670,69 @@ const Analysis = () => {
             </Card>
           </div>
 
+          {/* Performance per Sport Table */}
+          <div className="sport-performance-table">
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+              <CardHeader>
+                <CardTitle className="text-xl">Performance per Sport</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-4">Sport</th>
+                        <th className="text-left p-4">Scommesse</th>
+                        <th className="text-left p-4">Vinte</th>
+                        <th className="text-left p-4">Win Rate</th>
+                        <th className="text-left p-4">Stake Totale</th>
+                        <th className="text-left p-4">Profitto</th>
+                        <th className="text-left p-4">ROI</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(sportData).map(([sport, data]) => {
+                        const sportBets = filteredBets.filter(bet => {
+                          // Check if it's a multiple bet with same sport selections
+                          if (!bet.sport && bet.multiple_title) {
+                            // For multiple bets, we need to check if they were categorized under this sport
+                            return Object.entries(sportData).find(([s, _]) => s === sport)?.[1].count > 0;
+                          }
+                          return (bet.sport || 'Altro') === sport;
+                        });
+                        
+                        const wonBets = sportBets.filter(bet => bet.status === 'won').length;
+                        const sportWinRate = sportBets.length > 0 ? (wonBets / sportBets.length) * 100 : 0;
+                        const totalStake = sportBets.reduce((sum, bet) => sum + bet.stake, 0);
+                        const sportROI = totalStake > 0 ? calculateROI(data.profit, totalStake) : 0;
+                        
+                        return (
+                          <tr key={sport} className="border-b hover:bg-gray-50">
+                            <td className="p-4 font-medium">{sport}</td>
+                            <td className="p-4">{data.count}</td>
+                            <td className="p-4">{wonBets}</td>
+                            <td className="p-4">{sportWinRate.toFixed(1)}%</td>
+                            <td className="p-4">{formatCurrency(totalStake)}</td>
+                            <td className="p-4">
+                              <span className={data.profit >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                {formatCurrency(data.profit)}
+                              </span>
+                            </td>
+                            <td className="p-4">
+                              <span className={sportROI >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                {sportROI.toFixed(1)}%
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Tipster Performance Table */}
           <div className="tipster-table">
             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
