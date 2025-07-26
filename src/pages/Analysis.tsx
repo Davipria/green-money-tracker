@@ -178,7 +178,20 @@ const Analysis = () => {
 
   // Create bankroll evolution data - grouped by day
   const bankrollEvolutionData = (() => {
-    // Group bets by date
+    if (filteredBets.length === 0) return [];
+    
+    // Calculate starting bankroll considering bets before the filter period
+    let startingBankroll = initialBankroll;
+    
+    // Find the first date in filtered bets
+    const firstFilteredDate = new Date(Math.min(...filteredBets.map(bet => new Date(bet.date).getTime())));
+    
+    // Add profit from all bets before the filter period
+    const betsBeforeFilter = bets.filter(bet => new Date(bet.date) < firstFilteredDate);
+    const profitBeforeFilter = betsBeforeFilter.reduce((sum, bet) => sum + (bet.profit || 0), 0);
+    startingBankroll += profitBeforeFilter;
+    
+    // Group filtered bets by date
     const betsByDate = filteredBets
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .reduce((acc, bet) => {
@@ -191,7 +204,7 @@ const Analysis = () => {
       }, {} as Record<string, Bet[]>);
 
     // Calculate final bankroll for each day
-    let runningBankroll = initialBankroll;
+    let runningBankroll = startingBankroll;
     const dailyData: Array<{date: string, bankroll: number, dailyProfit: number}> = [];
 
     Object.entries(betsByDate).forEach(([dateKey, dayBets]) => {
