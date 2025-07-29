@@ -698,7 +698,9 @@ const Analysis = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {Object.entries(sportData).map(([sport, data]) => {
+                      {Object.entries(sportData)
+                        .sort(([,a], [,b]) => b.count - a.count)
+                        .map(([sport, data]) => {
                         const sportBets = filteredBets.filter(bet => betsWithSport[bet.id] === sport);
                         
                         const wonBets = sportBets.filter(bet => bet.status === 'won').length;
@@ -751,7 +753,9 @@ const Analysis = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {Object.entries(tipsterData).map(([tipster, data]) => {
+                      {Object.entries(tipsterData)
+                        .sort(([,a], [,b]) => b.count - a.count)
+                        .map(([tipster, data]) => {
                         const tipsterBets = filteredBets.filter(bet => (bet.tipster || 'Nessun tipster') === tipster);
                         const tipsterWinRate = tipsterBets.length > 0 ? 
                           (tipsterBets.filter(bet => bet.status === 'won').length / tipsterBets.length) * 100 : 0;
