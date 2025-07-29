@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Bet } from "@/types/bet";
 import { Link } from "react-router-dom";
+import BetDetailsDialog from "@/components/BetDetailsDialog";
+import EditBetDialog from "@/components/EditBetDialog";
 
 interface UserProfile {
   username: string | null;
@@ -19,6 +21,9 @@ const Dashboard = () => {
   const [bets, setBets] = useState<Bet[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedBet, setSelectedBet] = useState<Bet | null>(null);
+  const [betDetailsOpen, setBetDetailsOpen] = useState(false);
+  const [editBetOpen, setEditBetOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -85,6 +90,69 @@ const Dashboard = () => {
 
   // Calculate current balance (bankroll + profit)
   const currentBalance = (profile?.bankroll || 0) + totalProfit;
+
+  const handleBetClick = (bet: Bet) => {
+    setSelectedBet(bet);
+    setBetDetailsOpen(true);
+  };
+
+  const handleEditBet = () => {
+    setBetDetailsOpen(false);
+    setEditBetOpen(true);
+  };
+
+  const handleDeleteBet = async () => {
+    if (!selectedBet) return;
+
+    try {
+      const { error } = await supabase
+        .from('bets')
+        .delete()
+        .eq('id', selectedBet.id);
+
+      if (error) {
+        toast({
+          title: "Errore",
+          description: "Impossibile eliminare la scommessa",
+          variant: "destructive",
+        });
+      } else {
+        setBets(bets.filter(bet => bet.id !== selectedBet.id));
+        setBetDetailsOpen(false);
+        setSelectedBet(null);
+        toast({
+          title: "Scommessa eliminata",
+          description: "La scommessa è stata eliminata con successo",
+        });
+      }
+    } catch (error) {
+      console.error('Errore eliminazione scommessa:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore imprevisto",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBetUpdate = async () => {
+    // Ricarica i dati per vedere le modifiche
+    try {
+      const { data } = await supabase
+        .from('bets')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (data) {
+        setBets(data as Bet[]);
+      }
+    } catch (error) {
+      console.error('Errore ricaricamento scommesse:', error);
+    }
+    
+    setEditBetOpen(false);
+    setSelectedBet(null);
+  };
 
   if (loading) {
     return (
@@ -215,9 +283,12 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {bets.slice(0, 5).map((bet) => (
-                  <div key={bet.id} className="group">
-                    <div className="flex items-center justify-between p-6 bg-gradient-to-r from-gray-50 to-white border border-gray-100 rounded-xl hover:shadow-lg transition-all duration-300 group-hover:border-blue-200">
+                 {bets.slice(0, 5).map((bet) => (
+                   <div key={bet.id} className="group">
+                     <div 
+                       className="flex items-center justify-between p-6 bg-gradient-to-r from-gray-50 to-white border border-gray-100 rounded-xl hover:shadow-lg transition-all duration-300 group-hover:border-blue-200 cursor-pointer"
+                       onClick={() => handleBetClick(bet)}
+                     >
                       <div className="flex-1">
                         <div className="font-semibold text-gray-900 text-lg mb-1">{bet.event}</div>
                         <div className="text-sm text-gray-600 flex items-center space-x-4">
@@ -253,6 +324,23 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Bet Details Dialog */}
+      <BetDetailsDialog
+        bet={selectedBet}
+        open={betDetailsOpen}
+        onOpenChange={setBetDetailsOpen}
+        onEdit={handleEditBet}
+        onDelete={handleDeleteBet}
+      />
+
+      {/* Edit Bet Dialog */}
+      <EditBetDialog
+        bet={selectedBet}
+        open={editBetOpen}
+        onOpenChange={setEditBetOpen}
+        onBetUpdated={handleBetUpdate}
+      />
     </div>
   );
 };
