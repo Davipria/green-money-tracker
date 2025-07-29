@@ -2,8 +2,9 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, TrendingUp, Target, Calendar, Dice2 } from "lucide-react";
+import { Users, TrendingUp, Target, Calendar, Dice2, Search } from "lucide-react";
 import { useTipsters } from "@/hooks/useTipsters";
 import { useState } from "react";
 
@@ -83,6 +84,17 @@ export default function Tipsters() {
         <p className="text-muted-foreground">
           Scopri i migliori tipster e le loro performance
         </p>
+      </div>
+
+      {/* Campo di ricerca */}
+      <div className="mb-6 relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+        <Input
+          placeholder="Cerca tipster per nome o username..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-10"
+        />
       </div>
 
       {filteredTipsters.length === 0 ? (
