@@ -414,8 +414,12 @@ export const exportToPDF = async (elementId: string, filename: string = 'analisi
 
     let currentY = 90; // Start position after title
 
-    // Hide export button during capture
-    const exportButton = document.querySelector('button[onclick*="exportToPDF"]') as HTMLElement;
+    // Hide export button during capture - better selector
+    const exportButtons = document.querySelectorAll('button');
+    const exportButton = Array.from(exportButtons).find(btn => 
+      btn.textContent?.includes('Esporta PDF') || 
+      btn.querySelector('svg[data-lucide="file-text"]')
+    ) as HTMLElement;
     if (exportButton) {
       exportButton.style.display = 'none';
     }
@@ -437,15 +441,16 @@ export const exportToPDF = async (elementId: string, filename: string = 'analisi
 
       // Prepare analysis data for main stats (for height estimation)
       let mainStatsAnalysis = '';
-      if (analysisData) {
+      if (analysisData && analysisData.filteredBets && analysisData.filteredBets.length > 0) {
         // Calculate main stats from analysis data
         const totalProfit = analysisData.filteredBets.reduce((sum, bet) => sum + (bet.profit || 0), 0);
         const totalStake = analysisData.filteredBets.reduce((sum, bet) => sum + bet.stake, 0);
         const wonBets = analysisData.filteredBets.filter(bet => bet.status === 'won').length;
         const winRate = analysisData.filteredBets.length > 0 ? (wonBets / analysisData.filteredBets.length) * 100 : 0;
         const overallROI = calculateROI(totalProfit, totalStake);
-        const averageOdds = analysisData.filteredBets.reduce((sum, bet) => sum + bet.odds, 0) / analysisData.filteredBets.length;
-        const averageStake = totalStake / analysisData.filteredBets.length;
+        const averageOdds = analysisData.filteredBets.length > 0 ? 
+          analysisData.filteredBets.reduce((sum, bet) => sum + bet.odds, 0) / analysisData.filteredBets.length : 0;
+        const averageStake = analysisData.filteredBets.length > 0 ? totalStake / analysisData.filteredBets.length : 0;
         const mainStats = {
           totalProfit,
           overallROI,
