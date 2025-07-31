@@ -51,7 +51,7 @@ export const calculateProfitVolatility = (bets: Bet[]): number => {
 export const groupBetsByMonth = (bets: Bet[]): MonthlyStats[] => {
   const grouped = bets.reduce((acc, bet) => {
     const date = new Date(bet.date);
-    const key = `${date.getFullYear()}-${date.getMonth()}`;
+    const key = `${date.getFullYear()}-${String(date.getMonth()).padStart(2, '0')}`;
     
     if (!acc[key]) {
       acc[key] = {
@@ -62,6 +62,7 @@ export const groupBetsByMonth = (bets: Bet[]): MonthlyStats[] => {
         profit: 0,
         betsCount: 0,
         winRate: 0,
+        monthNumber: date.getMonth(),
       };
     }
     
@@ -75,13 +76,13 @@ export const groupBetsByMonth = (bets: Bet[]): MonthlyStats[] => {
     acc[key].profit += calculateProfit(bet);
     
     return acc;
-  }, {} as Record<string, MonthlyStats>);
+  }, {} as Record<string, MonthlyStats & { monthNumber: number }>);
   
   // Calculate win rates
   Object.keys(grouped).forEach(key => {
     const monthBets = bets.filter(bet => {
       const date = new Date(bet.date);
-      const betKey = `${date.getFullYear()}-${date.getMonth()}`;
+      const betKey = `${date.getFullYear()}-${String(date.getMonth()).padStart(2, '0')}`;
       return betKey === key;
     });
     
@@ -89,7 +90,14 @@ export const groupBetsByMonth = (bets: Bet[]): MonthlyStats[] => {
     grouped[key].winRate = monthBets.length > 0 ? (wonBets / monthBets.length) * 100 : 0;
   });
   
-  return Object.values(grouped).sort((a, b) => b.year - a.year || b.month.localeCompare(a.month));
+  return Object.values(grouped)
+    .sort((a, b) => {
+      if (b.year !== a.year) {
+        return b.year - a.year;
+      }
+      return b.monthNumber - a.monthNumber;
+    })
+    .map(({ monthNumber, ...rest }) => rest);
 };
 
 export const groupBetsByMonthWithROI = (bets: Bet[]) => {
