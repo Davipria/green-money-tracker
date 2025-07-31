@@ -133,6 +133,14 @@ const Archive = () => {
     }
   };
 
+  const toggleMonth = (monthKey: string) => {
+    setOpenMonths(prev => 
+      prev.includes(monthKey) 
+        ? prev.filter(key => key !== monthKey)
+        : [...prev, monthKey]
+    );
+  };
+
   const getBetsForMonth = (month: string, year: number) => {
     return bets.filter(bet => {
       const betDate = new Date(bet.date);
