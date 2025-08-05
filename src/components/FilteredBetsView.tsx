@@ -82,7 +82,7 @@ const FilteredBetsView = ({ bets, filterType, filterValue, onBack }: FilteredBet
       const firstMonthKey = `${monthlyStats[0].month}-${monthlyStats[0].year}`;
       setOpenMonths([firstMonthKey]);
     }
-  }, [monthlyStats]);
+  }, [monthlyStats.length]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
