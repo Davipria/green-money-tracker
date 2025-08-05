@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,12 +21,14 @@ const FilteredBetsView = ({ bets, filterType, filterValue, onBack }: FilteredBet
   const [selectedBet, setSelectedBet] = useState<Bet | null>(null);
   const [editingBet, setEditingBet] = useState<Bet | null>(null);
 
-  const filteredBets = bets.filter(bet => {
-    if (filterType === 'sport') {
-      return bet.sport === filterValue || (!bet.sport && filterValue === 'Altro');
-    }
-    return (bet.tipster || 'Nessun tipster') === filterValue;
-  });
+  const filteredBets = useMemo(() => {
+    return bets.filter(bet => {
+      if (filterType === 'sport') {
+        return bet.sport === filterValue || (!bet.sport && filterValue === 'Altro');
+      }
+      return (bet.tipster || 'Nessun tipster') === filterValue;
+    });
+  }, [bets, filterType, filterValue]);
 
   const monthlyStats = groupBetsByMonth(filteredBets);
 
