@@ -5,6 +5,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { formatCurrency, calculateROI, groupBetsByMonthWithROI, calculateAverageOdds, calculateAverageStake } from "@/utils/betUtils";
 import ExportPDFDialog from "@/components/ExportPDFDialog";
+import FilteredBetsView from "@/components/FilteredBetsView";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +28,10 @@ const Analysis = () => {
   const [initialBankroll, setInitialBankroll] = useState(1000);
   const [sportData, setSportData] = useState<Record<string, { count: number; profit: number }>>({});
   const [betsWithSport, setBetsWithSport] = useState<Record<string, string>>({});
+  const [filteredView, setFilteredView] = useState<{
+    type: 'sport' | 'tipster';
+    value: string;
+  } | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -345,6 +350,18 @@ const Analysis = () => {
           </div>
         </div>
       </div>
+    );
+  }
+
+  // Show filtered view if one is selected
+  if (filteredView) {
+    return (
+      <FilteredBetsView
+        bets={bets}
+        filterType={filteredView.type}
+        filterValue={filteredView.value}
+        onBack={() => setFilteredView(null)}
+      />
     );
   }
 
@@ -709,7 +726,11 @@ const Analysis = () => {
                         const sportROI = totalStake > 0 ? calculateROI(data.profit, totalStake) : 0;
                         
                         return (
-                          <tr key={sport} className="border-b hover:bg-gray-50">
+                          <tr 
+                            key={sport} 
+                            className="border-b hover:bg-gray-50 cursor-pointer transition-colors"
+                            onClick={() => setFilteredView({ type: 'sport', value: sport })}
+                          >
                             <td className="p-4 font-medium">{sport}</td>
                             <td className="p-4">{data.count}</td>
                             <td className="p-4">{wonBets}</td>
@@ -761,7 +782,11 @@ const Analysis = () => {
                           (tipsterBets.filter(bet => bet.status === 'won').length / tipsterBets.length) * 100 : 0;
                         
                         return (
-                          <tr key={tipster} className="border-b hover:bg-gray-50">
+                          <tr 
+                            key={tipster} 
+                            className="border-b hover:bg-gray-50 cursor-pointer transition-colors"
+                            onClick={() => setFilteredView({ type: 'tipster', value: tipster })}
+                          >
                             <td className="p-4 font-medium">{tipster}</td>
                             <td className="p-4">{data.count}</td>
                             <td className="p-4">
