@@ -643,23 +643,28 @@ const Analysis = () => {
                 <CardTitle className="text-xl">Distribuzione per Sport</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={350}>
                   <PieChart>
                     <Pie
                       data={chartData}
                       cx="50%"
                       cy="50%"
-                      labelLine={false}
-                      label={({ sport, percent }: any) => `${sport} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
+                      labelLine={true}
+                      label={({ sport, percent }: any) => `${sport} (${(percent * 100).toFixed(0)}%)`}
+                      outerRadius={90}
                       fill="#8884d8"
                       dataKey="scommesse"
+                      fontSize={12}
+                      fontWeight="500"
                     >
                       {chartData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip 
+                      formatter={(value: number, name: string) => [value, 'Scommesse']}
+                      labelFormatter={(label: string) => `Sport: ${label}`}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </CardContent>
