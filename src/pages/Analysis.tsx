@@ -643,15 +643,15 @@ const Analysis = () => {
                 <CardTitle className="text-xl">Distribuzione per Sport</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={350}>
+                <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
                       data={chartData}
                       cx="50%"
                       cy="50%"
-                      labelLine={true}
+                      labelLine={false}
                       label={({ sport, percent }: any) => `${sport} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={90}
+                      outerRadius={80}
                       fill="#8884d8"
                       dataKey="scommesse"
                     >
