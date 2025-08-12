@@ -99,6 +99,8 @@ const Analysis = () => {
           case "week":
             const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
             return betDate >= weekAgo;
+          case "today":
+            return betDate.toDateString() === now.toDateString();
           case "month":
             return betDate.getMonth() === now.getMonth() && betDate.getFullYear() === now.getFullYear();
           case "year":
@@ -171,6 +173,8 @@ const Analysis = () => {
       case "week":
         const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         return betDate >= weekAgo;
+      case "today":
+        return betDate.toDateString() === now.toDateString();
       case "month":
         return betDate.getMonth() === now.getMonth() && betDate.getFullYear() === now.getFullYear();
       case "year":
@@ -419,6 +423,9 @@ const Analysis = () => {
                 </ToggleGroupItem>
                 <ToggleGroupItem value="week" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
                   Questa settimana
+                </ToggleGroupItem>
+                <ToggleGroupItem value="today" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
+                  Oggi
                 </ToggleGroupItem>
                 <ToggleGroupItem value="custom" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
                   Scegli
