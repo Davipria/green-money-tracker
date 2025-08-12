@@ -370,24 +370,24 @@ const Analysis = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
-        <div id="analysis-content" className="space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-3 sm:p-6">
+      <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
+        <div id="analysis-content" className="space-y-6 sm:space-y-8">
           {/* Header Section */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl mb-4">
-              <BarChart3 className="w-8 h-8 text-white" />
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl mb-4">
+              <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
             </div>
-            <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-4xl font-bold mb-3 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
               Analisi Prestazioni
             </h1>
-            <p className="text-gray-600 text-lg">
+            <p className="text-gray-600 text-base sm:text-lg px-4">
               Analizza le tue performance e identifica tendenze
             </p>
           </div>
 
           {/* Export Button */}
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center mb-6 sm:mb-8">
             <ExportPDFDialog 
               analysisData={{
                 bankrollEvolutionData,
@@ -403,31 +403,31 @@ const Analysis = () => {
           </div>
 
           {/* Filters Section */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Time Filter */}
-            <div className="flex justify-center">
+            <div className="flex justify-center px-2 sm:px-0">
               <ToggleGroup 
                 type="single" 
                 value={timeFilter} 
                 onValueChange={(value) => value && setTimeFilter(value)}
-                className="bg-white/80 backdrop-blur-sm p-1 rounded-xl shadow-lg"
+                className="bg-white/80 backdrop-blur-sm p-1 rounded-xl shadow-lg flex-wrap sm:flex-nowrap gap-1 sm:gap-0"
               >
-                <ToggleGroupItem value="all" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
+                <ToggleGroupItem value="all" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white text-xs sm:text-sm px-2 sm:px-3">
                   Tutto
                 </ToggleGroupItem>
-                <ToggleGroupItem value="year" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
+                <ToggleGroupItem value="year" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white text-xs sm:text-sm px-2 sm:px-3">
                   Quest'anno
                 </ToggleGroupItem>
-                <ToggleGroupItem value="month" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
+                <ToggleGroupItem value="month" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white text-xs sm:text-sm px-2 sm:px-3">
                   Questo mese
                 </ToggleGroupItem>
-                <ToggleGroupItem value="week" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
+                <ToggleGroupItem value="week" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white text-xs sm:text-sm px-2 sm:px-3">
                   Questa settimana
                 </ToggleGroupItem>
-                <ToggleGroupItem value="today" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
+                <ToggleGroupItem value="today" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white text-xs sm:text-sm px-2 sm:px-3">
                   Oggi
                 </ToggleGroupItem>
-                <ToggleGroupItem value="custom" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white">
+                <ToggleGroupItem value="custom" className="data-[state=on]:bg-gradient-to-r data-[state=on]:from-purple-500 data-[state=on]:to-pink-600 data-[state=on]:text-white text-xs sm:text-sm px-2 sm:px-3">
                   Scegli
                 </ToggleGroupItem>
               </ToggleGroup>
@@ -435,7 +435,7 @@ const Analysis = () => {
 
             {/* Custom Date Range Picker */}
             {timeFilter === "custom" && (
-              <div className="flex justify-center gap-4">
+              <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 px-4 sm:px-0">
                 <div className="flex flex-col items-center gap-2">
                   <label className="text-sm font-medium text-gray-600">Data Inizio</label>
                   <Popover>
@@ -443,7 +443,7 @@ const Analysis = () => {
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-48 justify-start text-left font-normal bg-white/80 backdrop-blur-sm",
+                          "w-full sm:w-48 justify-start text-left font-normal bg-white/80 backdrop-blur-sm",
                           !customDateRange.from && "text-muted-foreground"
                         )}
                       >
@@ -455,14 +455,12 @@ const Analysis = () => {
                       <Calendar
                         mode="single"
                         selected={customDateRange.from}
-                        onSelect={(date) => setCustomDateRange(prev => ({ ...prev, from: date }))}
+                        onSelect={(date) => setCustomDateRange(prev => ({...prev, from: date}))}
                         initialFocus
-                        className="pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>
                 </div>
-
                 <div className="flex flex-col items-center gap-2">
                   <label className="text-sm font-medium text-gray-600">Data Fine</label>
                   <Popover>
@@ -470,7 +468,7 @@ const Analysis = () => {
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-48 justify-start text-left font-normal bg-white/80 backdrop-blur-sm",
+                          "w-full sm:w-48 justify-start text-left font-normal bg-white/80 backdrop-blur-sm",
                           !customDateRange.to && "text-muted-foreground"
                         )}
                       >
@@ -482,9 +480,8 @@ const Analysis = () => {
                       <Calendar
                         mode="single"
                         selected={customDateRange.to}
-                        onSelect={(date) => setCustomDateRange(prev => ({ ...prev, to: date }))}
+                        onSelect={(date) => setCustomDateRange(prev => ({...prev, to: date}))}
                         initialFocus
-                        className="pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>
@@ -495,86 +492,86 @@ const Analysis = () => {
 
           {/* Stats Overview */}
           <div className="stats-overview">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               <Card className="bg-gradient-to-br from-green-500 to-emerald-600 border-0 text-white shadow-xl">
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-green-100 text-sm font-medium">Profitto Totale</p>
-                      <p className="text-3xl font-bold">{formatCurrency(totalProfit)}</p>
+                      <p className="text-green-100 text-xs sm:text-sm font-medium">Profitto Totale</p>
+                      <p className="text-xl sm:text-3xl font-bold">{formatCurrency(totalProfit)}</p>
                     </div>
-                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                      <TrendingUp className="w-6 h-6" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                      <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 border-0 text-white shadow-xl">
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-blue-100 text-sm font-medium">ROI</p>
-                      <p className="text-3xl font-bold">{overallROI.toFixed(1)}%</p>
+                      <p className="text-blue-100 text-xs sm:text-sm font-medium">ROI</p>
+                      <p className="text-xl sm:text-3xl font-bold">{overallROI.toFixed(1)}%</p>
                     </div>
-                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                      <Percent className="w-6 h-6" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                      <Percent className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="bg-gradient-to-br from-purple-500 to-pink-600 border-0 text-white shadow-xl">
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-purple-100 text-sm font-medium">Win Rate</p>
-                      <p className="text-3xl font-bold">{winRate.toFixed(1)}%</p>
+                      <p className="text-purple-100 text-xs sm:text-sm font-medium">Win Rate</p>
+                      <p className="text-xl sm:text-3xl font-bold">{winRate.toFixed(1)}%</p>
                     </div>
-                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                      <Target className="w-6 h-6" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                      <Target className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="bg-gradient-to-br from-orange-500 to-red-600 border-0 text-white shadow-xl">
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-orange-100 text-sm font-medium">Scommesse Totali</p>
-                      <p className="text-3xl font-bold">{filteredBets.length}</p>
+                      <p className="text-orange-100 text-xs sm:text-sm font-medium">Scommesse Totali</p>
+                      <p className="text-xl sm:text-3xl font-bold">{filteredBets.length}</p>
                     </div>
-                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                      <BarChart3 className="w-6 h-6" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                      <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="bg-gradient-to-br from-teal-500 to-cyan-600 border-0 text-white shadow-xl">
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-teal-100 text-sm font-medium">Quota Media</p>
-                      <p className="text-3xl font-bold">{averageOdds.toFixed(2)}</p>
+                      <p className="text-teal-100 text-xs sm:text-sm font-medium">Quota Media</p>
+                      <p className="text-xl sm:text-3xl font-bold">{averageOdds.toFixed(2)}</p>
                     </div>
-                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                      <Activity className="w-6 h-6" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                      <Activity className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="bg-gradient-to-br from-amber-500 to-yellow-600 border-0 text-white shadow-xl">
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-amber-100 text-sm font-medium">Puntata Media</p>
-                      <p className="text-3xl font-bold">{formatCurrency(averageStake)}</p>
+                      <p className="text-amber-100 text-xs sm:text-sm font-medium">Puntata Media</p>
+                      <p className="text-xl sm:text-3xl font-bold">{formatCurrency(averageStake)}</p>
                     </div>
-                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                      <DollarSign className="w-6 h-6" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                      <DollarSign className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                   </div>
                 </CardContent>
@@ -583,18 +580,18 @@ const Analysis = () => {
           </div>
 
           {/* Charts Section */}
-          <div className={`charts-section grid grid-cols-1 ${shouldShowPerformanceChart() ? 'lg:grid-cols-2' : ''} gap-8`}>
+          <div className={`charts-section grid grid-cols-1 ${shouldShowPerformanceChart() ? 'xl:grid-cols-2' : ''} gap-6 sm:gap-8`}>
             {/* Bankroll Evolution Chart */}
             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
               <CardHeader>
-                <CardTitle className="text-xl">Evoluzione Bankroll</CardTitle>
+                <CardTitle className="text-lg sm:text-xl">Evoluzione Bankroll</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={bankrollEvolutionData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                <ResponsiveContainer width="100%" height={250}>
+                  <LineChart data={bankrollEvolutionData} margin={{ top: 20, right: 20, left: 10, bottom: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis domain={['dataMin - 50', 'dataMax + 50']} />
+                    <XAxis dataKey="date" fontSize={12} />
+                    <YAxis domain={['dataMin - 50', 'dataMax + 50']} fontSize={12} />
                     <Tooltip 
                       formatter={(value: number, name: string) => [
                         formatCurrency(value),
@@ -619,14 +616,14 @@ const Analysis = () => {
             {shouldShowPerformanceChart() && (
               <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
                 <CardHeader>
-                  <CardTitle className="text-xl">Performance (ROI)</CardTitle>
+                  <CardTitle className="text-lg sm:text-xl">Performance (ROI)</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={monthlyPerformanceData}>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <LineChart data={monthlyPerformanceData} margin={{ top: 20, right: 20, left: 10, bottom: 20 }}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
+                      <XAxis dataKey="month" fontSize={12} />
+                      <YAxis fontSize={12} />
                       <Tooltip 
                         formatter={(value: number, name: string) => [
                           name === 'roi' ? `${value.toFixed(1)}%` : formatCurrency(value),
@@ -643,11 +640,11 @@ const Analysis = () => {
           </div>
 
           {/* Second Row of Charts */}
-          <div className="charts-section grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="charts-section grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
             {/* Sports Distribution Chart */}
             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
               <CardHeader>
-                <CardTitle className="text-xl">Distribuzione per Sport</CardTitle>
+                <CardTitle className="text-lg sm:text-xl">Distribuzione per Sport</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -656,9 +653,9 @@ const Analysis = () => {
                       data={chartData}
                       cx="50%"
                       cy="50%"
-                      labelLine={false}
+                      labelLine={true}
                       label={({ sport, percent }: any) => `${sport} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
+                      outerRadius={90}
                       fill="#8884d8"
                       dataKey="scommesse"
                     >
@@ -675,7 +672,7 @@ const Analysis = () => {
             {/* Bookmaker Distribution Chart */}
             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
               <CardHeader>
-                <CardTitle className="text-xl">Distribuzione per Bookmaker</CardTitle>
+                <CardTitle className="text-lg sm:text-xl">Distribuzione per Bookmaker</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -705,20 +702,20 @@ const Analysis = () => {
           <div className="sport-performance-table">
             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
               <CardHeader>
-                <CardTitle className="text-xl">Performance per Sport</CardTitle>
+                <CardTitle className="text-lg sm:text-xl">Performance per Sport</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-0 sm:p-6">
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b">
-                        <th className="text-left p-4">Sport</th>
-                        <th className="text-left p-4">Scommesse</th>
-                        <th className="text-left p-4">Vinte</th>
-                        <th className="text-left p-4">Win Rate</th>
-                        <th className="text-left p-4">Stake Totale</th>
-                        <th className="text-left p-4">Profitto</th>
-                        <th className="text-left p-4">ROI</th>
+                        <th className="text-left p-2 sm:p-4 text-xs sm:text-sm">Sport</th>
+                        <th className="text-left p-2 sm:p-4 text-xs sm:text-sm">Scommesse</th>
+                        <th className="text-left p-2 sm:p-4 text-xs sm:text-sm hidden sm:table-cell">Vinte</th>
+                        <th className="text-left p-2 sm:p-4 text-xs sm:text-sm">Win Rate</th>
+                        <th className="text-left p-2 sm:p-4 text-xs sm:text-sm hidden md:table-cell">Stake Totale</th>
+                        <th className="text-left p-2 sm:p-4 text-xs sm:text-sm">Profitto</th>
+                        <th className="text-left p-2 sm:p-4 text-xs sm:text-sm hidden lg:table-cell">ROI</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -738,17 +735,17 @@ const Analysis = () => {
                             className="border-b hover:bg-gray-50 cursor-pointer transition-colors"
                             onClick={() => setFilteredView({ type: 'sport', value: sport })}
                           >
-                            <td className="p-4 font-medium">{sport}</td>
-                            <td className="p-4">{data.count}</td>
-                            <td className="p-4">{wonBets}</td>
-                            <td className="p-4">{sportWinRate.toFixed(1)}%</td>
-                            <td className="p-4">{formatCurrency(totalStake)}</td>
-                            <td className="p-4">
+                            <td className="p-2 sm:p-4 font-medium text-xs sm:text-sm">{sport}</td>
+                            <td className="p-2 sm:p-4 text-xs sm:text-sm">{data.count}</td>
+                            <td className="p-2 sm:p-4 text-xs sm:text-sm hidden sm:table-cell">{wonBets}</td>
+                            <td className="p-2 sm:p-4 text-xs sm:text-sm">{sportWinRate.toFixed(1)}%</td>
+                            <td className="p-2 sm:p-4 text-xs sm:text-sm hidden md:table-cell">{formatCurrency(totalStake)}</td>
+                            <td className="p-2 sm:p-4 text-xs sm:text-sm">
                               <span className={data.profit >= 0 ? 'text-green-600' : 'text-red-600'}>
                                 {formatCurrency(data.profit)}
                               </span>
                             </td>
-                            <td className="p-4">
+                            <td className="p-2 sm:p-4 text-xs sm:text-sm hidden lg:table-cell">
                               <span className={sportROI >= 0 ? 'text-green-600' : 'text-red-600'}>
                                 {sportROI.toFixed(1)}%
                               </span>
@@ -767,17 +764,17 @@ const Analysis = () => {
           <div className="tipster-table">
             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
               <CardHeader>
-                <CardTitle className="text-xl">Performance Tipster</CardTitle>
+                <CardTitle className="text-lg sm:text-xl">Performance Tipster</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-0 sm:p-6">
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b">
-                        <th className="text-left p-4">Tipster</th>
-                        <th className="text-left p-4">Scommesse</th>
-                        <th className="text-left p-4">Profitto</th>
-                        <th className="text-left p-4">Win Rate</th>
+                        <th className="text-left p-2 sm:p-4 text-xs sm:text-sm">Tipster</th>
+                        <th className="text-left p-2 sm:p-4 text-xs sm:text-sm">Scommesse</th>
+                        <th className="text-left p-2 sm:p-4 text-xs sm:text-sm">Profitto</th>
+                        <th className="text-left p-2 sm:p-4 text-xs sm:text-sm">Win Rate</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -794,14 +791,14 @@ const Analysis = () => {
                             className="border-b hover:bg-gray-50 cursor-pointer transition-colors"
                             onClick={() => setFilteredView({ type: 'tipster', value: tipster })}
                           >
-                            <td className="p-4 font-medium">{tipster}</td>
-                            <td className="p-4">{data.count}</td>
-                            <td className="p-4">
+                            <td className="p-2 sm:p-4 font-medium text-xs sm:text-sm">{tipster}</td>
+                            <td className="p-2 sm:p-4 text-xs sm:text-sm">{data.count}</td>
+                            <td className="p-2 sm:p-4 text-xs sm:text-sm">
                               <span className={data.profit >= 0 ? 'text-green-600' : 'text-red-600'}>
                                 {formatCurrency(data.profit)}
                               </span>
                             </td>
-                            <td className="p-4">{tipsterWinRate.toFixed(1)}%</td>
+                            <td className="p-2 sm:p-4 text-xs sm:text-sm">{tipsterWinRate.toFixed(1)}%</td>
                           </tr>
                         );
                       })}
