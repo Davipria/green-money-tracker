@@ -3,7 +3,35 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { Bet } from "@/types/bet";
 
+// Type for public tipster data (limited fields)
+export type PublicTipsterProfile = {
+  id: string;
+  username: string | null;
+  bio: string | null;
+  favorite_sport: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  profile_type: string;
+};
+
+// Type for full tipster profile (used when user can see all data)
 export type TipsterProfile = Tables<"profiles"> & {
+  stats?: {
+    totalBets: number;
+    winRate: number;
+    totalProfit: number;
+    totalStake: number;
+    roi: number;
+    avgOdds: number;
+    bestStreak: number;
+    currentStreak: number;
+    profitPercent: number;
+  };
+  bets?: Bet[];
+};
+
+// Combined type for tipster display
+export type DisplayTipsterProfile = (PublicTipsterProfile | TipsterProfile) & {
   stats?: {
     totalBets: number;
     winRate: number;
@@ -48,7 +76,7 @@ const convertToBet = (dbBet: any): Bet => ({
 });
 
 export const useTipsters = () => {
-  const [tipsters, setTipsters] = useState<TipsterProfile[]>([]);
+  const [tipsters, setTipsters] = useState<DisplayTipsterProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,11 +87,9 @@ export const useTipsters = () => {
 
       console.log("🔍 Fetching tipsters...");
 
-      // Recupera tutti i profili che hanno profile_type = 'tipster'
+      // Use the secure function to get only public tipster data
       const { data: profiles, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("profile_type", "tipster");
+        .rpc("get_public_tipster_profiles");
 
       if (profileError) {
         console.error("❌ Error fetching profiles:", profileError);
@@ -75,8 +101,8 @@ export const useTipsters = () => {
 
       // Per ogni tipster, calcola le statistiche
       const tipstersWithStats = await Promise.all(
-        profiles.map(async (profile) => {
-          console.log(`📈 Fetching bets for tipster: ${profile.username || profile.first_name}`);
+        profiles.map(async (profile: PublicTipsterProfile) => {
+          console.log(`📈 Fetching bets for tipster: ${profile.username || 'Unknown'}`);
           
           const { data: dbBets, error: betsError } = await supabase
             .from("bets")
@@ -88,16 +114,17 @@ export const useTipsters = () => {
             throw betsError;
           }
 
-          console.log(`🎯 Found ${dbBets?.length || 0} bets for tipster: ${profile.username || profile.first_name}`);
+          console.log(`🎯 Found ${dbBets?.length || 0} bets for tipster: ${profile.username || 'Unknown'}`);
 
           const bets = dbBets.map(convertToBet);
-          const stats = calculateTipsterStats(bets, profile.bankroll);
+          // For public profiles, we don't have bankroll info, so pass null
+          const stats = calculateTipsterStats(bets, null);
 
           return {
             ...profile,
             stats,
             bets,
-          };
+          } as DisplayTipsterProfile;
         })
       );
 

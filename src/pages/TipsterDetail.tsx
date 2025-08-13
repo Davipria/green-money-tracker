@@ -131,7 +131,7 @@ function RankingsSection() {
                 onClick={() => navigate(`/app/tipsters/${t!.id}`)}
               >
                 <td className="px-3 py-2 font-bold">{idx + 1}</td>
-                <td className="px-3 py-2">{t!.username || t!.first_name + ' ' + t!.last_name}</td>
+                <td className="px-3 py-2">{t!.username || "Tipster"}</td>
                 <td className={`px-3 py-2 text-right font-semibold ${t!.stats!.totalProfit > 0 ? 'text-green-600' : t!.stats!.totalProfit < 0 ? 'text-red-600' : ''}`}>{t!.stats!.totalProfit > 0 ? '+' : ''}{t!.stats!.totalProfit.toFixed(2)}</td>
                 <td className={`px-3 py-2 text-right ${t!.stats!.roi > 0 ? 'text-green-600' : t!.stats!.roi < 0 ? 'text-red-600' : ''}`}>{t!.stats!.roi > 0 ? '+' : ''}{t!.stats!.roi.toFixed(2)}%</td>
                 <td className="px-3 py-2 text-right">{t!.stats!.winRate.toFixed(2)}%</td>

@@ -22,8 +22,7 @@ export default function Tipsters() {
     const searchLower = search.toLowerCase();
     return (
       tipster.username?.toLowerCase().includes(searchLower) ||
-      tipster.first_name?.toLowerCase().includes(searchLower) ||
-      tipster.last_name?.toLowerCase().includes(searchLower)
+      tipster.bio?.toLowerCase().includes(searchLower)
     );
   });
 
@@ -120,14 +119,12 @@ export default function Tipsters() {
                   <Avatar className="h-12 w-12">
                     <AvatarImage src={tipster.avatar_url || ""} />
                     <AvatarFallback>
-                      {tipster.username?.charAt(0).toUpperCase() || 
-                       tipster.first_name?.charAt(0).toUpperCase() || 
-                       "T"}
+                     {tipster.username?.charAt(0).toUpperCase() || "T"}
                     </AvatarFallback>
                   </Avatar>
                   <div>
                     <CardTitle className="text-lg">
-                      {tipster.username || `${tipster.first_name} ${tipster.last_name}`}
+                      {tipster.username || "Tipster"}
                     </CardTitle>
                     <p className="text-sm text-muted-foreground">
                       {tipster.favorite_sport || "Sport preferito non specificato"}
