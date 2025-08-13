@@ -1,78 +1,19 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatCurrency } from "@/utils/betUtils";
-import { TrendingUp, TrendingDown, Target, Trophy, Banknote, Zap } from "lucide-react";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useMemo, useCallback } from "react";
+import { useDashboardData } from "@/hooks/useDashboardData";
 import { Bet } from "@/types/bet";
-import { Link } from "react-router-dom";
 import BetDetailsDialog from "@/components/BetDetailsDialog";
 import EditBetDialog from "@/components/EditBetDialog";
-
-interface UserProfile {
-  username: string | null;
-  first_name: string | null;
-  last_name: string | null;
-  bankroll: number | null;
-}
+import DashboardStats from "@/components/DashboardStats";
+import RecentBets from "@/components/RecentBets";
 
 const Dashboard = () => {
-  const [bets, setBets] = useState<Bet[]>([]);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { bets, profile, loading, deleteBet, refreshBets } = useDashboardData();
   const [selectedBet, setSelectedBet] = useState<Bet | null>(null);
   const [betDetailsOpen, setBetDetailsOpen] = useState(false);
   const [editBetOpen, setEditBetOpen] = useState(false);
-  const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const { data: user } = await supabase.auth.getUser();
-        if (!user.user) {
-          setLoading(false);
-          return;
-        }
-
-        // Fetch user profile
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('username, first_name, last_name, bankroll')
-          .eq('id', user.user.id)
-          .single();
-
-        if (profileData) {
-          setProfile(profileData);
-        }
-
-        // Fetch bets
-        const { data, error } = await supabase
-          .from('bets')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          console.error('Errore caricamento scommesse:', error);
-          toast({
-            title: "Errore",
-            description: "Impossibile caricare le scommesse",
-            variant: "destructive",
-          });
-        } else {
-          setBets((data || []) as Bet[]);
-        }
-      } catch (error) {
-        console.error('Errore imprevisto:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [toast]);
-
-  const getDisplayName = () => {
+  const getDisplayName = useCallback(() => {
     if (profile?.username) {
       return profile.username;
     }
@@ -80,79 +21,51 @@ const Dashboard = () => {
       return profile.first_name;
     }
     return "Utente";
-  };
+  }, [profile?.username, profile?.first_name]);
 
-  const totalProfit = bets.reduce((sum, bet) => sum + (bet.profit || 0), 0);
-  const totalStake = bets.reduce((sum, bet) => sum + bet.stake, 0);
-  const wonBets = bets.filter(bet => bet.status === 'won').length;
-  const winRate = bets.length > 0 ? (wonBets / bets.length) * 100 : 0;
-  const roi = totalStake > 0 ? (totalProfit / totalStake) * 100 : 0;
+  const stats = useMemo(() => {
+    const totalProfit = bets.reduce((sum, bet) => sum + (bet.profit || 0), 0);
+    const totalStake = bets.reduce((sum, bet) => sum + bet.stake, 0);
+    const wonBets = bets.filter(bet => bet.status === 'won').length;
+    const winRate = bets.length > 0 ? (wonBets / bets.length) * 100 : 0;
+    const roi = totalStake > 0 ? (totalProfit / totalStake) * 100 : 0;
+    const currentBalance = (profile?.bankroll || 0) + totalProfit;
 
-  // Calculate current balance (bankroll + profit)
-  const currentBalance = (profile?.bankroll || 0) + totalProfit;
+    return {
+      totalProfit,
+      totalStake,
+      wonBets,
+      winRate,
+      roi,
+      currentBalance
+    };
+  }, [bets, profile?.bankroll]);
 
-  const handleBetClick = (bet: Bet) => {
+  const handleBetClick = useCallback((bet: Bet) => {
     setSelectedBet(bet);
     setBetDetailsOpen(true);
-  };
+  }, []);
 
-  const handleEditBet = () => {
+  const handleEditBet = useCallback(() => {
     setBetDetailsOpen(false);
     setEditBetOpen(true);
-  };
+  }, []);
 
-  const handleDeleteBet = async () => {
+  const handleDeleteBet = useCallback(async () => {
     if (!selectedBet) return;
 
-    try {
-      const { error } = await supabase
-        .from('bets')
-        .delete()
-        .eq('id', selectedBet.id);
-
-      if (error) {
-        toast({
-          title: "Errore",
-          description: "Impossibile eliminare la scommessa",
-          variant: "destructive",
-        });
-      } else {
-        setBets(bets.filter(bet => bet.id !== selectedBet.id));
-        setBetDetailsOpen(false);
-        setSelectedBet(null);
-        toast({
-          title: "Scommessa eliminata",
-          description: "La scommessa è stata eliminata con successo",
-        });
-      }
-    } catch (error) {
-      console.error('Errore eliminazione scommessa:', error);
-      toast({
-        title: "Errore",
-        description: "Si è verificato un errore imprevisto",
-        variant: "destructive",
-      });
+    const success = await deleteBet(selectedBet.id);
+    if (success) {
+      setBetDetailsOpen(false);
+      setSelectedBet(null);
     }
-  };
+  }, [selectedBet, deleteBet]);
 
-  const handleBetUpdate = async () => {
-    // Ricarica i dati per vedere le modifiche
-    try {
-      const { data } = await supabase
-        .from('bets')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (data) {
-        setBets(data as Bet[]);
-      }
-    } catch (error) {
-      console.error('Errore ricaricamento scommesse:', error);
-    }
-    
+  const handleBetUpdate = useCallback(async () => {
+    await refreshBets();
     setEditBetOpen(false);
     setSelectedBet(null);
-  };
+  }, [refreshBets]);
 
   if (loading) {
     return (
@@ -178,154 +91,25 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header Section */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             Bentornato {getDisplayName()}
           </h1>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="bg-gradient-to-br from-orange-500 to-red-600 border-0 text-white shadow-xl hover:shadow-2xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-orange-100 text-sm font-medium mb-1">Saldo Attuale</p>
-                  <p className="text-3xl font-bold">{formatCurrency(currentBalance)}</p>
-                  <p className="text-orange-100 text-xs mt-1">
-                    Bankroll + Profitto
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Banknote className="w-6 h-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <DashboardStats
+          currentBalance={stats.currentBalance}
+          totalProfit={stats.totalProfit}
+          roi={stats.roi}
+          totalStake={stats.totalStake}
+          betsCount={bets.length}
+          winRate={stats.winRate}
+          wonBets={stats.wonBets}
+        />
 
-          <Card className="bg-gradient-to-br from-green-500 to-emerald-600 border-0 text-white shadow-xl hover:shadow-2xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-green-100 text-sm font-medium mb-1">Profitto Totale</p>
-                  <p className="text-3xl font-bold">{formatCurrency(totalProfit)}</p>
-                  <p className="text-green-100 text-xs mt-1">
-                    {totalProfit >= 0 ? '+' : ''}{roi.toFixed(1)}% ROI
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  {totalProfit >= 0 ? (
-                    <TrendingUp className="w-6 h-6" />
-                  ) : (
-                    <TrendingDown className="w-6 h-6" />
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 border-0 text-white shadow-xl hover:shadow-2xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-blue-100 text-sm font-medium mb-1">Puntata Totale</p>
-                  <p className="text-3xl font-bold">{formatCurrency(totalStake)}</p>
-                  <p className="text-blue-100 text-xs mt-1">
-                    {bets.length} scommesse
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Target className="w-6 h-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-purple-500 to-pink-600 border-0 text-white shadow-xl hover:shadow-2xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-100 text-sm font-medium mb-1">Percentuale Vincite</p>
-                  <p className="text-3xl font-bold">{winRate.toFixed(1)}%</p>
-                  <p className="text-purple-100 text-xs mt-1">
-                    {wonBets} su {bets.length} scommesse
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Trophy className="w-6 h-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Recent Bets */}
-        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-          <CardHeader className="pb-6">
-            <Link to="/app/archive" className="block hover:opacity-80 transition-opacity">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <Zap className="w-4 h-4 text-white" />
-                </div>
-                <CardTitle className="text-xl">Ultime Scommesse</CardTitle>
-              </div>
-            </Link>
-          </CardHeader>
-          <CardContent>
-            {bets.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl flex items-center justify-center">
-                  <Target className="w-8 h-8 text-gray-500" />
-                </div>
-                <p className="text-gray-500 text-lg font-medium mb-2">Non hai ancora aggiunto scommesse</p>
-                <p className="text-gray-400">Vai alla sezione "Nuova Scommessa" per iniziare.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                 {bets.slice(0, 5).map((bet) => (
-                   <div key={bet.id} className="group">
-                     <div 
-                       className="flex items-center justify-between p-6 bg-gradient-to-r from-gray-50 to-white border border-gray-100 rounded-xl hover:shadow-lg transition-all duration-300 group-hover:border-blue-200 cursor-pointer"
-                       onClick={() => handleBetClick(bet)}
-                     >
-                      <div className="flex-1">
-                        <div className="font-semibold text-gray-900 text-lg mb-1">{bet.event}</div>
-                        <div className="text-sm text-gray-600 flex items-center space-x-4">
-                          <span className="flex items-center">
-                            <Target className="w-4 h-4 mr-1" />
-                            {bet.sport || bet.bet_type}
-                          </span>
-                          <span className="flex items-center">
-                            <Banknote className="w-4 h-4 mr-1" />
-                            {new Date(bet.date).toLocaleDateString('it-IT')}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right flex flex-col items-end">
-                        <div className="font-semibold text-gray-900 text-lg mb-1">{formatCurrency(bet.stake)}</div>
-                        <div className={`text-sm font-medium px-3 py-1 rounded-full text-center ${
-                          bet.status === 'won' 
-                            ? 'bg-green-100 text-green-800' 
-                            : bet.status === 'lost' 
-                            ? 'bg-red-100 text-red-800'
-                            : bet.status === 'cashout'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {bet.status === 'won' ? 'Vinta' : bet.status === 'lost' ? 'Persa' : bet.status === 'cashout' ? 'Cashout' : 'In attesa'}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <RecentBets bets={bets} onBetClick={handleBetClick} />
       </div>
 
-      {/* Bet Details Dialog */}
       <BetDetailsDialog
         bet={selectedBet}
         open={betDetailsOpen}
@@ -334,7 +118,6 @@ const Dashboard = () => {
         onDelete={handleDeleteBet}
       />
 
-      {/* Edit Bet Dialog */}
       <EditBetDialog
         bet={selectedBet}
         open={editBetOpen}
