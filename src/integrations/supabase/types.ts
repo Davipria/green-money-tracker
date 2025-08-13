@@ -250,6 +250,18 @@ export type Database = {
         Args: { profile_user_id: string }
         Returns: boolean
       }
+      get_public_tipster_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          username: string
+          bio: string
+          favorite_sport: string
+          avatar_url: string
+          created_at: string
+          profile_type: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
