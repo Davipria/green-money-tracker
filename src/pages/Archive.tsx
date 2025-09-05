@@ -214,31 +214,86 @@ const Archive = () => {
           </p>
           
           {/* Filters Section */}
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-center mb-6">
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-500" />
-              <span className="text-sm text-gray-600 font-medium">Filtra per tipster:</span>
-              <Select value={selectedTipster} onValueChange={setSelectedTipster}>
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tutti i tipster</SelectItem>
-                  {availableTipsters.map((tipster) => (
-                    <SelectItem key={tipster} value={tipster}>
-                      {tipster}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 mb-8">
+            <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                  <Filter className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">Filtra le scommesse</h3>
+                  <p className="text-sm text-gray-500">Seleziona un tipster per visualizzare solo le sue scommesse</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  <span className="text-sm text-gray-700 font-medium whitespace-nowrap">Tipster:</span>
+                  <Select value={selectedTipster} onValueChange={setSelectedTipster}>
+                    <SelectTrigger className="w-56 h-11 bg-white border-2 border-gray-200 hover:border-blue-300 focus:border-blue-500 rounded-xl shadow-sm transition-all duration-200">
+                      <SelectValue placeholder="Seleziona tipster..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-2 border-gray-200 rounded-xl shadow-xl z-50 max-h-64">
+                      <SelectItem 
+                        value="all" 
+                        className="hover:bg-blue-50 focus:bg-blue-50 rounded-lg mx-1 my-0.5 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full"></div>
+                          <span className="font-medium">Tutti i tipster</span>
+                          <span className="text-xs text-gray-500 ml-auto">({bets.length})</span>
+                        </div>
+                      </SelectItem>
+                      {availableTipsters.map((tipster) => {
+                        const tipsterBetsCount = bets.filter(bet => (bet.tipster || 'Nessun tipster') === tipster).length;
+                        return (
+                          <SelectItem 
+                            key={tipster} 
+                            value={tipster}
+                            className="hover:bg-blue-50 focus:bg-blue-50 rounded-lg mx-1 my-0.5 cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full"></div>
+                              <span className="font-medium">{tipster}</span>
+                              <span className="text-xs text-gray-500 ml-auto">({tipsterBetsCount})</span>
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {selectedTipster !== "all" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedTipster("all")}
+                    className="border-2 border-gray-200 hover:border-red-300 hover:bg-red-50 text-gray-600 hover:text-red-600 rounded-xl transition-all duration-200"
+                  >
+                    Cancella filtro
+                  </Button>
+                )}
+              </div>
             </div>
+            
+            {selectedTipster !== "all" && (
+              <div className="mt-4 p-3 bg-blue-50 rounded-xl border border-blue-200">
+                <div className="flex items-center gap-2 text-blue-700">
+                  <Target className="w-4 h-4" />
+                  <span className="text-sm font-medium">
+                    Visualizzando {filteredBets.length} scommesse di "{selectedTipster}"
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Export Button */}
-          <div className="flex justify-center">
+          <div className="flex justify-center mb-8">
             <ExportBetsDialog 
               trigger={
-                <Button className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2">
+                <Button className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-3">
                   <Download className="w-5 h-5" />
                   <span>Esporta in Excel</span>
                 </Button>
