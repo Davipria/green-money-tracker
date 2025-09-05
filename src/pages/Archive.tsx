@@ -1,10 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency, groupBetsByMonth, calculateProfit } from "@/utils/betUtils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronRight, Archive as ArchiveIcon, Target, Calendar, TrendingUp, Trash2, Download } from "lucide-react";
-import { useState, useEffect } from "react";
+import { ChevronDown, ChevronRight, Archive as ArchiveIcon, Target, Calendar, TrendingUp, Trash2, Download, Filter } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Bet, MonthlyStats } from "@/types/bet";
@@ -31,6 +32,7 @@ const Archive = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [deletingBetId, setDeletingBetId] = useState<string | null>(null);
+  const [selectedTipster, setSelectedTipster] = useState<string>("all");
   const { toast } = useToast();
 
   const fetchBets = async () => {
@@ -141,8 +143,8 @@ const Archive = () => {
     );
   };
 
-  const getBetsForMonth = (month: string, year: number) => {
-    return bets.filter(bet => {
+  const getBetsForMonth = (month: string, year: number, filteredBets: Bet[]) => {
+    return filteredBets.filter(bet => {
       const betDate = new Date(bet.date);
       const betMonth = betDate.toLocaleDateString('it-IT', { month: 'long' });
       return betMonth === month && betDate.getFullYear() === year;
@@ -153,6 +155,20 @@ const Archive = () => {
       return new Date(b.date).getTime() - new Date(a.date).getTime();
     });
   };
+
+  // Get unique tipsters from bets
+  const availableTipsters = useMemo(() => {
+    const tipsters = Array.from(new Set(bets.map(bet => bet.tipster || 'Nessun tipster')))
+      .filter(tipster => tipster !== null)
+      .sort();
+    return tipsters;
+  }, [bets]);
+
+  // Filter bets based on selected tipster
+  const filteredBets = useMemo(() => {
+    if (selectedTipster === "all") return bets;
+    return bets.filter(bet => (bet.tipster || 'Nessun tipster') === selectedTipster);
+  }, [bets, selectedTipster]);
 
   if (loading) {
     return (
@@ -175,7 +191,7 @@ const Archive = () => {
     );
   }
 
-  const monthlyStats = groupBetsByMonth(bets);
+  const monthlyStats = groupBetsByMonth(filteredBets);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
@@ -190,8 +206,34 @@ const Archive = () => {
           </h1>
           <p className="text-gray-600 text-lg mb-6">
             Storico delle tue scommesse organizzato per mese
+            {selectedTipster !== "all" && (
+              <span className="block text-sm text-blue-600 font-medium mt-1">
+                {filteredBets.length} scommesse di {selectedTipster}
+              </span>
+            )}
           </p>
           
+          {/* Filters Section */}
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-center mb-6">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-gray-500" />
+              <span className="text-sm text-gray-600 font-medium">Filtra per tipster:</span>
+              <Select value={selectedTipster} onValueChange={setSelectedTipster}>
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tutti i tipster</SelectItem>
+                  {availableTipsters.map((tipster) => (
+                    <SelectItem key={tipster} value={tipster}>
+                      {tipster}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           {/* Export Button */}
           <div className="flex justify-center">
             <ExportBetsDialog 
@@ -205,14 +247,28 @@ const Archive = () => {
           </div>
         </div>
 
-        {bets.length === 0 ? (
+        {filteredBets.length === 0 ? (
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
             <CardContent className="text-center py-20">
               <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl flex items-center justify-center">
                 <ArchiveIcon className="w-12 h-12 text-gray-500" />
               </div>
-              <p className="text-gray-500 text-lg font-medium mb-2">Non hai ancora aggiunto scommesse</p>
-              <p className="text-gray-400">Vai alla sezione "Nuova Scommessa" per iniziare.</p>
+              {bets.length === 0 ? (
+                <>
+                  <p className="text-gray-500 text-lg font-medium mb-2">Non hai ancora aggiunto scommesse</p>
+                  <p className="text-gray-400">Vai alla sezione "Nuova Scommessa" per iniziare.</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-gray-500 text-lg font-medium mb-2">Nessuna scommessa trovata</p>
+                  <p className="text-gray-400">
+                    {selectedTipster === "all" 
+                      ? "Non ci sono scommesse nell'archivio."
+                      : `Nessuna scommessa trovata per il tipster "${selectedTipster}".`
+                    }
+                  </p>
+                </>
+              )}
             </CardContent>
           </Card>
         ) : (
@@ -220,7 +276,7 @@ const Archive = () => {
             {monthlyStats.map((month) => {
               const monthKey = `${month.month}-${month.year}`;
               const isOpen = openMonths.includes(monthKey);
-              const monthBets = getBetsForMonth(month.month, month.year);
+              const monthBets = getBetsForMonth(month.month, month.year, filteredBets);
 
               return (
                 <Card key={monthKey} className="bg-white/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
