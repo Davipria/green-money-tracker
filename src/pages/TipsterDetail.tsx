@@ -31,6 +31,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { formatCurrency } from "@/utils/betUtils";
+import FilteredBetsView from "@/components/FilteredBetsView";
 
 // --- RankingsSection Component ---
 import React from "react";
@@ -155,6 +156,7 @@ export default function TipsterDetail() {
   const [selectedYear, setSelectedYear] = useState<string>('all');
   const [period, setPeriod] = useState<'all' | 'year' | 'month' | 'week' | 'custom'>('all');
   const [customRange, setCustomRange] = useState<{from: Date|null, to: Date|null}>({from: null, to: null});
+  const [showFilteredView, setShowFilteredView] = useState(false);
 
   useEffect(() => {
     if (tipsterId) {
@@ -390,9 +392,10 @@ export default function TipsterDetail() {
 
         <div className="lg:col-span-2 order-1 lg:order-2">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsList className="grid w-full grid-cols-4 mb-6">
               <TabsTrigger value="overview">Panoramica</TabsTrigger>
               <TabsTrigger value="archive">Archivio</TabsTrigger>
+              <TabsTrigger value="bets">Scommesse</TabsTrigger>
               <TabsTrigger value="stats">Statistiche</TabsTrigger>
             </TabsList>
 
@@ -554,6 +557,29 @@ export default function TipsterDetail() {
                         })}
                     </Accordion>
                   )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="bets" className="mt-0">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CalendarIcon className="w-5 h-5" />
+                    Scommesse per Mese
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground mb-4">
+                    Visualizza tutte le scommesse di questo tipster organizzate per mese.
+                  </p>
+                  <Button 
+                    onClick={() => setShowFilteredView(true)}
+                    className="w-full"
+                  >
+                    <CalendarIcon className="w-4 h-4 mr-2" />
+                    Visualizza Scommesse per Mese
+                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -733,6 +759,18 @@ export default function TipsterDetail() {
           </Tabs>
         </div>
       </div>
+
+      {/* Filtered Bets View */}
+      {showFilteredView && (
+        <div className="fixed inset-0 z-50 bg-background">
+          <FilteredBetsView
+            bets={bets}
+            filterType="tipster"
+            filterValue={tipster.username || `${tipster.first_name} ${tipster.last_name}` || "Tipster"}
+            onBack={() => setShowFilteredView(false)}
+          />
+        </div>
+      )}
     </div>
   );
 }
