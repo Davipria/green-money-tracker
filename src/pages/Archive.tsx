@@ -289,17 +289,6 @@ const Archive = () => {
             )}
           </div>
 
-          {/* Export Button */}
-          <div className="flex justify-center mb-8">
-            <ExportBetsDialog 
-              trigger={
-                <Button className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-3">
-                  <Download className="w-5 h-5" />
-                  <span>Esporta in Excel</span>
-                </Button>
-              }
-            />
-          </div>
         </div>
 
         {filteredBets.length === 0 ? (
@@ -499,6 +488,18 @@ const Archive = () => {
           onOpenChange={setEditDialogOpen}
           onBetUpdated={handleBetUpdated}
         />
+        
+        {/* Export Button at Bottom */}
+        <div className="flex justify-center mt-12">
+          <ExportBetsDialog 
+            trigger={
+              <Button className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-3">
+                <Download className="w-5 h-5" />
+                <span>Esporta in Excel</span>
+              </Button>
+            }
+          />
+        </div>
       </div>
     </div>
   );
