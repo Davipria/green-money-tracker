@@ -635,6 +635,7 @@ const AddBet = () => {
                       <SelectItem value="pallavolo">Pallavolo</SelectItem>
                       <SelectItem value="ping-pong">Ping Pong</SelectItem>
                       <SelectItem value="rugby">Rugby</SelectItem>
+                      <SelectItem value="football-americano">Football Americano</SelectItem>
                       <SelectItem value="altro">Altro</SelectItem>
                     </SelectContent>
                   </Select>
@@ -794,6 +795,7 @@ const AddBet = () => {
                               <SelectItem value="pallavolo">Pallavolo</SelectItem>
                               <SelectItem value="ping-pong">Ping Pong</SelectItem>
                               <SelectItem value="rugby">Rugby</SelectItem>
+                              <SelectItem value="football-americano">Football Americano</SelectItem>
                               <SelectItem value="altro">Altro</SelectItem>
                             </SelectContent>
                           </Select>

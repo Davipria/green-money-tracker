@@ -242,6 +242,7 @@ const Profile = () => {
     { value: "pallavolo", label: "🏐 Pallavolo" },
     { value: "ping-pong", label: "🏓 Ping Pong" },
     { value: "rugby", label: "🏉 Rugby" },
+    { value: "football-americano", label: "🏈 Football Americano" },
     { value: "altro", label: "🎯 Altro" }
   ];
 
