@@ -135,6 +135,50 @@ const Archive = () => {
     }
   };
 
+  const handleDeleteAllBets = async () => {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return;
+
+      // Delete all bet_selections first
+      const { error: selectionsError } = await supabase
+        .from('bet_selections')
+        .delete()
+        .in('bet_id', bets.map(bet => bet.id));
+
+      if (selectionsError) {
+        console.error('Errore eliminazione selezioni:', selectionsError);
+      }
+
+      // Then delete all bets
+      const { error: betsError } = await supabase
+        .from('bets')
+        .delete()
+        .eq('user_id', user.user.id);
+
+      if (betsError) {
+        toast({
+          title: "Errore",
+          description: "Impossibile eliminare le scommesse",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Successo",
+          description: "Tutte le scommesse sono state eliminate",
+        });
+        fetchBets();
+      }
+    } catch (error) {
+      console.error('Errore imprevisto:', error);
+      toast({
+        title: "Errore",
+        description: "Errore imprevisto durante l'eliminazione",
+        variant: "destructive"
+      });
+    }
+  };
+
   const toggleMonth = (monthKey: string) => {
     setOpenMonths(prev => 
       prev.includes(monthKey) 
@@ -213,8 +257,8 @@ const Archive = () => {
             )}
           </p>
           
-          {/* Export Button */}
-          <div className="flex justify-center mb-8">
+          {/* Export and Delete Buttons */}
+          <div className="flex justify-center gap-4 mb-8">
             <ExportBetsDialog 
               trigger={
                 <Button className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-3">
@@ -223,6 +267,37 @@ const Archive = () => {
                 </Button>
               }
             />
+            
+            {bets.length > 0 && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button className="bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-3">
+                    <Trash2 className="w-5 h-5" />
+                    <span>Cancella Tutte</span>
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="bg-white border-0 shadow-2xl rounded-2xl">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-2xl font-bold text-gray-900">
+                      Conferma eliminazione
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="text-gray-600 text-base">
+                      Sei sicuro di voler eliminare <span className="font-bold text-red-600">tutte le {bets.length} scommesse</span>? 
+                      Questa azione è <span className="font-bold">irreversibile</span> e cancellerà permanentemente tutti i dati delle scommesse e delle relative selezioni.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="rounded-xl">Annulla</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={handleDeleteAllBets}
+                      className="bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white rounded-xl"
+                    >
+                      Elimina Tutte
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
 
           {/* Filters Section */}
