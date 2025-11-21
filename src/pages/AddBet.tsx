@@ -367,18 +367,19 @@ const AddBet = () => {
   ];
 
   const bookmakers = [
-    { value: "begamestar", label: "Begamestar" },
     { value: "bet365", label: "Bet365" },
     { value: "betfair", label: "Betfair" },
     { value: "betflag", label: "Betflag" },
-    { value: "betic", label: "Betic" },
+    { value: "daznbet", label: "DaznBet" },
     { value: "domusbet", label: "DomusBet" },
+    { value: "eplay24", label: "E-Play24" },
     { value: "eurobet", label: "Eurobet" },
     { value: "goldbet", label: "Goldbet" },
+    { value: "leovegas", label: "Leovegas" },
     { value: "planetwin365", label: "Planetwin365" },
     { value: "sisal", label: "Sisal" },
     { value: "snai", label: "Snai" },
-    { value: "leovegas", label: "Leovegas" },
+    { value: "vincitu", label: "Vincitu" },
     { value: "altro", label: "Altro" }
   ];
 
