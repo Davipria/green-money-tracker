@@ -379,6 +379,7 @@ const AddBet = () => {
     { value: "planetwin365", label: "Planetwin365" },
     { value: "sisal", label: "Sisal" },
     { value: "snai", label: "Snai" },
+    { value: "sportium", label: "Sportium" },
     { value: "vincitu", label: "Vincitu" },
     { value: "altro", label: "Altro" }
   ];
