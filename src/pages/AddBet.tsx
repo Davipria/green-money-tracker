@@ -370,6 +370,7 @@ const AddBet = () => {
     { value: "bet365", label: "Bet365" },
     { value: "betfair", label: "Betfair" },
     { value: "betflag", label: "Betflag" },
+    { value: "betsson", label: "Betsson" },
     { value: "daznbet", label: "DaznBet" },
     { value: "domusbet", label: "DomusBet" },
     { value: "eplay24", label: "E-Play24" },
