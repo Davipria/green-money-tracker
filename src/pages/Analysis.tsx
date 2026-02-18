@@ -26,7 +26,7 @@ const Analysis = () => {
     to: undefined
   });
   const [initialBankroll, setInitialBankroll] = useState(1000);
-  const [sportData, setSportData] = useState<Record<string, { count: number; profit: number }>>({});
+  const [sportData, setSportData] = useState<Record<string, { count: number; profit: number; won: number; totalStake: number }>>({});
   const [betsWithSport, setBetsWithSport] = useState<Record<string, string>>({});
   const [filteredView, setFilteredView] = useState<{
     type: 'sport' | 'tipster';
@@ -54,10 +54,41 @@ const Analysis = () => {
           setInitialBankroll(profileData.bankroll);
         }
 
-        const { data, error } = await supabase
-          .from('bets')
-          .select('*')
-          .order('created_at', { ascending: false });
+        // Fetch ALL bets - paginate to avoid 1000-row PostgREST limit
+        let allBets: any[] = [];
+        let from = 0;
+        const pageSize = 1000;
+        let hasMore = true;
+        
+        while (hasMore) {
+          const { data: page, error: pageError } = await supabase
+            .from('bets')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .range(from, from + pageSize - 1);
+          
+          if (pageError) {
+            console.error('Errore caricamento scommesse:', pageError);
+            toast({
+              title: "Errore",
+              description: "Impossibile caricare le scommesse",
+              variant: "destructive",
+            });
+            hasMore = false;
+            break;
+          }
+          
+          if (page && page.length > 0) {
+            allBets = [...allBets, ...page];
+            from += pageSize;
+            hasMore = page.length === pageSize;
+          } else {
+            hasMore = false;
+          }
+        }
+        
+        const data = allBets;
+        const error = null;
 
         if (error) {
           console.error('Errore caricamento scommesse:', error);
@@ -110,7 +141,7 @@ const Analysis = () => {
         }
       });
 
-      const sportsMap: Record<string, { count: number; profit: number }> = {};
+      const sportsMap: Record<string, { count: number; profit: number; won: number; totalStake: number }> = {};
       const betSportMapping: Record<string, string> = {};
       
       for (const bet of filtered) {
@@ -139,10 +170,14 @@ const Analysis = () => {
         betSportMapping[bet.id] = sport;
         
         if (!sportsMap[sport]) {
-          sportsMap[sport] = { count: 0, profit: 0 };
+          sportsMap[sport] = { count: 0, profit: 0, won: 0, totalStake: 0 };
         }
         sportsMap[sport].count += 1;
         sportsMap[sport].profit += bet.profit || 0;
+        sportsMap[sport].totalStake += bet.stake;
+        if (bet.status === 'won') {
+          sportsMap[sport].won += 1;
+        }
       }
       
       setSportData(sportsMap);
@@ -313,12 +348,16 @@ const Analysis = () => {
   const tipsterData = filteredBets.reduce((acc, bet) => {
     const tipster = bet.tipster || 'Nessun tipster';
     if (!acc[tipster]) {
-      acc[tipster] = { count: 0, profit: 0 };
+      acc[tipster] = { count: 0, profit: 0, won: 0, totalStake: 0 };
     }
     acc[tipster].count += 1;
     acc[tipster].profit += bet.profit || 0;
+    acc[tipster].totalStake += bet.stake;
+    if (bet.status === 'won') {
+      acc[tipster].won += 1;
+    }
     return acc;
-  }, {} as Record<string, { count: number; profit: number }>);
+  }, {} as Record<string, { count: number; profit: number; won: number; totalStake: number }>);
 
   if (bets.length === 0) {
     return (
@@ -722,12 +761,8 @@ const Analysis = () => {
                       {Object.entries(sportData)
                         .sort(([,a], [,b]) => b.count - a.count)
                         .map(([sport, data]) => {
-                        const sportBets = filteredBets.filter(bet => betsWithSport[bet.id] === sport);
-                        
-                        const wonBets = sportBets.filter(bet => bet.status === 'won').length;
-                        const sportWinRate = sportBets.length > 0 ? (wonBets / sportBets.length) * 100 : 0;
-                        const totalStake = sportBets.reduce((sum, bet) => sum + bet.stake, 0);
-                        const sportROI = totalStake > 0 ? calculateROI(data.profit, totalStake) : 0;
+                        const sportWinRate = data.count > 0 ? (data.won / data.count) * 100 : 0;
+                        const sportROI = data.totalStake > 0 ? calculateROI(data.profit, data.totalStake) : 0;
                         
                         return (
                           <tr 
@@ -737,9 +772,9 @@ const Analysis = () => {
                           >
                             <td className="p-2 sm:p-4 font-medium text-xs sm:text-sm">{sport}</td>
                             <td className="p-2 sm:p-4 text-xs sm:text-sm">{data.count}</td>
-                            <td className="p-2 sm:p-4 text-xs sm:text-sm hidden sm:table-cell">{wonBets}</td>
+                            <td className="p-2 sm:p-4 text-xs sm:text-sm hidden sm:table-cell">{data.won}</td>
                             <td className="p-2 sm:p-4 text-xs sm:text-sm">{sportWinRate.toFixed(1)}%</td>
-                            <td className="p-2 sm:p-4 text-xs sm:text-sm hidden md:table-cell">{formatCurrency(totalStake)}</td>
+                            <td className="p-2 sm:p-4 text-xs sm:text-sm hidden md:table-cell">{formatCurrency(data.totalStake)}</td>
                             <td className="p-2 sm:p-4 text-xs sm:text-sm">
                               <span className={data.profit >= 0 ? 'text-green-600' : 'text-red-600'}>
                                 {formatCurrency(data.profit)}
@@ -781,9 +816,8 @@ const Analysis = () => {
                       {Object.entries(tipsterData)
                         .sort(([,a], [,b]) => b.count - a.count)
                         .map(([tipster, data]) => {
-                        const tipsterBets = filteredBets.filter(bet => (bet.tipster || 'Nessun tipster') === tipster);
-                        const tipsterWinRate = tipsterBets.length > 0 ? 
-                          (tipsterBets.filter(bet => bet.status === 'won').length / tipsterBets.length) * 100 : 0;
+                        const tipsterWinRate = data.count > 0 ? (data.won / data.count) * 100 : 0;
+                        const tipsterROI = data.totalStake > 0 ? calculateROI(data.profit, data.totalStake) : 0;
                         
                         return (
                           <tr 
