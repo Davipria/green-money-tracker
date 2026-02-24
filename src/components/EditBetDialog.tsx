@@ -520,7 +520,9 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
                                 <SelectItem value="basket">Basket</SelectItem>
                                 <SelectItem value="formula1">Formula 1</SelectItem>
                                 <SelectItem value="pallavolo">Pallavolo</SelectItem>
+                                <SelectItem value="ping-pong">Ping Pong</SelectItem>
                                 <SelectItem value="rugby">Rugby</SelectItem>
+                                <SelectItem value="football-americano">Football Americano</SelectItem>
                                 <SelectItem value="altro">Altro</SelectItem>
                               </SelectContent>
                             </Select>
@@ -625,7 +627,9 @@ const EditBetDialog = ({ bet, open, onOpenChange, onBetUpdated }: EditBetDialogP
                       <SelectItem value="basket">Basket</SelectItem>
                       <SelectItem value="formula1">Formula 1</SelectItem>
                       <SelectItem value="pallavolo">Pallavolo</SelectItem>
+                      <SelectItem value="ping-pong">Ping Pong</SelectItem>
                       <SelectItem value="rugby">Rugby</SelectItem>
+                      <SelectItem value="football-americano">Football Americano</SelectItem>
                       <SelectItem value="altro">Altro</SelectItem>
                     </SelectContent>
                   </Select>
